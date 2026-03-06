@@ -16,6 +16,8 @@
 - Tauri v2 requires Rust 1.77.2+, Node 18+
 - Need `tauri-plugin-http` for CORS bypass (v2 plugin system)
 - Need `tauri-plugin-shell` for opening external links
+- **Package manager: `pnpm`** — see Phase 00 for all toolchain decisions
+- **Full dependency list is in [Phase 00](phase-00-bootstrap-toolchain.md)** — do NOT add deps ad-hoc
 
 ## Requirements
 
@@ -81,22 +83,12 @@ colors: {
    pnpm create tauri-app localman --template react-ts
    ```
 
-3. **Install frontend deps**
-   ```bash
-   pnpm add zustand dexie @radix-ui/react-dialog @radix-ui/react-dropdown-menu \
-     @radix-ui/react-tabs @radix-ui/react-tooltip @radix-ui/react-select \
-     @radix-ui/react-context-menu @radix-ui/react-toast \
-     @codemirror/lang-json @codemirror/lang-javascript codemirror @codemirror/view \
-     @tauri-apps/plugin-http @tauri-apps/api clsx tailwind-merge
-   pnpm add -D tailwindcss @tailwindcss/vite postcss autoprefixer \
-     @types/node prettier eslint
-   ```
+3. **Install all frontend deps**
+   - Use the complete dependency list from [Phase 00](phase-00-bootstrap-toolchain.md)
+   - Run both the runtime deps block and dev deps block exactly as written
 
 4. **Install Tauri plugins (Rust side)**
-   ```bash
-   cd src-tauri
-   cargo add tauri-plugin-http tauri-plugin-shell
-   ```
+   - Use the complete Rust deps block from [Phase 00](phase-00-bootstrap-toolchain.md)
 
 5. **Configure Tailwind**
    - Create `tailwind.config.ts` with design system tokens

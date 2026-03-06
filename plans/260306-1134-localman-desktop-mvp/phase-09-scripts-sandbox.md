@@ -16,7 +16,7 @@
 - Two integration options:
   1. **QuickJS WASM** (`quickjs-emscripten` npm package) — runs in web worker, simpler
   2. **QuickJS via Rust** (Tauri command) — better isolation, more control
-- Recommend: **QuickJS WASM** for MVP (simpler integration, good enough isolation)
+- **Decision locked: QuickJS WASM** (`quickjs-emscripten`) — lazy-loaded on first script execution (~500KB, acceptable)
 - Scripts interact via injected global object (`lm` or `pm` for Postman compat)
 - Pre-script: runs before request, can modify request params/headers/body, set variables
 - Post-script: runs after response, can read response, run assertions (tests)

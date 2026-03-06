@@ -179,7 +179,7 @@ jobs:
 - All keyboard shortcuts work
 
 ## Risk Assessment
-- macOS code signing requires Apple Developer account ($99/year) — can distribute unsigned for beta
+- macOS code signing: **unsigned beta** (no Apple Developer account needed). Users get Gatekeeper warning — documented in release notes. Code signing deferred to public release.
 - Windows SmartScreen warning without EV cert — can use standard cert, add to known publishers
 - Linux fragmentation — AppImage is most portable, test on major distros
 - Auto-updater security — verify signatures on updates

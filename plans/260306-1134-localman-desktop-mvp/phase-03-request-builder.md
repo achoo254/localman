@@ -14,7 +14,7 @@
 - URL bar is the hero element — large, always visible
 - Params/Headers use a key-value table editor (enable/disable per row)
 - Body tab needs mode switcher: JSON, Form Data, Multipart, Raw, XML, Binary
-- Auth tab: No Auth, Bearer, Basic, API Key (OAuth 2.0 deferred to Phase 2)
+- Auth tab: No Auth, Bearer, Basic, API Key — **OAuth 2.0 removed from MVP entirely**
 - Auto-sync URL query params with Params tab bidirectionally
 - CodeMirror 6 for JSON/XML/Raw body editing with syntax highlighting
 
@@ -26,7 +26,7 @@
 - Params tab: key-value table, toggle per row, auto-sync with URL query string
 - Headers tab: key-value table, auto-suggest common headers
 - Body tab: JSON (CodeMirror), Form Data (key-value), Raw text, XML, Binary (file picker)
-- Auth tab: None, Bearer Token, Basic Auth, API Key (header/query)
+- Auth tab: None, Bearer Token, Basic Auth, API Key (header/query) — no OAuth
 - Send button (Ctrl+Enter shortcut)
 - Tab system for multiple open requests
 

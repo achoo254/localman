@@ -11,6 +11,18 @@ created: 2026-03-06
 
 # Localman Desktop MVP — Implementation Plan
 
+## Agent Workflow Protocol
+
+**READ FIRST:** [workflow-agent-execution-protocol.md](workflow-agent-execution-protocol.md)
+
+Agents execute fully autonomously: code → self-review → test → commit → push → GitLab.
+- Zero human oversight during execution
+- Push directly to `main` (no branches, no MRs)
+- 1 GitLab milestone per phase, 1 issue per todo item
+- GitLab instance: `gitlabs.inet.vn` — use `glab --hostname gitlabs.inet.vn`
+
+---
+
 ## Overview
 
 Offline-first desktop API client built with Tauri v2 + React + TypeScript. Postman alternative focusing on speed, privacy, and local-first data.
@@ -33,6 +45,7 @@ Request execution: React -> Tauri IPC -> Rust HTTP client (bypass CORS) -> Respo
 
 | # | Phase | Est. | Status |
 |---|-------|------|--------|
+| 00 | [Bootstrap & Toolchain](phase-00-bootstrap-toolchain.md) | 1d | pending |
 | 01 | [Project Setup](phase-01-project-setup.md) | 3d | pending |
 | 02 | [Database Layer](phase-02-database-layer.md) | 3d | pending |
 | 03 | [Request Builder](phase-03-request-builder.md) | 5d | pending |
@@ -43,15 +56,18 @@ Request execution: React -> Tauri IPC -> Rust HTTP client (bypass CORS) -> Respo
 | 08 | [Import/Export](phase-08-import-export.md) | 4d | pending |
 | 09 | [Scripts Sandbox](phase-09-scripts-sandbox.md) | 5d | pending |
 | 10 | [Packaging & Polish](phase-10-packaging.md) | 5d | pending |
+| 11 | [Cloud Sync](phase-11-cloud-sync.md) | 4d | pending |
 
 ## Key Dependencies
 
-- Phases 1-2 must complete before all others
-- Phase 3-4 are tightly coupled (builder + executor)
-- Phase 5-7 depend on DB layer (Phase 2)
-- Phase 8 depends on Phase 5 (collections model)
-- Phase 9 depends on Phase 4 (HTTP client)
-- Phase 10 is final
+- Phase 00 must be read before starting Phase 01 (canonical toolchain reference)
+- Phase 01-02 must complete before all others
+- Phase 03-04 are tightly coupled (builder + executor)
+- Phase 05-07 depend on DB layer (Phase 02)
+- Phase 08 depends on Phase 05 (collections model)
+- Phase 09 depends on Phase 04 (HTTP client)
+- Phase 11 depends on Phase 08 (Postman serializer) and Phase 10
+- Phase 10 is final polish (Phase 11 can run concurrently after Phase 08)
 
 ## Directory Structure
 

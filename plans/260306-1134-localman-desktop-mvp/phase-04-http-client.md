@@ -14,7 +14,7 @@
 ## Key Insights
 - Tauri v2 `tauri-plugin-http` wraps Rust's `reqwest` — full HTTP client, no CORS
 - Invoke via `@tauri-apps/plugin-http` JS API: `fetch()` function similar to web fetch
-- Timing data: Tauri plugin doesn't provide DNS/TCP breakdown — measure total round-trip in JS, detailed timing requires custom Rust command
+- Timing data: **total round-trip only** (start/end timestamps in JS). No DNS/TCP/TLS breakdown in MVP — Tauri plugin doesn't expose this without custom Rust command (deferred).
 - Response body can be large — stream or truncate for display (limit to 10MB)
 - Auto-log every sent request to history (Phase 07 will wire the UI)
 
