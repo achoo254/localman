@@ -1,4 +1,8 @@
 @import "tailwindcss";
+@import "@fontsource/jetbrains-mono/400.css";
+@import "@fontsource/jetbrains-mono/500.css";
+@import "@fontsource/syne/400.css";
+@import "@fontsource/syne/600.css";
 
 @theme {
   /* Design system — dark-first (CLAUDE.md) */
@@ -18,13 +22,15 @@
   --spacing-4: 1rem;
   --radius-default: 6px;
   --radius-lg: 8px;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --font-sans: "Syne", system-ui, sans-serif;
 }
 
 /* Dark theme as default */
 :root {
   --background: var(--color-bg-primary);
   --foreground: #e2e8f0;
-  font-family: system-ui, sans-serif;
+  font-family: var(--font-sans);
   font-size: 16px;
   color: var(--foreground);
   background-color: var(--background);
