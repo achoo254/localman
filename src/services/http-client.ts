@@ -1,10 +1,22 @@
 /**
  * Execute HTTP requests via Tauri plugin (bypasses CORS). Wraps fetch with timing and response parsing.
+ * When not running in Tauri (e.g. browser dev), falls back to global fetch to avoid invoke errors.
  */
 
-import { fetch } from '@tauri-apps/plugin-http';
 import type { ResponseData, Cookie } from '../types/response';
 import type { PreparedRequest } from '../types/response';
+
+function isTauri(): boolean {
+  return typeof window !== 'undefined' && !!(window as unknown as { __TAURI__?: unknown }).__TAURI__;
+}
+
+async function getFetch(): Promise<typeof fetch> {
+  if (isTauri()) {
+    const { fetch: tauriFetch } = await import('@tauri-apps/plugin-http');
+    return tauriFetch;
+  }
+  return globalThis.fetch.bind(globalThis);
+}
 
 const MAX_BODY_DISPLAY = 10 * 1024 * 1024;
 
@@ -60,7 +72,8 @@ export async function executeHttp(
     body: prepared.body,
     signal: options.signal,
   };
-  const response = await fetch(prepared.url, init);
+  const fetchFn = await getFetch();
+  const response = await fetchFn(prepared.url, init);
   const elapsed = Math.round(performance.now() - start);
 
   const contentType = response.headers.get('content-type') ?? '';

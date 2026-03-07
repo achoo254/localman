@@ -12,10 +12,6 @@ import type { Collection, Folder, ApiRequest } from '../types/models';
 
 const EXPANDED_KEY = 'sidebar_expanded';
 
-function loadExpanded(): Set<string> {
-  return new Set();
-}
-
 async function loadExpandedAsync(): Promise<Set<string>> {
   const raw = await settingsService.get<string[]>(EXPANDED_KEY);
   return new Set(raw ?? []);
@@ -48,7 +44,8 @@ interface CollectionsStore {
 
 export const useCollectionsStore = create<CollectionsStore>((set, get) => ({
   searchQuery: '',
-  expandedIds: loadExpanded(),
+  // Fix #4: start with empty Set; hydrateExpanded() is called on app init (e.g. in App.tsx)
+  expandedIds: new Set<string>(),
 
   setSearch(query: string) {
     set({ searchQuery: query });
@@ -68,6 +65,7 @@ export const useCollectionsStore = create<CollectionsStore>((set, get) => ({
     void saveExpanded(ids);
   },
 
+  // Fix #4: hydrateExpanded loads from DB and must be called once on app mount
   async hydrateExpanded() {
     try {
       const ids = await loadExpandedAsync();

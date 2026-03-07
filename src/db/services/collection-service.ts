@@ -39,9 +39,12 @@ export async function update(id: string, data: Partial<Omit<Collection, 'id' | '
 }
 
 export async function remove(id: string): Promise<void> {
-  const folderIds = await db.folders.where('collection_id').equals(id).primaryKeys();
-  await db.folders.bulkDelete(folderIds);
-  const requestIds = await db.requests.where('collection_id').equals(id).primaryKeys();
-  await db.requests.bulkDelete(requestIds);
-  await db.collections.delete(id);
+  // Single atomic transaction: cascade delete folders, requests, then collection
+  await db.transaction('rw', [db.collections, db.folders, db.requests], async () => {
+    const folderIds = await db.folders.where('collection_id').equals(id).primaryKeys();
+    await db.folders.bulkDelete(folderIds);
+    const requestIds = await db.requests.where('collection_id').equals(id).primaryKeys();
+    await db.requests.bulkDelete(requestIds);
+    await db.collections.delete(id);
+  });
 }

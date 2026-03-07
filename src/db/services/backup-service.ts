@@ -42,22 +42,17 @@ export async function importAll(data: BackupData): Promise<void> {
   if (data.schema_version > CURRENT_SCHEMA_VERSION) {
     throw new Error(`Backup schema version ${data.schema_version} is newer than supported ${CURRENT_SCHEMA_VERSION}`);
   }
-  await db.transaction('rw', db.collections, db.folders, db.requests, async () => {
+  // Single atomic transaction: all clears and writes happen together or not at all
+  await db.transaction('rw', [db.collections, db.folders, db.requests, db.environments, db.history, db.settings], async () => {
     await db.collections.clear();
     await db.folders.clear();
     await db.requests.clear();
-  });
-  await db.transaction('rw', db.environments, db.history, db.settings, async () => {
     await db.environments.clear();
     await db.history.clear();
     await db.settings.clear();
-  });
-  await db.transaction('rw', db.collections, db.folders, db.requests, async () => {
     if (data.collections?.length) await db.collections.bulkAdd(data.collections);
     if (data.folders?.length) await db.folders.bulkAdd(data.folders);
     if (data.requests?.length) await db.requests.bulkAdd(data.requests);
-  });
-  await db.transaction('rw', db.environments, db.history, db.settings, async () => {
     if (data.environments?.length) await db.environments.bulkAdd(data.environments);
     if (data.history?.length) await db.history.bulkAdd(data.history);
     if (data.settings?.length) await db.settings.bulkAdd(data.settings);

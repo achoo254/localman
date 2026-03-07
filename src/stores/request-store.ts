@@ -5,7 +5,6 @@
 import { create } from 'zustand';
 import type { ApiRequest } from '../types/models';
 import * as requestService from '../db/services/request-service';
-import { newId, now } from '../db/utils';
 
 export interface TabInfo {
   id: string;
@@ -64,19 +63,28 @@ export const useRequestStore = create<RequestStore>((set, get) => ({
     const idx = openTabs.findIndex(t => t.id === id);
     if (idx === -1) return;
     const next = openTabs.filter(t => t.id !== id);
-    const nextActive = activeTabId === id
-      ? (next[idx] ?? next[idx - 1] ?? null)?.id ?? null
-      : activeTabId;
+
+    // Fix #1: only update activeRequest when closing the currently active tab
+    if (activeTabId !== id) {
+      set({ openTabs: next });
+      return;
+    }
+
+    const nextActiveId = (next[idx] ?? next[idx - 1] ?? null)?.id ?? null;
     set({
       openTabs: next,
-      activeTabId: nextActive,
-      activeRequest: nextActive && get().activeRequest?.id === nextActive ? get().activeRequest : null,
+      activeTabId: nextActiveId,
+      activeRequest: null,
       isDirty: false,
     });
+    // Fix #2 (applied here too): load request from DB for the new active tab
+    if (nextActiveId) void get().loadRequest(nextActiveId);
   },
 
   setActiveTab(id: string | null) {
-    set({ activeTabId: id, activeRequest: id && get().activeRequest?.id === id ? get().activeRequest : null });
+    // Fix #2: clear activeRequest then load from DB
+    set({ activeTabId: id, activeRequest: null });
+    if (id) void get().loadRequest(id);
   },
 
   updateActiveRequest(partial: Partial<ApiRequest>) {
@@ -91,9 +99,8 @@ export const useRequestStore = create<RequestStore>((set, get) => ({
   },
 
   async createNewRequest(collectionId: string, folderId: string | null) {
-    const ts = now();
-    const request: ApiRequest = {
-      id: newId(),
+    // Fix #3: let the service generate the ID — pass only data fields
+    const request = await requestService.create({
       collection_id: collectionId,
       folder_id: folderId,
       name: 'New Request',
@@ -104,10 +111,7 @@ export const useRequestStore = create<RequestStore>((set, get) => ({
       body: defaultBody,
       auth: defaultAuth,
       sort_order: 0,
-      created_at: ts,
-      updated_at: ts,
-    };
-    await requestService.create(request);
+    });
     get().openRequest(request);
     return request;
   },

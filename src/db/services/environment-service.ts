@@ -50,8 +50,13 @@ export async function remove(id: string): Promise<void> {
 export async function setActive(id: string): Promise<void> {
   await db.transaction('rw', db.environments, async () => {
     const all = await db.environments.toArray();
-    for (const e of all) {
-      await db.environments.update(e.id, { is_active: e.id === id, updated_at: now() } as Partial<Environment>);
-    }
+    const ts = now();
+    // Single bulkPut instead of N individual update() calls
+    const updated: Environment[] = all.map(e => ({
+      ...e,
+      is_active: e.id === id,
+      updated_at: ts,
+    }));
+    await db.environments.bulkPut(updated);
   });
 }

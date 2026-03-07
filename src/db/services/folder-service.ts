@@ -44,13 +44,26 @@ export async function update(id: string, data: Partial<Omit<Folder, 'id' | 'crea
 }
 
 export async function remove(id: string): Promise<void> {
-  const children = await db.folders.where('parent_id').equals(id).toArray();
-  for (const child of children) {
-    await remove(child.id);
-  }
-  const requestsInFolder = await db.requests.where('folder_id').equals(id).toArray();
-  for (const req of requestsInFolder) {
-    await db.requests.update(req.id, { folder_id: null, updated_at: now() });
-  }
-  await db.folders.delete(id);
+  // Single atomic transaction: recursively collect all descendant folder IDs,
+  // delete all their requests, then delete all folders including this one.
+  await db.transaction('rw', [db.folders, db.requests], async () => {
+    const allFolders = await db.folders.toArray();
+
+    // Collect IDs of this folder and all descendants via BFS
+    const toDelete: string[] = [];
+    const queue: string[] = [id];
+    while (queue.length > 0) {
+      const current = queue.shift()!;
+      toDelete.push(current);
+      const children = allFolders.filter(f => f.parent_id === current);
+      for (const child of children) queue.push(child.id);
+    }
+
+    // Delete all requests belonging to any folder in the subtree
+    const requestIds = await db.requests.where('folder_id').anyOf(toDelete).primaryKeys();
+    await db.requests.bulkDelete(requestIds);
+
+    // Delete all folders in the subtree
+    await db.folders.bulkDelete(toDelete);
+  });
 }
