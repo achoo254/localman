@@ -7,7 +7,7 @@
 
 ## Overview
 - **Priority:** P2
-- **Status:** pending
+- **Status:** completed
 - **Estimate:** 4 days
 - **Description:** Import from cURL commands and Postman Collection v2.1 format. Export to JSON (native format), cURL, and Postman-compatible format.
 
@@ -146,15 +146,15 @@ function exportFullBackup(): FullBackupData
    - "Copy as cURL" in request context menu
 
 ## Todo List
-- [ ] Build cURL parser with tests
-- [ ] Build Postman Collection v2.1 importer
-- [ ] Build native JSON importer
-- [ ] Build cURL exporter
-- [ ] Build native JSON exporter
-- [ ] Build Postman v2.1 exporter
-- [ ] Build import dialog UI
-- [ ] Build export dialog UI
-- [ ] Integrate import/export into menus
+- [x] Build cURL parser with tests
+- [x] Build Postman Collection v2.1 importer
+- [x] Build native JSON importer
+- [x] Build cURL exporter
+- [x] Build native JSON exporter
+- [x] Build Postman v2.1 exporter
+- [x] Build import dialog UI
+- [x] Build export dialog UI
+- [x] Integrate import/export into menus
 - [ ] Test with real Postman collection files
 
 ## Success Criteria
