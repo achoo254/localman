@@ -20,5 +20,6 @@ export function resolveDynamic(varName: string): string {
 }
 
 export function isDynamicVar(varName: string): boolean {
-  return varName.startsWith('$') && varName.trim() in dynamicResolvers;
+  const trimmed = varName.trim();
+  return trimmed.startsWith('$') && trimmed in dynamicResolvers;
 }

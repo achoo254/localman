@@ -30,9 +30,16 @@ export function interpolate(
       return resolved ? resolved : match;
     }
 
-    const resolved =
-      context.envVars[trimmed] ?? context.globalVars[trimmed] ?? '';
-    if (resolved === '') {
+    // Use hasOwnProperty check so empty-string values ("") are treated as resolved,
+    // not as missing. Falsy coercion would incorrectly leave {{varName}} in output.
+    const hasOwn = (obj: Record<string, string>, key: string) =>
+      Object.prototype.hasOwnProperty.call(obj, key);
+    const resolved = hasOwn(context.envVars, trimmed)
+      ? context.envVars[trimmed]
+      : hasOwn(context.globalVars, trimmed)
+        ? context.globalVars[trimmed]
+        : undefined;
+    if (resolved === undefined) {
       unresolved.push(trimmed);
       return match;
     }

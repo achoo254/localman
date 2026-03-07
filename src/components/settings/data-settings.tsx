@@ -2,7 +2,7 @@
  * Data settings: export backup, import backup, clear all data.
  */
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   exportFullBackupJson,
   saveExportFile,
@@ -15,12 +15,18 @@ export function DataSettings() {
   const [clearing, setClearing] = useState(false);
   const [confirmClear, setConfirmClear] = useState(false);
   const [importMessage, setImportMessage] = useState<string | null>(null);
+  const messageTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+
+  useEffect(() => () => clearTimeout(messageTimeoutRef.current), []);
 
   async function handleExportBackup() {
     const json = await exportFullBackupJson();
     const ok = await saveExportFile('localman-backup.json', json);
     setImportMessage(ok ? 'Backup saved.' : null);
-    if (ok) setTimeout(() => setImportMessage(null), 3000);
+    if (ok) {
+      clearTimeout(messageTimeoutRef.current);
+      messageTimeoutRef.current = setTimeout(() => setImportMessage(null), 3000);
+    }
   }
 
   async function handleImportBackup() {
@@ -40,7 +46,8 @@ export function DataSettings() {
     } catch (e) {
       setImportMessage(e instanceof Error ? e.message : 'Import failed.');
     }
-    setTimeout(() => setImportMessage(null), 5000);
+    clearTimeout(messageTimeoutRef.current);
+    messageTimeoutRef.current = setTimeout(() => setImportMessage(null), 5000);
   }
 
   async function handleClearAll() {

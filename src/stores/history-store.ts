@@ -97,20 +97,20 @@ export const useHistoryStore = create<HistoryStore>((set, get) => ({
   },
 
   async rerunEntry(entry: HistoryEntry) {
-    const snap = entry.request_snapshot ?? {};
+    const snap = entry.request_snapshot;
     try {
+      // RequestSnapshot has no collection_id — always resolve from DB
       const collections = await collectionService.getAll();
-      const col = collections[0];
-      if (!col) {
+      if (!collections.length) {
         set({ selectedEntry: null });
         return;
       }
       const defaultBody = { type: 'none' as const };
       const defaultAuth = { type: 'none' as const };
       const request = await requestService.create({
-        collection_id: col.id,
+        collection_id: collections[0].id,
         folder_id: null,
-        name: snap.name ?? `${entry.method} ${entry.url || 'Request'}`,
+        name: `${entry.method} ${entry.url || 'Request'}`,
         method: snap.method ?? 'GET',
         url: snap.url ?? '',
         params: snap.params ?? [],

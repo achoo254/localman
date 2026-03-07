@@ -12,7 +12,7 @@ export function HtmlPreview({ body }: HtmlPreviewProps) {
     <iframe
       title="Response preview"
       srcDoc={srcDoc}
-      sandbox="allow-scripts"
+      sandbox=""
       className="w-full min-h-[200px] border-0 rounded bg-white text-black"
     />
   );

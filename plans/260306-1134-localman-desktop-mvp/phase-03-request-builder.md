@@ -161,19 +161,19 @@ Shared between Params, Headers, Form Data:
     - Dirty indicator (dot)
 
 ## Todo List
-- [ ] Create request Zustand store
-- [ ] Build key-value editor component
-- [ ] Build variable highlight input
-- [ ] Build URL bar (method + URL + send)
-- [ ] Build params tab with URL sync
-- [ ] Build headers tab with auto-suggest
-- [ ] Build body tab (JSON/Form/Raw/XML/Binary)
-- [ ] Setup CodeMirror 6 for JSON/Raw editing
-- [ ] Build auth tab (Bearer/Basic/API Key)
-- [ ] Build request tabs container
-- [ ] Build request tab bar (multiple open requests)
-- [ ] Implement auto-save hook
-- [ ] Wire to Dexie DB services
+- [x] Create request Zustand store
+- [x] Build key-value editor component
+- [x] Build variable highlight input
+- [x] Build URL bar (method + URL + send)
+- [x] Build params tab with URL sync
+- [x] Build headers tab with auto-suggest
+- [x] Build body tab (JSON/Form/Raw/XML/Binary)
+- [x] Setup CodeMirror 6 for JSON/Raw editing
+- [x] Build auth tab (Bearer/Basic/API Key)
+- [x] Build request tabs container
+- [x] Build request tab bar (multiple open requests)
+- [x] Implement auto-save hook
+- [x] Wire to Dexie DB services
 
 ## Success Criteria
 - All HTTP methods selectable with correct colors

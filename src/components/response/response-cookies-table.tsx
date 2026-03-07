@@ -24,8 +24,8 @@ export function ResponseCookiesTable({ cookies }: ResponseCookiesTableProps) {
           </tr>
         </thead>
         <tbody>
-          {cookies.map((c, i) => (
-            <tr key={i} className="border-b border-[var(--color-bg-tertiary)]/50">
+          {cookies.map((c) => (
+            <tr key={c.name} className="border-b border-[var(--color-bg-tertiary)]/50">
               <td className="px-3 py-1.5 text-[var(--color-accent)]">{c.name}</td>
               <td className="max-w-[200px] truncate px-3 py-1.5 text-[var(--foreground)]" title={c.value}>
                 {c.value}

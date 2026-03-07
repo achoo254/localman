@@ -136,7 +136,7 @@ describe('history service', () => {
       status_code: 200,
       response_time: 50,
       response_size: 100,
-      request_snapshot: {},
+      request_snapshot: { method: 'GET', url: 'https://a.com', headers: [], body: { type: 'none' }, auth: { type: 'none' } },
     });
     const list = await historyService.query({ limit: 10 });
     expect(list).toHaveLength(1);

@@ -7,17 +7,9 @@ import { db } from '../../db/database';
 import { importAll } from '../../db/services/backup-service';
 import { CURRENT_SCHEMA_VERSION } from '../../db/migrations';
 import type { BackupData } from '../../db/services/backup-service';
-import type { Collection, Folder, ApiRequest } from '../../types/models';
+import type { Collection, Folder, ApiRequest, NativeCollectionExport } from '../../types/models';
 
-export type { BackupData };
-
-export interface NativeCollectionExport {
-  schema_version: number;
-  exported_at: string;
-  collection: Collection;
-  folders: Folder[];
-  requests: ApiRequest[];
-}
+export type { BackupData, NativeCollectionExport };
 
 export function isNativeBackup(data: unknown): data is BackupData {
   const o = data as Record<string, unknown>;

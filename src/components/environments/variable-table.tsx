@@ -98,7 +98,11 @@ function VariableRow({
         <input
           type={showValue ? 'text' : 'password'}
           value={showValue ? variable.value : MASK}
-          onChange={e => onUpdate({ value: e.target.value })}
+          onChange={e => {
+            // Reject if field is masked or value equals the mask sentinel
+            if (!showValue || e.target.value === MASK) return;
+            onUpdate({ value: e.target.value });
+          }}
           placeholder="Value"
           disabled={disabled || (variable.secret && !reveal)}
           readOnly={variable.secret && !reveal}
@@ -136,7 +140,7 @@ function VariableRow({
           className="rounded-md p-1.5 text-slate-500 opacity-0 transition-all hover:bg-red-500/10 hover:text-red-500 group-hover:opacity-100 disabled:opacity-0"
           aria-label="Remove"
         >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <line x1="18" y1="6" x2="6" y2="18" />
             <line x1="6" y1="6" x2="18" y2="18" />
           </svg>

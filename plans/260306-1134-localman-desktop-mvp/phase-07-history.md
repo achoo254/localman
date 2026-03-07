@@ -102,14 +102,14 @@ interface HistoryStore {
    - Auto-prune: delete entries older than setting (default: keep last 1000)
 
 ## Todo List
-- [ ] Create history Zustand store
-- [ ] Integrate auto-logging into response store
-- [ ] Build history sidebar tab (grouped by date)
-- [ ] Build history entry item component
-- [ ] Build history filter controls
-- [ ] Implement re-run from history
-- [ ] Implement clear history
-- [ ] Auto-prune old entries
+- [x] Create history Zustand store
+- [x] Integrate auto-logging into response store
+- [x] Build history sidebar tab (grouped by date)
+- [x] Build history entry item component
+- [x] Build history filter controls
+- [x] Implement re-run from history
+- [x] Implement clear history
+- [x] Auto-prune old entries
 
 ## Success Criteria
 - Every sent request auto-logged

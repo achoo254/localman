@@ -32,21 +32,21 @@ export function EditorSettings() {
           <option value={4}>4</option>
         </select>
       </label>
-      <label className="flex items-center gap-2">
+      <label className="flex items-center gap-2 cursor-pointer">
         <input
           type="checkbox"
           checked={editor.wordWrap}
           onChange={e => setEditor({ wordWrap: e.target.checked })}
-          className="rounded border-slate-600 text-[var(--color-accent)]"
+          className="w-4 h-4 rounded border-slate-600 text-[var(--color-accent)] cursor-pointer"
         />
         <span className="text-sm text-slate-300">Word wrap</span>
       </label>
-      <label className="flex items-center gap-2">
+      <label className="flex items-center gap-2 cursor-pointer">
         <input
           type="checkbox"
           checked={editor.lineNumbers}
           onChange={e => setEditor({ lineNumbers: e.target.checked })}
-          className="rounded border-slate-600 text-[var(--color-accent)]"
+          className="w-4 h-4 rounded border-slate-600 text-[var(--color-accent)] cursor-pointer"
         />
         <span className="text-sm text-slate-300">Line numbers</span>
       </label>

@@ -39,9 +39,12 @@ function urlMatches(url: string, pattern: string): boolean {
 
 export async function add(entry: Omit<HistoryEntry, 'id' | 'timestamp'>): Promise<number> {
   const withTs: Omit<HistoryEntry, 'id'> = { ...entry, timestamp: now() };
-  const id = await db.history.add(withTs as HistoryEntry);
-  await pruneToLimit(DEFAULT_HISTORY_LIMIT);
-  return id;
+  // Run add + prune atomically so concurrent calls can't exceed the limit
+  return db.transaction('rw', db.history, async () => {
+    const id = await db.history.add(withTs as HistoryEntry);
+    await pruneToLimit(DEFAULT_HISTORY_LIMIT);
+    return id;
+  });
 }
 
 async function pruneToLimit(limit: number): Promise<void> {

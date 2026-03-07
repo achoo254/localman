@@ -14,10 +14,8 @@ export function getAuthHeaders(auth: AuthConfig): Record<string, string> {
       }
       return {};
     case 'basic':
-      if (auth.username != null && auth.password != null) {
-        const encoded = btoa(
-          `${auth.username}:${auth.password}`
-        );
+      if (auth.username?.trim() && auth.password?.trim()) {
+        const encoded = btoa(`${auth.username}:${auth.password}`);
         return { Authorization: `Basic ${encoded}` };
       }
       return {};

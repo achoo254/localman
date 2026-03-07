@@ -26,5 +26,8 @@ export interface AuthConfig {
   password?: string;
   apiKeyHeader?: string;
   apiKeyValue?: string;
+  // TODO(oauth2): Replace with a typed interface when OAuth2 is implemented.
+  // Expected fields: grant_type, client_id, client_secret, token_url, scope,
+  //   redirect_uri, access_token, refresh_token (all strings).
   oauth2Config?: Record<string, string>;
 }

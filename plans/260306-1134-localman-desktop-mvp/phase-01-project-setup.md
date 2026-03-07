@@ -114,14 +114,14 @@ colors: {
    - Hot reload works on frontend changes
 
 ## Todo List
-- [ ] Scaffold Tauri v2 + React + TS
-- [ ] Install all frontend dependencies
-- [ ] Install Tauri plugins (http, shell)
-- [ ] Configure Tailwind with design tokens
-- [ ] Configure Tauri window + plugins
-- [ ] Create base layout components
-- [ ] Setup fonts (JetBrains Mono, Syne)
-- [ ] Verify dev mode works
+- [x] Scaffold Tauri v2 + React + TS
+- [x] Install all frontend dependencies
+- [x] Install Tauri plugins (http, shell)
+- [x] Configure Tailwind with design tokens
+- [x] Configure Tauri window + plugins
+- [x] Create base layout components
+- [x] Setup fonts (JetBrains Mono, Syne)
+- [x] Verify dev mode works
 
 ## Success Criteria
 - `pnpm tauri dev` launches app in < 5s

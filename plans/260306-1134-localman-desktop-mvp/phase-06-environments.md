@@ -156,16 +156,16 @@ interface EnvironmentStore {
    - Link to environment manager
 
 ## Todo List
-- [ ] Create interpolation engine service
-- [ ] Create dynamic variables service
-- [ ] Create environment Zustand store
-- [ ] Build environment bar with selector
-- [ ] Build environment manager dialog
-- [ ] Build variable table editor
-- [ ] Integrate interpolation into request preparer
-- [ ] Update URL bar with variable hover preview
-- [ ] Build sidebar environments tab
-- [ ] Handle secret variables (masked display)
+- [x] Create interpolation engine service
+- [x] Create dynamic variables service
+- [x] Create environment Zustand store
+- [x] Build environment bar with selector
+- [x] Build environment manager dialog
+- [x] Build variable table editor
+- [x] Integrate interpolation into request preparer
+- [x] Update URL bar with variable hover preview
+- [x] Build sidebar environments tab
+- [x] Handle secret variables (masked display)
 
 ## Success Criteria
 - Variables in `{{url}}/path` resolve correctly when request sent

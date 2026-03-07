@@ -24,7 +24,7 @@ export function buildUrlWithParams(url: string, params: KeyValuePair[]): string 
     u.search = '';
     for (const p of params) {
       if (p.enabled && p.key.trim()) {
-        u.searchParams.set(p.key.trim(), p.value);
+        u.searchParams.append(p.key.trim(), p.value);
       }
     }
     const query = u.searchParams.toString();
