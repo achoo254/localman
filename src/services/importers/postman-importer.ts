@@ -109,18 +109,21 @@ export interface ImportPostmanResult {
  * All IDs are regenerated; sort_order preserved from item order.
  */
 export function importPostmanCollection(json: PostmanCollection): ImportPostmanResult {
-  const collectionId = newId();
+  const info = json.info ?? {};
+  const postmanId = info._postman_id;
+  const syncUpdatedAt = info['x-localman-updated-at'];
   const ts = now();
+  const collectionId = typeof postmanId === 'string' && postmanId.length > 0 ? postmanId : newId();
   const collection: Collection = {
     id: collectionId,
-    name: json.info?.name ?? 'Imported Collection',
+    name: info.name ?? 'Imported Collection',
     description:
-      typeof json.info?.description === 'string'
-        ? json.info.description
-        : json.info?.description?.content,
+      typeof info.description === 'string'
+        ? info.description
+        : (info.description as { content?: string })?.content,
     sort_order: 0,
-    created_at: ts,
-    updated_at: ts,
+    created_at: syncUpdatedAt ?? ts,
+    updated_at: syncUpdatedAt ?? ts,
   };
 
   const folders: Folder[] = [];

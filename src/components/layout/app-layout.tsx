@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Titlebar } from './titlebar';
+import { useSyncStore } from '../../stores/sync-store';
 import { Sidebar } from './sidebar';
 import { StatusBar } from './status-bar';
 import { EnvironmentBar } from '../environments/environment-bar';
@@ -29,6 +30,17 @@ export function AppLayout({ children }: AppLayoutProps) {
     return () => window.removeEventListener('keydown', onKeyDown);
   }, []);
 
+  const loadSyncConfig = useSyncStore(s => s.loadConfig);
+  const syncAll = useSyncStore(s => s.syncAll);
+  useEffect(() => {
+    void loadSyncConfig().then(() => {
+      const config = useSyncStore.getState().config;
+      if (config?.enabled && config?.endpoints?.list) {
+        void syncAll().catch(() => {});
+      }
+    });
+  }, [loadSyncConfig, syncAll]);
+
   return (
     <div
       className="flex h-screen w-screen flex-col overflow-hidden"
@@ -37,6 +49,7 @@ export function AppLayout({ children }: AppLayoutProps) {
       <Titlebar
         onImportClick={() => setImportOpen(true)}
         onSettingsClick={() => setSettingsOpen(true)}
+        onOpenSyncSettings={() => setSettingsOpen(true)}
       />
       {settingsOpen ? (
         <div className="flex-1 min-h-0 flex flex-col">

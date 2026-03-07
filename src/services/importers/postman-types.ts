@@ -8,6 +8,8 @@ export interface PostmanInfo {
   schema: string;
   _postman_id?: string;
   description?: string | { content?: string };
+  /** Localman: collection updated_at for sync LWW (ISO 8601). */
+  'x-localman-updated-at'?: string;
 }
 
 export interface PostmanAuthAttribute {

@@ -142,6 +142,7 @@ export function exportToPostman(
     schema: SCHEMA_URL,
     _postman_id: collection.id,
     description: collection.description,
+    'x-localman-updated-at': collection.updated_at,
   };
   return {
     info,

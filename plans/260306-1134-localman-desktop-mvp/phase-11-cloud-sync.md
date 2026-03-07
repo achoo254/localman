@@ -7,7 +7,7 @@
 
 ## Overview
 - **Priority:** P2
-- **Status:** pending
+- **Status:** completed
 - **Estimate:** 4 days
 - **Description:** Bidirectional sync of collections (as Postman Collection v2.1 JSON) to a user-configured HTTP endpoint. No auth UI — user provides raw headers/params. Last-Write-Wins by `updated_at`. Trigger: manual button + auto on app start.
 
@@ -212,17 +212,17 @@ Extend the existing Postman exporter from Phase 08:
 ---
 
 ## Todo List
-- [ ] Extend postman-exporter with `x-localman-updated-at` + `_postman_id`
-- [ ] Extend postman-importer to read back those fields
-- [ ] Build sync HTTP client (configurable endpoints + headers + params)
-- [ ] Build sync service (reconcile algorithm)
-- [ ] Build sync Zustand store
-- [ ] Build sync settings UI (4 URLs + headers + params + test connection)
-- [ ] Build sync status indicator in titlebar
-- [ ] Integrate auto-sync in app-initializer
-- [ ] Handle delete propagation to server
-- [ ] Handle partial failures gracefully (toast per error)
-- [ ] Unit test: reconcile algorithm, serialization roundtrip
+- [x] Extend postman-exporter with `x-localman-updated-at` + `_postman_id`
+- [x] Extend postman-importer to read back those fields
+- [x] Build sync HTTP client (configurable endpoints + headers + params)
+- [x] Build sync service (reconcile algorithm)
+- [x] Build sync Zustand store
+- [x] Build sync settings UI (4 URLs + headers + params + test connection)
+- [x] Build sync status indicator in titlebar
+- [x] Integrate auto-sync on app start (app-layout)
+- [x] Handle delete propagation to server
+- [x] Handle partial failures gracefully (errors in store, shown in UI)
+- [x] Unit test: reconcile algorithm, serialization roundtrip
 
 ---
 

@@ -1,12 +1,14 @@
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { FileUp, Settings } from 'lucide-react';
+import { SyncStatusIndicator } from './sync-status-indicator';
 
 interface TitlebarProps {
   onImportClick?: () => void;
   onSettingsClick?: () => void;
+  onOpenSyncSettings?: () => void;
 }
 
-export function Titlebar({ onImportClick, onSettingsClick }: TitlebarProps) {
+export function Titlebar({ onImportClick, onSettingsClick, onOpenSyncSettings }: TitlebarProps) {
   async function minimize() {
     await getCurrentWindow().minimize();
   }
@@ -52,6 +54,7 @@ export function Titlebar({ onImportClick, onSettingsClick }: TitlebarProps) {
             Settings
           </button>
         )}
+        <SyncStatusIndicator onOpenSyncSettings={onOpenSyncSettings} />
       </div>
       <div className="flex items-center gap-0.5" data-tauri-drag-region={false}>
         <button

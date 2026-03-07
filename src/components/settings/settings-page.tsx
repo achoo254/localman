@@ -3,21 +3,23 @@
  */
 
 import { useState, useEffect } from 'react';
-import { Settings, Sliders, Code, Globe, Database, Info, ArrowLeft } from 'lucide-react';
+import { Settings, Sliders, Code, Globe, Database, Cloud, Info, ArrowLeft } from 'lucide-react';
 import { GeneralSettings } from './general-settings';
 import { EditorSettings } from './editor-settings';
 import { ProxySettings } from './proxy-settings';
 import { DataSettings } from './data-settings';
+import { SyncSettings } from './sync-settings';
 import { AboutSection } from './about-section';
 import { useSettingsStore } from '../../stores/settings-store';
 
-type SectionId = 'general' | 'editor' | 'proxy' | 'data' | 'about';
+type SectionId = 'general' | 'editor' | 'proxy' | 'data' | 'sync' | 'about';
 
 const SECTIONS: { id: SectionId; label: string; icon: React.ReactNode }[] = [
   { id: 'general', label: 'General', icon: <Sliders className="h-4 w-4" /> },
   { id: 'editor', label: 'Editor', icon: <Code className="h-4 w-4" /> },
   { id: 'proxy', label: 'Proxy', icon: <Globe className="h-4 w-4" /> },
   { id: 'data', label: 'Data', icon: <Database className="h-4 w-4" /> },
+  { id: 'sync', label: 'Cloud Sync', icon: <Cloud className="h-4 w-4" /> },
   { id: 'about', label: 'About', icon: <Info className="h-4 w-4" /> },
 ];
 
@@ -71,6 +73,7 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
           {section === 'editor' && <EditorSettings />}
           {section === 'proxy' && <ProxySettings />}
           {section === 'data' && <DataSettings />}
+          {section === 'sync' && <SyncSettings />}
           {section === 'about' && <AboutSection />}
         </main>
       </div>
