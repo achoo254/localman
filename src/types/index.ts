@@ -14,3 +14,4 @@ export type {
   HistoryEntry,
   Setting,
 } from './models';
+export type { ResponseData, Cookie, PreparedRequest } from './response';
