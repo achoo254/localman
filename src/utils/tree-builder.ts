@@ -37,7 +37,10 @@ export function buildTree(
   }
 
   function collectionHasMatch(collectionId: string): boolean {
-    if (matchCollection(collections.find(c => c.id === collectionId)!)) return true;
+    // Guard: if collection not found, treat as no match
+    const collection = collections.find(c => c.id === collectionId);
+    if (!collection) return false;
+    if (matchCollection(collection)) return true;
     const rootFolders = folders.filter(f => f.collection_id === collectionId && f.parent_id === null);
     const rootRequests = requests.filter(r => r.collection_id === collectionId && r.folder_id === null);
     if (rootRequests.some(matchRequest)) return true;

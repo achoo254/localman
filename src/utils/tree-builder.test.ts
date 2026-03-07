@@ -12,18 +12,6 @@ function col(id: string, name: string, sortOrder: number): Collection {
   };
 }
 
-function folder(id: string, collectionId: string, parentId: string | null, name: string, sortOrder: number): Folder {
-  return {
-    id,
-    collection_id: collectionId,
-    parent_id: parentId,
-    name,
-    sort_order: sortOrder,
-    created_at: '',
-    updated_at: '',
-  };
-}
-
 function req(id: string, collectionId: string, folderId: string | null, name: string, sortOrder: number): ApiRequest {
   return {
     id,
