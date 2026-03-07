@@ -9,6 +9,7 @@ import { prepareRequest } from '../services/request-preparer';
 import { executeHttp } from '../services/http-client';
 import * as historyService from '../db/services/history-service';
 import { useEnvironmentStore } from './environment-store';
+import { useHistoryStore } from './history-store';
 
 interface ResponseStore {
   response: ResponseData | null;
@@ -47,25 +48,26 @@ export const useResponseStore = create<ResponseStore>((set, get) => ({
         error: null,
         abortController: null,
       });
-      try {
-        await historyService.add({
-          request_id: request.id,
+      // Fire-and-forget: log to history without blocking UI
+      void useHistoryStore.getState().logEntry({
+        request_id: request.id,
+        method: request.method,
+        url: prepared.url,
+        status_code: data.status,
+        response_time: data.responseTime,
+        response_size: data.bodySize,
+        request_snapshot: {
           method: request.method,
-          url: prepared.url,
-          status_code: data.status,
-          response_time: data.responseTime,
-          response_size: data.bodySize,
-          request_snapshot: {
-            method: request.method,
-            url: request.url,
-            name: request.name,
-          },
-          response_body: data.body.length > 50000 ? undefined : data.body,
-          response_headers: data.headers,
-        });
-      } catch {
-        // History log failed; keep showing response (don't overwrite with error)
-      }
+          url: request.url,
+          name: request.name,
+          headers: request.headers,
+          params: request.params,
+          body: request.body,
+          auth: request.auth,
+        },
+        response_body: historyService.truncateBody(data.body ?? ''),
+        response_headers: data.headers,
+      });
     } catch (err) {
       if (err instanceof Error && err.name === 'AbortError') {
         set({ isLoading: false, abortController: null });

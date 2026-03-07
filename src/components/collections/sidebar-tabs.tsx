@@ -14,6 +14,7 @@ import { CreateCollectionDialog } from './create-collection-dialog';
 import { CreateFolderDialog } from './create-folder-dialog';
 import { MoveRequestDialog } from './move-request-dialog';
 import { EnvironmentSidebarTab } from '../environments/environment-sidebar-tab';
+import { HistorySidebarTab } from '../history/history-sidebar-tab';
 
 type TabId = 'collections' | 'history' | 'environments';
 
@@ -201,9 +202,7 @@ export function SidebarTabs({ onOpenEnvironmentManager }: SidebarTabsProps) {
               </div>
             </>
           )}
-          {activeTab === 'history' && (
-            <div className="p-4 text-sm text-gray-500">History (Phase 07)</div>
-          )}
+          {activeTab === 'history' && <HistorySidebarTab />}
           {activeTab === 'environments' &&
             (onOpenEnvironmentManager ? (
               <EnvironmentSidebarTab onOpenManager={onOpenEnvironmentManager} />
