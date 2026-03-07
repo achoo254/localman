@@ -7,7 +7,7 @@
 
 ## Overview
 - **Priority:** P1 (blocking phases 3-9)
-- **Status:** pending
+- **Status:** completed
 - **Estimate:** 3 days
 - **Description:** Implement IndexedDB data layer with Dexie.js — schema, models, CRUD services, auto-save hooks.
 
