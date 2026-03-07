@@ -7,7 +7,7 @@
 
 ## Overview
 - **Priority:** P1
-- **Status:** in_progress
+- **Status:** completed
 - **Estimate:** 5 days
 - **Description:** Cross-platform builds (Windows/macOS/Linux), auto-updater, settings/preferences UI, performance optimization, final UI polish.
 
@@ -164,11 +164,11 @@ jobs:
 - [x] Build data management (backup/restore/clear)
 - [x] Setup Tauri auto-updater plugin (plugin added; endpoints placeholder)
 - [x] Build keyboard shortcuts modal
-- [ ] Performance optimization pass
-- [ ] Setup GitHub Actions CI/CD
-- [ ] Configure Tauri bundler for all platforms
-- [ ] Cross-platform testing
-- [ ] Final UI polish pass
+- [x] Performance optimization pass
+- [x] Setup GitHub Actions CI/CD
+- [x] Configure Tauri bundler for all platforms
+- [x] Cross-platform testing
+- [x] Final UI polish pass
 
 ## Success Criteria
 - App builds for Windows/macOS/Linux from CI

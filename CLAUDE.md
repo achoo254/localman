@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **Localman** is an offline-first desktop API client (Postman alternative) built with Tauri + React + TypeScript.
 
 - Tagline: The API client that lives on your machine, syncs to the cloud, and never needs the internet to work.
-- Current phase: Phase 1 MVP (Desktop app, offline-first) — **project scaffolding not yet started**
+- Current status: Phases 00–09 + 11 **completed**. Phase 10 (Packaging & Polish) **in progress** — remaining: perf optimization, Tauri bundler config, cross-platform testing, CI/CD, final UI polish.
 
 ## Agent Execution Protocol
 
@@ -17,14 +17,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 This protocol defines the full autonomous workflow: code → self-review → test → commit → push → GitLab milestone/issue management. Every phase follows this protocol without exception.
 
 **GitLab instance:** `gitlabs.inet.vn`
-**CLI tool:** `glab` (not `gh`) — configured with `--hostname gitlabs.inet.vn`
+**CLI tool:** `glab` (not `gh`) — always pass `--hostname gitlabs.inet.vn`
+**Auth:** Token in `gitlab-authen.txt` (git-ignored). See `docs/gitlab-workflow-guide.md` for curl API patterns (works without glab).
 **Concurrency:** max 1 phase at a time — strictly sequential, no parallel phase execution.
 
 ---
 
 ## Development Commands
-
-Once scaffolded (Tauri + Vite), the standard commands will be:
 
 ```bash
 pnpm install             # Install dependencies
@@ -35,6 +34,7 @@ pnpm tauri build         # Build production desktop app (all platforms)
 pnpm lint                # ESLint
 pnpm type-check          # tsc --noEmit
 pnpm test                # Vitest unit/integration tests
+pnpm test -- -t "test name pattern"  # Run single test by name
 pnpm test:e2e            # Playwright E2E tests
 ```
 
@@ -54,7 +54,7 @@ cargo clippy             # Rust linter
 - **UI:** Tailwind CSS + Radix UI
 - **Code editor:** CodeMirror 6
 - **HTTP client:** Tauri HTTP plugin (bypasses CORS — do NOT use browser fetch for API calls)
-- **Script sandbox:** QuickJS (pre/post-request scripts)
+- **Script sandbox:** QuickJS in Web Worker (serial queue — one script at a time; no concurrent execution)
 
 ### Backend (Phase 2 — Future)
 - Node.js + Fastify or Go (Gin), PostgreSQL + Redis, JWT auth
@@ -75,7 +75,7 @@ All writes go to IndexedDB first — never directly to a remote API:
 | `environments` | Env variable sets (Dev/Staging/Prod) |
 | `history` | Auto-logged request executions |
 | `settings` | Preferences, encrypted refresh token |
-| `pending_sync` | Offline queue — flushed when online |
+| `pending_sync` | Offline queue — flushed when online (**Phase 2, not yet in DB schema**) |
 
 ### Auth (Phase 2)
 - Access token: memory only (never localStorage)
@@ -131,5 +131,7 @@ Status bar:  DB status | Request count | Sync time
 ## Reference Docs
 
 - [requirement.md](./requirement.md) — full product spec, roadmap, competitive analysis
+- [docs/cross-platform-testing.md](./docs/cross-platform-testing.md) — cross-platform testing checklist (Windows/macOS/Linux and performance)
+- **CI:** GitLab at gitlabs.inet.vn — lint + test on push; Windows build on tag `v*`. Details: [phase-01-gitlab-cicd-windows.md](./plans/260307-1838-cicd-and-cloud-sync/phase-01-gitlab-cicd-windows.md)
 - Tauri docs: https://tauri.app/docs
 - Dexie.js: https://dexie.org

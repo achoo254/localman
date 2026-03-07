@@ -8,6 +8,8 @@ import { EnvironmentManager } from '../environments/environment-manager';
 import { ImportDialog } from '../import-export/import-dialog';
 import { SettingsPage } from '../settings/settings-page';
 import { KeyboardShortcutsModal } from '../common/keyboard-shortcuts-modal';
+import { useRequestStore } from '../../stores/request-store';
+import * as collectionService from '../../db/services/collection-service';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -18,12 +20,25 @@ export function AppLayout({ children }: AppLayoutProps) {
   const [importOpen, setImportOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
       if ((e.ctrlKey || e.metaKey) && e.key === '/') {
         e.preventDefault();
         setShortcutsOpen(o => !o);
+      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 't') {
+        e.preventDefault();
+        collectionService.getAll().then(collections => {
+          const col = collections[0];
+          if (!col) {
+            collectionService.create({ name: 'Default', description: '', sort_order: 0 }).then(newCol => {
+              useRequestStore.getState().createNewRequest(newCol.id, null);
+            });
+          } else {
+            useRequestStore.getState().createNewRequest(col.id, null);
+          }
+        });
       }
     }
     window.addEventListener('keydown', onKeyDown);
@@ -59,7 +74,11 @@ export function AppLayout({ children }: AppLayoutProps) {
         <>
           <EnvironmentBar onOpenManager={() => setManagerOpen(true)} />
           <div className="flex min-h-0 flex-1">
-            <Sidebar onOpenEnvironmentManager={() => setManagerOpen(true)} />
+            <Sidebar
+              collapsed={sidebarCollapsed}
+              onToggleCollapsed={() => setSidebarCollapsed((c) => !c)}
+              onOpenEnvironmentManager={() => setManagerOpen(true)}
+            />
             <main className="min-w-0 flex-1 overflow-auto" style={{ background: 'var(--color-bg-primary)' }}>
               {children}
             </main>

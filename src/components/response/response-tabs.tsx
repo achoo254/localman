@@ -2,6 +2,7 @@
  * Response tabs: Body, Headers, Cookies, Tests (when post-script ran).
  */
 
+import { useState, useEffect } from 'react';
 import * as Tabs from '@radix-ui/react-tabs';
 import { ResponseBodyViewer } from './response-body-viewer';
 import { ResponseHeadersTable } from './response-headers-table';
@@ -17,13 +18,21 @@ interface ResponseTabsProps {
 }
 
 const tabClass =
-  'rounded-t-lg px-4 py-2 text-[13px] font-medium text-slate-400 transition-colors hover:bg-slate-800/50 hover:text-slate-200 data-[state=active]:bg-[var(--color-bg-primary)] data-[state=active]:text-[var(--color-accent)] data-[state=active]:border-b-2 data-[state=active]:border-[var(--color-accent)] select-none';
+  'rounded-t-lg px-4 py-2 text-sm font-medium text-slate-400 transition-colors hover:bg-slate-800/50 hover:text-slate-200 data-[state=active]:bg-[var(--color-bg-primary)] data-[state=active]:text-[var(--color-accent)] data-[state=active]:border-b-2 data-[state=active]:border-[var(--color-accent)] select-none cursor-pointer';
 
 export function ResponseTabs({ data, scriptResults }: ResponseTabsProps) {
   const hasTests = scriptResults != null;
+  const [activeTab, setActiveTab] = useState<string>(hasTests ? 'tests' : 'body');
+
+  // Auto-switch to tests tab when new script results arrive; switch to body otherwise
+  useEffect(() => {
+    // Sync tab to script results (intentional derived state in effect)
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional sync to props
+    setActiveTab(hasTests ? 'tests' : 'body');
+  }, [hasTests, scriptResults]);
 
   return (
-    <Tabs.Root defaultValue={hasTests ? 'tests' : 'body'} className="flex flex-col min-h-0 flex-1">
+    <Tabs.Root value={activeTab} onValueChange={setActiveTab} className="flex flex-col min-h-0 flex-1">
       <Tabs.List className="flex border-b border-[var(--color-bg-tertiary)] px-3 pt-2 gap-1 shrink-0 bg-[#0B1120]">
         {hasTests && (
           <Tabs.Trigger value="tests" className={tabClass}>

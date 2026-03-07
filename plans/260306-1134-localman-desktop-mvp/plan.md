@@ -1,7 +1,7 @@
 ---
 title: "Localman Desktop MVP"
 description: "Phase 1 MVP implementation plan for offline-first desktop API client"
-status: pending
+status: completed
 priority: P1
 effort: 4 months
 branch: main
@@ -55,8 +55,8 @@ Request execution: React -> Tauri IPC -> Rust HTTP client (bypass CORS) -> Respo
 | 07 | [History](phase-07-history.md) | 2d | completed |
 | 08 | [Import/Export](phase-08-import-export.md) | 4d | completed |
 | 09 | [Scripts Sandbox](phase-09-scripts-sandbox.md) | 5d | completed |
-| 10 | [Packaging & Polish](phase-10-packaging.md) | 5d | in_progress |
-| 11 | [Cloud Sync](phase-11-cloud-sync.md) | 4d | pending |
+| 10 | [Packaging & Polish](phase-10-packaging.md) | 5d | completed |
+| 11 | [Cloud Sync](phase-11-cloud-sync.md) | 4d | completed |
 
 ## Key Dependencies
 

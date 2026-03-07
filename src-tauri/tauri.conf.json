@@ -26,6 +26,7 @@
   },
   "plugins": {
     "updater": {
+      "pubkey": "",
       "endpoints": []
     }
   },
@@ -38,6 +39,9 @@
       "icons/128x128@2x.png",
       "icons/icon.icns",
       "icons/icon.ico"
-    ]
+    ],
+    "shortDescription": "Offline-first API client",
+    "longDescription": "Localman — The API client that lives on your machine. Postman alternative with collections, environments, and local-first data.",
+    "category": "DeveloperTool"
   }
 }

@@ -1,14 +1,23 @@
 /**
  * Request tabs: Params, Headers, Body, Auth, Pre-Script, Post-Script.
+ * BodyTab and ScriptEditor are lazy-loaded (CodeMirror) to reduce initial bundle.
  */
 
+import { lazy, Suspense } from 'react';
 import * as Tabs from '@radix-ui/react-tabs';
 import { ParamsTab } from './params-tab';
 import { HeadersTab } from './headers-tab';
-import { BodyTab } from './body-tab';
 import { AuthTab } from './auth-tab';
-import { ScriptEditor } from './script-editor';
 import type { ApiRequest } from '../../types/models';
+
+const BodyTab = lazy(() => import('./body-tab').then((m) => ({ default: m.BodyTab })));
+const ScriptEditor = lazy(() => import('./script-editor').then((m) => ({ default: m.ScriptEditor })));
+
+const EditorFallback = () => (
+  <div className="min-h-[140px] w-full rounded border border-[var(--color-bg-tertiary)] flex items-center justify-center text-slate-500 text-sm">
+    Loading editor…
+  </div>
+);
 
 interface RequestTabsProps {
   request: ApiRequest;
@@ -71,26 +80,32 @@ export function RequestTabs({ request, onUpdate }: RequestTabsProps) {
         />
       </Tabs.Content>
       <Tabs.Content value="body" className="mt-0 flex-1 overflow-auto">
-        <BodyTab
-          body={request.body}
-          onChange={body => onUpdate({ body })}
-          disabled={noBody}
-        />
+        <Suspense fallback={<EditorFallback />}>
+          <BodyTab
+            body={request.body}
+            onChange={body => onUpdate({ body })}
+            disabled={noBody}
+          />
+        </Suspense>
       </Tabs.Content>
       <Tabs.Content value="auth" className="mt-0 flex-1 overflow-auto">
         <AuthTab auth={request.auth} onChange={auth => onUpdate({ auth })} />
       </Tabs.Content>
       <Tabs.Content value="pre" className="mt-0 flex-1 overflow-auto p-4">
-        <ScriptEditor
-          value={request.pre_script ?? ''}
-          onChange={v => onUpdate({ pre_script: v })}
-        />
+        <Suspense fallback={<EditorFallback />}>
+          <ScriptEditor
+            value={request.pre_script ?? ''}
+            onChange={v => onUpdate({ pre_script: v })}
+          />
+        </Suspense>
       </Tabs.Content>
       <Tabs.Content value="post" className="mt-0 flex-1 overflow-auto p-4">
-        <ScriptEditor
-          value={request.post_script ?? ''}
-          onChange={v => onUpdate({ post_script: v })}
-        />
+        <Suspense fallback={<EditorFallback />}>
+          <ScriptEditor
+            value={request.post_script ?? ''}
+            onChange={v => onUpdate({ post_script: v })}
+          />
+        </Suspense>
       </Tabs.Content>
     </Tabs.Root>
   );

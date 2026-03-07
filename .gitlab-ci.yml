@@ -1,23 +1,14 @@
-## GitLab CI/CD — Localman Desktop
-##
-## Runners available: Linux amd64 (no Windows runner).
-## - verify stage: lint + type-check + test (runs on Linux — pure JS/TS, no native deps)
-## - build stage: frontend-only Vite build to verify compilation
-##
-## NOTE: Windows .msi/.exe Tauri builds require a Windows runner.
-## Until a Windows runner is registered, produce installers locally:
-##   pnpm tauri build
-## Then attach artifacts manually to GitLab Releases.
+# GitLab CI for Localman — verify on every push, build Windows on tags
+# See docs/gitlab-workflow-guide.md and plans/260307-1838-cicd-and-cloud-sync/phase-01-gitlab-cicd-windows.md
 
 stages:
   - verify
   - build
 
 variables:
-  # Use project-local pnpm store for caching
-  PNPM_STORE_PATH: "$CI_PROJECT_DIR/.pnpm-store"
+  CARGO_HOME: "$CI_PROJECT_DIR/.cargo"
+  PNPM_HOME: "$CI_PROJECT_DIR/.pnpm-store"
 
-# Reusable node cache anchored to pnpm-lock.yaml
 .node-cache: &node-cache
   cache:
     key:
@@ -26,45 +17,48 @@ variables:
     paths:
       - node_modules/
       - .pnpm-store/
-    policy: pull-push
 
-# ── Verify: lint + type-check + unit tests ───────────────────────────────────
+.cargo-cache: &cargo-cache
+  cache:
+    key:
+      files:
+        - src-tauri/Cargo.lock
+    paths:
+      - .cargo/registry/
+      - src-tauri/target/
+
 lint-and-test:
   stage: verify
-  image: node:22-slim
-  <<: *node-cache
-  before_script:
-    - corepack enable
-    - corepack prepare pnpm@latest --activate
-    - pnpm config set store-dir "$PNPM_STORE_PATH"
-    - pnpm install --frozen-lockfile
+  tags:
+    - windows
+  cache:
+    - <<: *node-cache
   script:
+    - corepack enable
+    - pnpm install --frozen-lockfile
     - pnpm lint
     - pnpm type-check
-    - pnpm test
+    - pnpm test --run
   rules:
-    # Run on every push and merge request
-    - if: '$CI_PIPELINE_SOURCE == "push"'
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: $CI_PIPELINE_SOURCE == "push"
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
 
-# ── Build: verify frontend compiles cleanly ──────────────────────────────────
-# Runs only on version tags (v*). Tauri build skipped — no Windows runner.
-# This at minimum catches frontend compilation errors before a release.
-build-frontend:
+build-windows:
   stage: build
-  image: node:22-slim
-  <<: *node-cache
-  before_script:
-    - corepack enable
-    - corepack prepare pnpm@latest --activate
-    - pnpm config set store-dir "$PNPM_STORE_PATH"
-    - pnpm install --frozen-lockfile
+  tags:
+    - windows
+  cache:
+    - <<: *node-cache
+    - <<: *cargo-cache
   script:
-    - pnpm build
+    - corepack enable
+    - pnpm install --frozen-lockfile
+    - pnpm tauri build
   artifacts:
-    name: "localman-frontend-$CI_COMMIT_TAG"
+    name: "localman-windows-$CI_COMMIT_TAG"
     paths:
-      - dist/
-    expire_in: 30 days
+      - src-tauri/target/release/bundle/msi/*.msi
+      - src-tauri/target/release/bundle/nsis/*.exe
+    expire_in: 90 days
   rules:
-    - if: '$CI_COMMIT_TAG =~ /^v/'
+    - if: $CI_COMMIT_TAG =~ /^v/

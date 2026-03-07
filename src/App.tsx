@@ -10,6 +10,9 @@ import "./App.css";
 function App() {
   const loadSettings = useSettingsStore(s => s.load);
   useEffect(() => {
+    if (typeof performance !== 'undefined' && performance.mark) {
+      performance.mark('localman-app-mounted');
+    }
     void loadSettings();
   }, [loadSettings]);
 

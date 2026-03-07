@@ -2,7 +2,8 @@
  * Sidebar tabs: Collections (active), History placeholder, Environments placeholder.
  */
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
+import { confirm } from '@tauri-apps/plugin-dialog';
 import { Folder, History, Layers } from 'lucide-react';
 import { CollectionSearch } from './collection-search';
 import { CollectionTree } from './collection-tree';
@@ -83,25 +84,25 @@ export function SidebarTabs({ onOpenEnvironmentManager }: SidebarTabsProps) {
   const syncConfig = useSyncStore(s => s.config);
   const deleteOnServer = useSyncStore(s => s.deleteOnServer);
 
-  const handleDeleteCollection = async (id: string) => {
-    if (!window.confirm('Delete this collection and all its folders and requests?')) return;
-    if (syncConfig?.enabled && window.confirm('Also delete from cloud sync server?')) {
+  const handleDeleteCollection = useCallback(async (id: string) => {
+    if (!await confirm('Delete this collection and all its folders and requests?')) return;
+    if (syncConfig?.enabled && await confirm('Also delete from cloud sync server?')) {
       await deleteOnServer(id);
     }
     await deleteCollection(id);
-  };
+  }, [syncConfig, deleteOnServer, deleteCollection]);
 
-  const handleDeleteFolder = async (id: string) => {
-    if (window.confirm('Delete this folder and its contents?')) {
+  const handleDeleteFolder = useCallback(async (id: string) => {
+    if (await confirm('Delete this folder and its contents?')) {
       await deleteFolder(id);
     }
-  };
+  }, [deleteFolder]);
 
-  const handleDeleteRequest = async (id: string) => {
-    if (window.confirm('Delete this request?')) {
+  const handleDeleteRequest = useCallback(async (id: string) => {
+    if (await confirm('Delete this request?')) {
       await deleteRequest(id);
     }
-  };
+  }, [deleteRequest]);
 
   const handleDuplicateRequest = async (id: string) => {
     const copy = await duplicateRequest(id);
@@ -144,8 +145,8 @@ export function SidebarTabs({ onOpenEnvironmentManager }: SidebarTabsProps) {
     onDeleteRequest: handleDeleteRequest,
     onExportCollection: handleExportCollection,
     onCopyAsCurl: handleCopyAsCurl,
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }), [deleteCollection, deleteFolder, deleteRequest, duplicateRequest, moveRequestToCollection, openRequest]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- stable callback object; handlers are stable in practice
+  }), [handleDeleteCollection, handleDeleteFolder, handleDeleteRequest, handleDuplicateRequest, handleCopyAsCurl]);
 
   const handleCollectionDialogOpenChange = (open: boolean) => {
     if (!open) {
@@ -160,6 +161,7 @@ export function SidebarTabs({ onOpenEnvironmentManager }: SidebarTabsProps) {
         <div className="flex flex-col border-r border-[var(--color-bg-tertiary)] w-12 shrink-0 py-3 gap-2 items-center bg-[#0B1120]">
           <button
             type="button"
+            aria-label="Collections"
             onClick={() => setActiveTab('collections')}
             className={`p-2.5 rounded-xl transition-all duration-200 ${activeTab === 'collections' ? 'bg-[var(--color-bg-tertiary)] text-[var(--color-accent)] shadow-sm' : 'text-slate-500 hover:text-slate-200 hover:bg-white/5'}`}
             title="Collections"
@@ -168,6 +170,7 @@ export function SidebarTabs({ onOpenEnvironmentManager }: SidebarTabsProps) {
           </button>
           <button
             type="button"
+            aria-label="History"
             onClick={() => setActiveTab('history')}
             className={`p-2.5 rounded-xl transition-all duration-200 ${activeTab === 'history' ? 'bg-[var(--color-bg-tertiary)] text-[var(--color-accent)] shadow-sm' : 'text-slate-500 hover:text-slate-200 hover:bg-white/5'}`}
             title="History"
@@ -176,6 +179,7 @@ export function SidebarTabs({ onOpenEnvironmentManager }: SidebarTabsProps) {
           </button>
           <button
             type="button"
+            aria-label="Environments"
             onClick={() => setActiveTab('environments')}
             className={`p-2.5 rounded-xl transition-all duration-200 ${activeTab === 'environments' ? 'bg-[var(--color-bg-tertiary)] text-[var(--color-accent)] shadow-sm' : 'text-slate-500 hover:text-slate-200 hover:bg-white/5'}`}
             title="Environments"
@@ -204,7 +208,7 @@ export function SidebarTabs({ onOpenEnvironmentManager }: SidebarTabsProps) {
                       onClick={() => setCollectionDialog('create')}
                       className="rounded-lg bg-[var(--color-accent)] px-5 py-2 text-[13px] font-semibold text-white transition-all hover:bg-[var(--color-accent-hover)] hover:shadow-md active:scale-95"
                     >
-                      Create Collection
+                      New collection
                     </button>
                   </div>
                 ) : (

@@ -37,15 +37,10 @@ git push -uf origin main
 - [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
 - [ ] [Set auto-merge](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
 
-## Test and Deploy
+## Testing & CI
 
-Use the built-in continuous integration in GitLab.
-
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing(SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+- **Cross-platform testing:** See the [Cross-Platform Testing Checklist](docs/cross-platform-testing.md) for manual verification on Windows, macOS, and Linux (including performance checks).
+- **CI (GitLab):** Pipelines run on [gitlabs.inet.vn](https://gitlabs.inet.vn). On every push, lint and tests run; on tags `v*`, a Windows build produces `.msi`/`.exe` artifacts. See [Phase 01 — GitLab CI/CD (Windows)](plans/260307-1838-cicd-and-cloud-sync/phase-01-gitlab-cicd-windows.md) for pipeline details.
 
 ***
 

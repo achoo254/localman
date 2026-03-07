@@ -2,7 +2,7 @@
  * Collapsible JSON tree with syntax-style colors. No virtualization for MVP.
  */
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, memo } from 'react';
 
 type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
 
@@ -14,7 +14,7 @@ function tryParse(value: string): JsonValue | undefined {
   }
 }
 
-function JsonNode({
+const JsonNode = memo(function JsonNode({
   name,
   value,
   depth,
@@ -89,13 +89,13 @@ function JsonNode({
       <span className={color}>{valStr}</span>
     </div>
   );
-}
+});
 
 interface JsonViewerProps {
   body: string;
 }
 
-export function JsonViewer({ body }: JsonViewerProps) {
+export const JsonViewer = memo(function JsonViewer({ body }: JsonViewerProps) {
   const parsed = useMemo(() => tryParse(body), [body]);
   if (parsed === undefined) {
     return <pre className="p-4 font-mono text-sm text-red-400 whitespace-pre-wrap break-words">Invalid JSON</pre>;
@@ -105,4 +105,4 @@ export function JsonViewer({ body }: JsonViewerProps) {
       <JsonNode name="" value={parsed} depth={0} />
     </div>
   );
-}
+});
