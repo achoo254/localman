@@ -1,6 +1,11 @@
 # localman
 
+Offline-first desktop API client (Postman alternative) — Tauri + React + TypeScript.
 
+## Prerequisites
+
+- **Node.js** (v18+) and **pnpm**
+- **Rust** (required for Tauri): install from [rustup.rs](https://rustup.rs). On Windows, run `rustup-init.exe` then **restart your terminal** so `cargo` is in PATH. Verify with: `cargo --version`
 
 ## Getting started
 
