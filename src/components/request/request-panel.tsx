@@ -1,9 +1,10 @@
 /**
- * Request panel: URL bar + tabs, wired to request store.
+ * Request panel: URL bar + tabs, wired to request store and HTTP execution.
  */
 
 import { useEffect } from 'react';
 import { useRequestStore } from '../../stores/request-store';
+import { useResponseStore } from '../../stores/response-store';
 import { useAutoSave } from '../../hooks/use-auto-save';
 import { UrlBar } from './url-bar';
 import { RequestTabs } from './request-tabs';
@@ -17,6 +18,9 @@ export function RequestPanel() {
   const updateActiveRequest = useRequestStore(s => s.updateActiveRequest);
   const saveRequest = useRequestStore(s => s.saveRequest);
   const createNewRequest = useRequestStore(s => s.createNewRequest);
+  const executeRequest = useResponseStore(s => s.executeRequest);
+  const cancelRequest = useResponseStore(s => s.cancelRequest);
+  const isLoading = useResponseStore(s => s.isLoading);
 
   useAutoSave();
 
@@ -53,9 +57,9 @@ export function RequestPanel() {
     updateActiveRequest({ url, params });
   };
 
-  const handleSend = () => {
-    void saveRequest();
-    // Phase 04: invoke HTTP client
+  const handleSend = async () => {
+    await saveRequest();
+    executeRequest(activeRequest);
   };
 
   return (
@@ -67,6 +71,8 @@ export function RequestPanel() {
           onMethodChange={m => updateActiveRequest({ method: m })}
           onUrlChange={handleUrlChange}
           onSend={handleSend}
+          onCancel={cancelRequest}
+          isLoading={isLoading}
         />
       </div>
       <div className="min-h-0 flex-1 overflow-auto">

@@ -14,6 +14,8 @@ interface UrlBarProps {
   onMethodChange: (m: HttpMethod) => void;
   onUrlChange: (url: string) => void;
   onSend: () => void;
+  onCancel?: () => void;
+  isLoading?: boolean;
   disabled?: boolean;
 }
 
@@ -23,6 +25,8 @@ export function UrlBar({
   onMethodChange,
   onUrlChange,
   onSend,
+  onCancel,
+  isLoading,
   disabled,
 }: UrlBarProps) {
   const handleKeyDown = useCallback(
@@ -44,14 +48,24 @@ export function UrlBar({
         placeholder="https://api.example.com/..."
         onKeyDown={handleKeyDown}
       />
-      <button
-        type="button"
-        onClick={onSend}
-        disabled={disabled}
-        className="rounded bg-[var(--color-accent)] px-4 py-2 font-medium text-white hover:opacity-90 disabled:opacity-50"
-      >
-        Send
-      </button>
+      {isLoading && onCancel ? (
+        <button
+          type="button"
+          onClick={onCancel}
+          className="rounded bg-red-500/80 px-4 py-2 font-medium text-white hover:bg-red-500"
+        >
+          Cancel
+        </button>
+      ) : (
+        <button
+          type="button"
+          onClick={onSend}
+          disabled={disabled}
+          className="rounded bg-[var(--color-accent)] px-4 py-2 font-medium text-white hover:opacity-90 disabled:opacity-50"
+        >
+          Send
+        </button>
+      )}
     </div>
   );
 }
