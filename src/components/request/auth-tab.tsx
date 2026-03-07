@@ -27,6 +27,7 @@ export function AuthTab({ auth, onChange }: AuthTabProps) {
           <button
             key={value}
             type="button"
+            aria-pressed={auth.type === value}
             onClick={() => setType(value)}
             className={`rounded px-3 py-1.5 text-sm ${
               auth.type === value
@@ -40,8 +41,9 @@ export function AuthTab({ auth, onChange }: AuthTabProps) {
       </div>
       {auth.type === 'bearer' && (
         <div className="flex flex-col gap-2">
-          <label className="text-sm text-gray-400">Token</label>
+          <label htmlFor="auth-bearer-token" className="text-sm text-gray-400">Token</label>
           <input
+            id="auth-bearer-token"
             type="password"
             value={auth.bearerToken ?? ''}
             onChange={e => onChange({ ...auth, bearerToken: e.target.value })}
@@ -52,16 +54,18 @@ export function AuthTab({ auth, onChange }: AuthTabProps) {
       )}
       {auth.type === 'basic' && (
         <div className="flex flex-col gap-2">
-          <label className="text-sm text-gray-400">Username</label>
+          <label htmlFor="auth-basic-username" className="text-sm text-gray-400">Username</label>
           <input
+            id="auth-basic-username"
             type="text"
             value={auth.username ?? ''}
             onChange={e => onChange({ ...auth, username: e.target.value })}
             placeholder="Username"
             className="rounded border border-[var(--color-bg-tertiary)] bg-[var(--color-bg-secondary)] px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-[var(--color-accent)]"
           />
-          <label className="text-sm text-gray-400">Password</label>
+          <label htmlFor="auth-basic-password" className="text-sm text-gray-400">Password</label>
           <input
+            id="auth-basic-password"
             type="password"
             value={auth.password ?? ''}
             onChange={e => onChange({ ...auth, password: e.target.value })}
@@ -72,16 +76,18 @@ export function AuthTab({ auth, onChange }: AuthTabProps) {
       )}
       {auth.type === 'api-key' && (
         <div className="flex flex-col gap-2">
-          <label className="text-sm text-gray-400">Key (header name or query param)</label>
+          <label htmlFor="auth-apikey-header" className="text-sm text-gray-400">Key (header name or query param)</label>
           <input
+            id="auth-apikey-header"
             type="text"
             value={auth.apiKeyHeader ?? ''}
             onChange={e => onChange({ ...auth, apiKeyHeader: e.target.value })}
             placeholder="X-API-Key"
             className="rounded border border-[var(--color-bg-tertiary)] bg-[var(--color-bg-secondary)] px-3 py-2 font-mono text-sm outline-none focus:ring-1 focus:ring-[var(--color-accent)]"
           />
-          <label className="text-sm text-gray-400">Value</label>
+          <label htmlFor="auth-apikey-value" className="text-sm text-gray-400">Value</label>
           <input
+            id="auth-apikey-value"
             type="password"
             value={auth.apiKeyValue ?? ''}
             onChange={e => onChange({ ...auth, apiKeyValue: e.target.value })}

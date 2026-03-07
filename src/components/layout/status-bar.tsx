@@ -9,7 +9,8 @@ export function StatusBar() {
         opacity: 0.8,
       }}
     >
-      <span>DB: ready</span>
+      <span style={{ color: 'var(--color-accent)', opacity: 0.7 }}>Localman v0.1.0</span>
+      <span className="ml-auto opacity-50">Offline</span>
     </footer>
   );
 }

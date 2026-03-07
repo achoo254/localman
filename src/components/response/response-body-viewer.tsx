@@ -2,7 +2,7 @@
  * Body viewer with Pretty (JSON tree), Raw, and Preview (HTML) tabs.
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { JsonViewer } from './json-viewer';
 import { RawViewer } from './raw-viewer';
 import { HtmlPreview } from './html-preview';
@@ -22,12 +22,21 @@ function isHtml(ct: string): boolean {
   return /html/.test(ct);
 }
 
+function defaultMode(contentType: string): ViewMode {
+  if (isJsonLike(contentType)) return 'pretty';
+  if (isHtml(contentType)) return 'preview';
+  return 'raw';
+}
+
 export function ResponseBodyViewer({ body, contentType }: ResponseBodyViewerProps) {
-  const [mode, setMode] = useState<ViewMode>(() =>
-    isJsonLike(contentType) ? 'pretty' : isHtml(contentType) ? 'preview' : 'raw'
-  );
+  const [mode, setMode] = useState<ViewMode>(() => defaultMode(contentType));
   const showPretty = isJsonLike(contentType);
   const showPreview = isHtml(contentType);
+
+  // Reset mode when contentType changes between responses
+  useEffect(() => {
+    setMode(defaultMode(contentType));
+  }, [contentType]);
 
   return (
     <div className="flex flex-col min-h-0 flex-1">

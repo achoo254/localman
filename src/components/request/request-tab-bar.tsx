@@ -23,14 +23,14 @@ export function RequestTabBar() {
 
   if (openTabs.length === 0) {
     return (
-      <div className="border-b border-[var(--color-bg-tertiary)] px-4 py-2 text-sm text-gray-500">
+      <div className="border-b border-[var(--color-bg-tertiary)] px-4 py-2.5 text-sm text-slate-500 bg-[#0B1120]">
         No request open — create or open a request from the sidebar.
       </div>
     );
   }
 
   return (
-    <div className="flex border-b border-[var(--color-bg-tertiary)] bg-[var(--color-bg-secondary)]">
+    <div className="flex border-b border-[var(--color-bg-tertiary)] bg-[#0B1120] pt-1 px-1 gap-1 overflow-x-auto select-none scrollbar-none">
       {openTabs.map(tab => (
         <div
           key={tab.id}
@@ -43,10 +43,10 @@ export function RequestTabBar() {
               setActiveTab(tab.id);
             }
           }}
-          className={`flex cursor-pointer items-center gap-2 border-r border-[var(--color-bg-tertiary)] px-3 py-2 text-sm ${
+          className={`flex group cursor-pointer items-center min-w-[120px] max-w-[200px] gap-2 rounded-t-lg border-t border-x px-3 py-2 text-sm transition-colors ${
             activeTabId === tab.id
-              ? 'bg-[var(--color-bg-primary)] text-[var(--foreground)]'
-              : 'text-gray-400 hover:bg-[var(--color-bg-tertiary)]'
+              ? 'border-[var(--color-bg-tertiary)] bg-[var(--color-bg-secondary)] text-[var(--foreground)]'
+              : 'border-transparent text-slate-400 hover:bg-[var(--color-bg-tertiary)] hover:text-slate-200'
           }`}
         >
           <span
@@ -56,14 +56,15 @@ export function RequestTabBar() {
             {tab.method}
           </span>
           <span className="max-w-[120px] truncate">{tab.name}</span>
-          {tab.isDirty && <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-accent)]" />}
+          <div className="flex-1 min-w-0" />
+          {tab.isDirty && <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--color-accent)]" />}
           <button
             type="button"
             onClick={e => {
               e.stopPropagation();
               closeTab(tab.id);
             }}
-            className="rounded p-0.5 hover:bg-[var(--color-bg-tertiary)] hover:text-[var(--foreground)]"
+            className={`rounded-md p-0.5 transition-colors shrink-0 ${activeTabId === tab.id ? 'opacity-100 hover:bg-slate-700/50 hover:text-white' : 'opacity-0 group-hover:opacity-100 hover:bg-slate-700/50 hover:text-white'}`}
             aria-label="Close tab"
           >
             ×

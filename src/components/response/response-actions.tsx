@@ -22,17 +22,17 @@ export function ResponseActions({ body, onCopy }: ResponseActionsProps) {
     if (!path) return;
     try {
       await writeTextFile(path, body);
-    } catch {
-      // Save failed — user can retry or pick another path
+    } catch (err) {
+      console.error('[ResponseActions] Failed to save response to file:', err);
     }
   }, [body]);
 
   return (
-    <div className="flex gap-1 border-b border-[var(--color-bg-tertiary)] px-2 py-1.5">
+    <div className="flex gap-2 border-b border-[var(--color-bg-tertiary)] px-3 py-2 bg-[#0B1120]">
       <button
         type="button"
         onClick={handleCopy}
-        className="flex items-center gap-1.5 rounded px-2 py-1 text-sm text-gray-400 hover:bg-[var(--color-bg-tertiary)] hover:text-[var(--foreground)]"
+        className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-slate-400 transition-colors hover:bg-slate-800/50 hover:text-slate-200"
       >
         <Copy className="h-4 w-4" />
         Copy
@@ -40,7 +40,7 @@ export function ResponseActions({ body, onCopy }: ResponseActionsProps) {
       <button
         type="button"
         onClick={handleSave}
-        className="flex items-center gap-1.5 rounded px-2 py-1 text-sm text-gray-400 hover:bg-[var(--color-bg-tertiary)] hover:text-[var(--foreground)]"
+        className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-slate-400 transition-colors hover:bg-slate-800/50 hover:text-slate-200"
       >
         <Download className="h-4 w-4" />
         Save to file

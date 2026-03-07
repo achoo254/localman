@@ -97,9 +97,13 @@ export function VariableHighlightInput({
         onScroll={handleScroll}
         onKeyDown={onKeyDown}
         placeholder={placeholder}
-        className={`w-full min-w-0 rounded bg-transparent px-3 py-2 font-mono text-sm text-transparent outline-none caret-[var(--foreground)] placeholder:text-gray-500 ${
+        className={`w-full min-w-0 rounded bg-transparent px-3 py-2 font-mono text-sm outline-none placeholder:text-gray-500 ${
           focused ? 'ring-1 ring-[var(--color-accent)]' : ''
         } ${className}`}
+        style={{
+          color: 'var(--foreground)',
+          WebkitTextFillColor: 'transparent',
+        }}
         spellCheck={false}
       />
     </div>

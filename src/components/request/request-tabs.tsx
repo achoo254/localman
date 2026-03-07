@@ -19,40 +19,40 @@ export function RequestTabs({ request, onUpdate }: RequestTabsProps) {
 
   return (
     <Tabs.Root defaultValue="params" className="flex flex-col">
-      <Tabs.List className="flex border-b border-[var(--color-bg-tertiary)] px-2">
+      <Tabs.List className="flex border-b border-[var(--color-bg-tertiary)] px-3 pt-2 gap-1 bg-[#0B1120] overflow-x-auto scrollbar-none shrink-0 w-full">
         <Tabs.Trigger
           value="params"
-          className="rounded-t px-3 py-2 text-sm text-gray-400 hover:text-[var(--foreground)] data-[state=active]:border-b-2 data-[state=active]:border-[var(--color-accent)] data-[state=active]:text-[var(--foreground)]"
+          className="rounded-t-lg px-4 py-2 text-[13px] font-medium text-slate-400 transition-colors hover:bg-slate-800/50 hover:text-slate-200 data-[state=active]:bg-[var(--color-bg-primary)] data-[state=active]:text-[var(--color-accent)] data-[state=active]:border-b-2 data-[state=active]:border-[var(--color-accent)] select-none"
         >
           Params
         </Tabs.Trigger>
         <Tabs.Trigger
           value="headers"
-          className="rounded-t px-3 py-2 text-sm text-gray-400 hover:text-[var(--foreground)] data-[state=active]:border-b-2 data-[state=active]:border-[var(--color-accent)] data-[state=active]:text-[var(--foreground)]"
+          className="rounded-t-lg px-4 py-2 text-[13px] font-medium text-slate-400 transition-colors hover:bg-slate-800/50 hover:text-slate-200 data-[state=active]:bg-[var(--color-bg-primary)] data-[state=active]:text-[var(--color-accent)] data-[state=active]:border-b-2 data-[state=active]:border-[var(--color-accent)] select-none"
         >
           Headers
         </Tabs.Trigger>
         <Tabs.Trigger
           value="body"
-          className="rounded-t px-3 py-2 text-sm text-gray-400 hover:text-[var(--foreground)] data-[state=active]:border-b-2 data-[state=active]:border-[var(--color-accent)] data-[state=active]:text-[var(--foreground)]"
+          className="rounded-t-lg px-4 py-2 text-[13px] font-medium text-slate-400 transition-colors hover:bg-slate-800/50 hover:text-slate-200 data-[state=active]:bg-[var(--color-bg-primary)] data-[state=active]:text-[var(--color-accent)] data-[state=active]:border-b-2 data-[state=active]:border-[var(--color-accent)] select-none"
         >
           Body
         </Tabs.Trigger>
         <Tabs.Trigger
           value="auth"
-          className="rounded-t px-3 py-2 text-sm text-gray-400 hover:text-[var(--foreground)] data-[state=active]:border-b-2 data-[state=active]:border-[var(--color-accent)] data-[state=active]:text-[var(--foreground)]"
+          className="rounded-t-lg px-4 py-2 text-[13px] font-medium text-slate-400 transition-colors hover:bg-slate-800/50 hover:text-slate-200 data-[state=active]:bg-[var(--color-bg-primary)] data-[state=active]:text-[var(--color-accent)] data-[state=active]:border-b-2 data-[state=active]:border-[var(--color-accent)] select-none"
         >
           Auth
         </Tabs.Trigger>
         <Tabs.Trigger
           value="pre"
-          className="rounded-t px-3 py-2 text-sm text-gray-400 hover:text-[var(--foreground)] data-[state=active]:border-b-2 data-[state=active]:border-[var(--color-accent)] data-[state=active]:text-[var(--foreground)]"
+          className="rounded-t-lg px-4 py-2 text-[13px] font-medium text-slate-400 transition-colors hover:bg-slate-800/50 hover:text-slate-200 data-[state=active]:bg-[var(--color-bg-primary)] data-[state=active]:text-[var(--color-accent)] data-[state=active]:border-b-2 data-[state=active]:border-[var(--color-accent)] select-none"
         >
           Pre-Script
         </Tabs.Trigger>
         <Tabs.Trigger
           value="post"
-          className="rounded-t px-3 py-2 text-sm text-gray-400 hover:text-[var(--foreground)] data-[state=active]:border-b-2 data-[state=active]:border-[var(--color-accent)] data-[state=active]:text-[var(--foreground)]"
+          className="rounded-t-lg px-4 py-2 text-[13px] font-medium text-slate-400 transition-colors hover:bg-slate-800/50 hover:text-slate-200 data-[state=active]:bg-[var(--color-bg-primary)] data-[state=active]:text-[var(--color-accent)] data-[state=active]:border-b-2 data-[state=active]:border-[var(--color-accent)] select-none"
         >
           Post-Script
         </Tabs.Trigger>

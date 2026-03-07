@@ -38,6 +38,7 @@ export function CollectionItem({
         type="button"
         className="shrink-0 p-0.5 rounded hover:bg-[var(--color-bg-tertiary)]"
         aria-expanded={isExpanded}
+        onClick={e => e.stopPropagation()}
       >
         <ChevronRight
           className={`h-4 w-4 text-gray-400 transition-transform ${isExpanded ? 'rotate-90' : ''}`}

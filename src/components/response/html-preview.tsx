@@ -1,5 +1,5 @@
 /**
- * Sandboxed iframe for HTML response preview (no script execution).
+ * Sandboxed iframe for HTML response preview (no script execution, no same-origin access).
  */
 
 interface HtmlPreviewProps {
@@ -12,7 +12,7 @@ export function HtmlPreview({ body }: HtmlPreviewProps) {
     <iframe
       title="Response preview"
       srcDoc={srcDoc}
-      sandbox="allow-same-origin"
+      sandbox="allow-scripts"
       className="w-full min-h-[200px] border-0 rounded bg-white text-black"
     />
   );

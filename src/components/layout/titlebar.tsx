@@ -13,18 +13,14 @@ export function Titlebar() {
 
   return (
     <header
-      className="flex h-10 shrink-0 items-center justify-between px-3"
-      style={{
-        background: 'var(--color-bg-secondary)',
-        borderBottom: '1px solid var(--color-bg-tertiary)',
-      }}
+      className="flex h-11 shrink-0 items-center justify-between px-4 border-b border-slate-800/50 bg-[#0B1120] select-none"
     >
       <div
         className="flex flex-1 items-center gap-2"
         data-tauri-drag-region
       >
-        <span className="text-sm font-medium" style={{ color: 'var(--color-accent)' }}>
-          Localman
+        <span className="text-xs font-semibold tracking-wider text-slate-300">
+          LOCALMAN
         </span>
       </div>
       <div className="flex items-center gap-0.5" data-tauri-drag-region={false}>
@@ -32,20 +28,29 @@ export function Titlebar() {
           type="button"
           aria-label="Minimize"
           onClick={minimize}
-          className="h-8 w-10 rounded-none hover:bg-white/10"
-        />
+          className="flex h-9 w-12 items-center justify-center rounded-none text-slate-400 transition-colors hover:bg-white/10 hover:text-white"
+        >
+          {/* minimize icon */}
+          <svg width="10" height="1" viewBox="0 0 10 1" fill="currentColor"><rect width="10" height="1"/></svg>
+        </button>
         <button
           type="button"
           aria-label="Maximize"
           onClick={toggleMaximize}
-          className="h-8 w-10 rounded-none hover:bg-white/10"
-        />
+          className="flex h-9 w-12 items-center justify-center rounded-none text-slate-400 transition-colors hover:bg-white/10 hover:text-white"
+        >
+          {/* maximize icon */}
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1"><rect x="0.5" y="0.5" width="9" height="9"/></svg>
+        </button>
         <button
           type="button"
           aria-label="Close"
           onClick={close}
-          className="h-8 w-10 rounded-none hover:bg-red-500/80"
-        />
+          className="flex h-9 w-12 items-center justify-center rounded-none text-slate-400 transition-colors hover:bg-red-500 hover:text-white"
+        >
+          {/* close icon */}
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><line x1="1" y1="1" x2="9" y2="9"/><line x1="9" y1="1" x2="1" y2="9"/></svg>
+        </button>
       </div>
     </header>
   );
