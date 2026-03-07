@@ -1,6 +1,16 @@
 /**
  * Base type exports for Localman.
- * Extended in Phase 02 (DB) and Phase 03 (request builder).
+ * Re-exports from enums, common, and models.
  */
 
-export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | 'HEAD' | 'OPTIONS';
+export type { HttpMethod, BodyType, AuthType } from './enums';
+export type { KeyValuePair, RequestBody, AuthConfig } from './common';
+export type {
+  Collection,
+  Folder,
+  ApiRequest,
+  EnvVariable,
+  Environment,
+  HistoryEntry,
+  Setting,
+} from './models';
