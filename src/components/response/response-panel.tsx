@@ -28,6 +28,7 @@ export function ResponsePanel() {
   const response = useResponseStore(s => s.response);
   const isLoading = useResponseStore(s => s.isLoading);
   const error = useResponseStore(s => s.error);
+  const scriptResults = useResponseStore(s => s.scriptResults);
   const selectedHistoryEntry = useHistoryStore(s => s.selectedEntry);
   const setSelectedEntry = useHistoryStore(s => s.setSelectedEntry);
 
@@ -84,7 +85,7 @@ export function ResponsePanel() {
       <ResponseStatusBar data={displayResponse} />
       <ResponseActions body={displayResponse.body} />
       <div className="min-h-0 flex-1 overflow-hidden flex flex-col">
-        <ResponseTabs data={displayResponse} />
+        <ResponseTabs data={displayResponse} scriptResults={scriptResults} />
       </div>
     </div>
   );

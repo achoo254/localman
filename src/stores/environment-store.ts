@@ -40,6 +40,8 @@ interface EnvironmentStore {
   addGlobalVariable: (variable: Omit<EnvVariable, 'id'>) => Promise<void>;
   updateGlobalVariable: (variable: EnvVariable) => Promise<void>;
   removeGlobalVariable: (variableId: string) => Promise<void>;
+  /** Merge script-set variables (lm.variables.set) into active environment. */
+  applyScriptVariables: (newVars: Record<string, string>) => Promise<void>;
 }
 
 export const useEnvironmentStore = create<EnvironmentStore>((set, get) => ({
@@ -165,5 +167,25 @@ export const useEnvironmentStore = create<EnvironmentStore>((set, get) => ({
     const next = globalVariables.filter(v => v.id !== variableId);
     await settingsService.set(GLOBAL_VARS_KEY, next);
     set({ globalVariables: next });
+  },
+
+  async applyScriptVariables(newVars: Record<string, string>) {
+    if (Object.keys(newVars).length === 0) return;
+    const active = get().environments.find(e => e.is_active);
+    if (!active) return;
+    const byKey = new Map(active.variables.map(v => [v.key.trim(), v]));
+    for (const [key, value] of Object.entries(newVars)) {
+      const k = key.trim();
+      if (!k) continue;
+      const existing = byKey.get(k);
+      if (existing) {
+        byKey.set(k, { ...existing, value });
+      } else {
+        byKey.set(k, { id: crypto.randomUUID(), key: k, value });
+      }
+    }
+    await environmentService.update(active.id, { variables: Array.from(byKey.values()) });
+    const environments = await environmentService.getAll();
+    set({ environments });
   },
 }));

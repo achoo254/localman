@@ -7,7 +7,7 @@
 
 ## Overview
 - **Priority:** P2
-- **Status:** pending
+- **Status:** completed
 - **Estimate:** 5 days
 - **Description:** JavaScript sandbox for pre-request and post-response scripts using QuickJS (via WASM or Tauri Rust integration). Scripts can set variables, modify requests, run assertions on responses.
 
@@ -162,17 +162,17 @@ Main Thread                    Web Worker
    - Useful for chaining requests (e.g., save auth token from login response)
 
 ## Todo List
-- [ ] Setup QuickJS WASM in Web Worker
-- [ ] Build `lm` script API object
-- [ ] Build assertion library (`lm.expect()`)
-- [ ] Build script runner service (pre + post)
-- [ ] Build pre-script editor tab (CodeMirror JS)
-- [ ] Build post-script editor tab
-- [ ] Build test results panel
-- [ ] Build script console output
-- [ ] Integrate scripts into request execution flow
-- [ ] Handle script errors and timeouts
-- [ ] Script variable persistence to environment
+- [x] Setup QuickJS WASM in Web Worker
+- [x] Build `lm` script API object
+- [x] Build assertion library (`lm.expect()`)
+- [x] Build script runner service (pre + post)
+- [x] Build pre-script editor tab (CodeMirror JS)
+- [x] Build post-script editor tab
+- [x] Build test results panel
+- [x] Build script console output
+- [x] Integrate scripts into request execution flow
+- [x] Handle script errors and timeouts
+- [x] Script variable persistence to environment
 
 ## Success Criteria
 - Pre-script can modify request headers/body before sending

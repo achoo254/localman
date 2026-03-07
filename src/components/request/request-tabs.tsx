@@ -7,6 +7,7 @@ import { ParamsTab } from './params-tab';
 import { HeadersTab } from './headers-tab';
 import { BodyTab } from './body-tab';
 import { AuthTab } from './auth-tab';
+import { ScriptEditor } from './script-editor';
 import type { ApiRequest } from '../../types/models';
 
 interface RequestTabsProps {
@@ -80,21 +81,15 @@ export function RequestTabs({ request, onUpdate }: RequestTabsProps) {
         <AuthTab auth={request.auth} onChange={auth => onUpdate({ auth })} />
       </Tabs.Content>
       <Tabs.Content value="pre" className="mt-0 flex-1 overflow-auto p-4">
-        <textarea
+        <ScriptEditor
           value={request.pre_script ?? ''}
-          onChange={e => onUpdate({ pre_script: e.target.value })}
-          placeholder="Pre-request script (Phase 09)"
-          className="min-h-[120px] w-full rounded border border-[var(--color-bg-tertiary)] bg-[var(--color-bg-secondary)] p-3 font-mono text-sm outline-none focus:ring-1 focus:ring-[var(--color-accent)]"
-          spellCheck={false}
+          onChange={v => onUpdate({ pre_script: v })}
         />
       </Tabs.Content>
       <Tabs.Content value="post" className="mt-0 flex-1 overflow-auto p-4">
-        <textarea
+        <ScriptEditor
           value={request.post_script ?? ''}
-          onChange={e => onUpdate({ post_script: e.target.value })}
-          placeholder="Post-response script (Phase 09)"
-          className="min-h-[120px] w-full rounded border border-[var(--color-bg-tertiary)] bg-[var(--color-bg-secondary)] p-3 font-mono text-sm outline-none focus:ring-1 focus:ring-[var(--color-accent)]"
-          spellCheck={false}
+          onChange={v => onUpdate({ post_script: v })}
         />
       </Tabs.Content>
     </Tabs.Root>
