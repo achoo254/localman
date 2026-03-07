@@ -54,6 +54,7 @@ cargo clippy             # Rust linter
 - **UI:** Tailwind CSS + Radix UI
 - **Code editor:** CodeMirror 6
 - **HTTP client:** Tauri HTTP plugin (bypasses CORS — do NOT use browser fetch for API calls)
+- **CORS / HTTP:** In Tauri, all API requests use plugin-http only (no browser fetch fallback); if the plugin is unavailable the app shows a clear error. The Vite dev server allows WebView origins (e.g. `null`, localhost) so the app and HMR load correctly in the Tauri window.
 - **Script sandbox:** QuickJS in Web Worker (serial queue — one script at a time; no concurrent execution)
 
 ### Backend (Phase 2 — Future)
