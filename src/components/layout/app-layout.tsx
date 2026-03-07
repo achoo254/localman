@@ -4,6 +4,7 @@ import { Sidebar } from './sidebar';
 import { StatusBar } from './status-bar';
 import { EnvironmentBar } from '../environments/environment-bar';
 import { EnvironmentManager } from '../environments/environment-manager';
+import { ImportDialog } from '../import-export/import-dialog';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -11,13 +12,14 @@ interface AppLayoutProps {
 
 export function AppLayout({ children }: AppLayoutProps) {
   const [managerOpen, setManagerOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
 
   return (
     <div
       className="flex h-screen w-screen flex-col overflow-hidden"
       style={{ background: 'var(--color-bg-primary)' }}
     >
-      <Titlebar />
+      <Titlebar onImportClick={() => setImportOpen(true)} />
       <EnvironmentBar onOpenManager={() => setManagerOpen(true)} />
       <div className="flex min-h-0 flex-1">
         <Sidebar onOpenEnvironmentManager={() => setManagerOpen(true)} />
@@ -27,6 +29,7 @@ export function AppLayout({ children }: AppLayoutProps) {
       </div>
       <StatusBar />
       <EnvironmentManager open={managerOpen} onOpenChange={setManagerOpen} />
+      <ImportDialog open={importOpen} onOpenChange={setImportOpen} />
     </div>
   );
 }

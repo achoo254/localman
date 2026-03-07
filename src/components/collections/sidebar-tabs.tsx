@@ -13,8 +13,11 @@ import * as requestService from '../../db/services/request-service';
 import { CreateCollectionDialog } from './create-collection-dialog';
 import { CreateFolderDialog } from './create-folder-dialog';
 import { MoveRequestDialog } from './move-request-dialog';
+import { ExportDialog } from '../import-export/export-dialog';
 import { EnvironmentSidebarTab } from '../environments/environment-sidebar-tab';
 import { HistorySidebarTab } from '../history/history-sidebar-tab';
+import { getCurlForRequest } from '../../services/import-export-service';
+import { useEnvironmentStore } from '../../stores/environment-store';
 
 type TabId = 'collections' | 'history' | 'environments';
 
@@ -32,8 +35,11 @@ export function SidebarTabs({ onOpenEnvironmentManager }: SidebarTabsProps) {
   const [renameFolderName, setRenameFolderName] = useState('');
   const [newFolderContext, setNewFolderContext] = useState<{ collectionId: string; parentId: string | null } | null>(null);
   const [moveRequestId, setMoveRequestId] = useState<string | null>(null);
+  const [exportCollectionId, setExportCollectionId] = useState<string | null>(null);
+  const [exportCollectionName, setExportCollectionName] = useState('');
 
   const { tree, isLoading } = useCollectionTree();
+  const getInterpolationContext = useEnvironmentStore(s => s.getInterpolationContext);
   const activeRequestId = useRequestStore(s => s.activeRequest?.id ?? null);
   const openRequest = useRequestStore(s => s.openRequest);
   const createNewRequest = useRequestStore(s => s.createNewRequest);
@@ -106,6 +112,19 @@ export function SidebarTabs({ onOpenEnvironmentManager }: SidebarTabsProps) {
     setMoveRequestId(null);
   };
 
+  const handleExportCollection = (collectionId: string, collectionName: string) => {
+    setExportCollectionId(collectionId);
+    setExportCollectionName(collectionName);
+  };
+
+  const handleCopyAsCurl = async (requestId: string) => {
+    const req = await requestService.getById(requestId);
+    if (!req) return;
+    const context = getInterpolationContext();
+    const curl = getCurlForRequest(req, context);
+    await navigator.clipboard.writeText(curl);
+  };
+
   // Memoize to avoid passing a new object reference on every render
   const contextMenuCallbacks = useMemo(() => ({
     onNewRequest: handleNewRequest,
@@ -117,6 +136,8 @@ export function SidebarTabs({ onOpenEnvironmentManager }: SidebarTabsProps) {
     onDuplicateRequest: handleDuplicateRequest,
     onMoveRequest: handleMoveRequest,
     onDeleteRequest: handleDeleteRequest,
+    onExportCollection: handleExportCollection,
+    onCopyAsCurl: handleCopyAsCurl,
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }), [deleteCollection, deleteFolder, deleteRequest, duplicateRequest, moveRequestToCollection, openRequest]);
 
@@ -253,6 +274,13 @@ export function SidebarTabs({ onOpenEnvironmentManager }: SidebarTabsProps) {
             setNewFolderContext(null);
           }
         }}
+      />
+
+      <ExportDialog
+        open={exportCollectionId !== null}
+        onOpenChange={open => { if (!open) setExportCollectionId(null); }}
+        collectionId={exportCollectionId}
+        collectionName={exportCollectionName}
       />
     </>
   );

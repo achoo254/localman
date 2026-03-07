@@ -1,6 +1,11 @@
 import { getCurrentWindow } from '@tauri-apps/api/window';
+import { FileUp } from 'lucide-react';
 
-export function Titlebar() {
+interface TitlebarProps {
+  onImportClick?: () => void;
+}
+
+export function Titlebar({ onImportClick }: TitlebarProps) {
   async function minimize() {
     await getCurrentWindow().minimize();
   }
@@ -22,6 +27,17 @@ export function Titlebar() {
         <span className="text-xs font-semibold tracking-wider text-slate-300">
           LOCALMAN
         </span>
+        {onImportClick && (
+          <button
+            type="button"
+            onClick={onImportClick}
+            className="flex items-center gap-1.5 rounded px-2 py-1.5 text-xs text-slate-400 hover:bg-white/10 hover:text-slate-200 transition-colors"
+            title="Import"
+          >
+            <FileUp className="h-3.5 w-3.5" />
+            Import
+          </button>
+        )}
       </div>
       <div className="flex items-center gap-0.5" data-tauri-drag-region={false}>
         <button

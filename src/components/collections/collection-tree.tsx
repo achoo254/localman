@@ -16,6 +16,8 @@ export interface ContextMenuCallbacks {
   onDuplicateRequest: (id: string) => void;
   onMoveRequest: (requestId: string) => void;
   onDeleteRequest: (id: string) => void;
+  onExportCollection?: (collectionId: string, collectionName: string) => void;
+  onCopyAsCurl?: (requestId: string) => void;
 }
 
 interface CollectionTreeProps {

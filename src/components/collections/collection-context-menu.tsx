@@ -17,6 +17,8 @@ interface CollectionContextMenuProps {
   onDuplicateRequest: (id: string) => void;
   onMoveRequest: (requestId: string) => void;
   onDeleteRequest: (id: string) => void;
+  onExportCollection?: (collectionId: string, collectionName: string) => void;
+  onCopyAsCurl?: (requestId: string) => void;
 }
 
 export function CollectionContextMenu({
@@ -31,6 +33,8 @@ export function CollectionContextMenu({
   onDuplicateRequest,
   onMoveRequest,
   onDeleteRequest,
+  onExportCollection,
+  onCopyAsCurl,
 }: CollectionContextMenuProps) {
   return (
     <ContextMenu.Root>
@@ -61,6 +65,14 @@ export function CollectionContextMenu({
               >
                 Rename
               </ContextMenu.Item>
+              {onExportCollection && (
+                <ContextMenu.Item
+                  className="px-3 py-1.5 text-sm outline-none hover:bg-[var(--color-bg-tertiary)] cursor-pointer"
+                  onSelect={() => onExportCollection(node.id, node.name)}
+                >
+                  Export
+                </ContextMenu.Item>
+              )}
               <ContextMenu.Item
                 className="px-3 py-1.5 text-sm text-red-400 outline-none hover:bg-[var(--color-bg-tertiary)] cursor-pointer"
                 onSelect={() => onDeleteCollection(node.id)}
@@ -100,6 +112,14 @@ export function CollectionContextMenu({
           )}
           {node.type === 'request' && (
             <>
+              {onCopyAsCurl && (
+                <ContextMenu.Item
+                  className="px-3 py-1.5 text-sm outline-none hover:bg-[var(--color-bg-tertiary)] cursor-pointer"
+                  onSelect={() => onCopyAsCurl(node.id)}
+                >
+                  Copy as cURL
+                </ContextMenu.Item>
+              )}
               <ContextMenu.Item
                 className="px-3 py-1.5 text-sm outline-none hover:bg-[var(--color-bg-tertiary)] cursor-pointer"
                 onSelect={() => onDuplicateRequest(node.id)}
