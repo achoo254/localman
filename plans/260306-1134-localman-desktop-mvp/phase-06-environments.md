@@ -6,7 +6,7 @@
 
 ## Overview
 - **Priority:** P1
-- **Status:** pending
+- **Status:** completed
 - **Estimate:** 4 days
 - **Description:** Multiple environments with variables, interpolation engine for URL/headers/body, secret variables, dynamic variables, environment bar.
 

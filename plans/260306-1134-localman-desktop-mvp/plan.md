@@ -51,7 +51,7 @@ Request execution: React -> Tauri IPC -> Rust HTTP client (bypass CORS) -> Respo
 | 03 | [Request Builder](phase-03-request-builder.md) | 5d | completed |
 | 04 | [HTTP Client & Response](phase-04-http-client.md) | 4d | completed |
 | 05 | [Collections & Sidebar](phase-05-collections-sidebar.md) | 5d | completed |
-| 06 | [Environments](phase-06-environments.md) | 4d | pending |
+| 06 | [Environments](phase-06-environments.md) | 4d | completed |
 | 07 | [History](phase-07-history.md) | 2d | pending |
 | 08 | [Import/Export](phase-08-import-export.md) | 4d | pending |
 | 09 | [Scripts Sandbox](phase-09-scripts-sandbox.md) | 5d | pending |
