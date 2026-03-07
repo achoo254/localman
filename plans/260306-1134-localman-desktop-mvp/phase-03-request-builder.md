@@ -6,7 +6,7 @@
 
 ## Overview
 - **Priority:** P1
-- **Status:** pending
+- **Status:** completed
 - **Estimate:** 5 days
 - **Description:** Full request builder UI — method selector, URL bar, params/headers/body/auth tabs with key-value editors and CodeMirror for body.
 
