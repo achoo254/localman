@@ -24,6 +24,11 @@
       "csp": null
     }
   },
+  "plugins": {
+    "updater": {
+      "endpoints": []
+    }
+  },
   "bundle": {
     "active": true,
     "targets": "all",

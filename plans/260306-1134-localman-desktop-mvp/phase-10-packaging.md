@@ -7,7 +7,7 @@
 
 ## Overview
 - **Priority:** P1
-- **Status:** pending
+- **Status:** in_progress
 - **Estimate:** 5 days
 - **Description:** Cross-platform builds (Windows/macOS/Linux), auto-updater, settings/preferences UI, performance optimization, final UI polish.
 
@@ -156,14 +156,14 @@ jobs:
     - Verify fonts, file dialogs, keyboard shortcuts
 
 ## Todo List
-- [ ] Create settings Zustand store
-- [ ] Build settings page with all sections
-- [ ] Build general settings controls
-- [ ] Build editor settings controls
-- [ ] Build proxy settings controls
-- [ ] Build data management (backup/restore/clear)
-- [ ] Setup Tauri auto-updater plugin
-- [ ] Build keyboard shortcuts modal
+- [x] Create settings Zustand store
+- [x] Build settings page with all sections
+- [x] Build general settings controls
+- [x] Build editor settings controls
+- [x] Build proxy settings controls
+- [x] Build data management (backup/restore/clear)
+- [x] Setup Tauri auto-updater plugin (plugin added; endpoints placeholder)
+- [x] Build keyboard shortcuts modal
 - [ ] Performance optimization pass
 - [ ] Setup GitHub Actions CI/CD
 - [ ] Configure Tauri bundler for all platforms

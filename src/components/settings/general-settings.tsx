@@ -1,0 +1,78 @@
+/**
+ * General settings: method, content type, timeout, SSL, redirects.
+ */
+
+import { useSettingsStore } from '../../stores/settings-store';
+
+const METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'];
+
+export function GeneralSettings() {
+  const { general, setGeneral } = useSettingsStore();
+
+  return (
+    <div className="flex flex-col gap-4 p-4">
+      <h2 className="text-sm font-semibold text-slate-200">General</h2>
+      <label className="flex flex-col gap-1">
+        <span className="text-xs text-slate-400">Default HTTP method</span>
+        <select
+          value={general.defaultMethod}
+          onChange={e => setGeneral({ defaultMethod: e.target.value })}
+          className="rounded border border-[var(--color-bg-tertiary)] bg-[var(--color-bg-secondary)] px-3 py-2 text-sm text-slate-200"
+        >
+          {METHODS.map(m => (
+            <option key={m} value={m}>{m}</option>
+          ))}
+        </select>
+      </label>
+      <label className="flex flex-col gap-1">
+        <span className="text-xs text-slate-400">Default Content-Type</span>
+        <input
+          type="text"
+          value={general.defaultContentType}
+          onChange={e => setGeneral({ defaultContentType: e.target.value })}
+          className="rounded border border-[var(--color-bg-tertiary)] bg-[var(--color-bg-secondary)] px-3 py-2 text-sm text-slate-200"
+        />
+      </label>
+      <label className="flex flex-col gap-1">
+        <span className="text-xs text-slate-400">Request timeout (ms)</span>
+        <input
+          type="number"
+          min={1000}
+          max={300000}
+          value={general.requestTimeoutMs}
+          onChange={e => setGeneral({ requestTimeoutMs: Number(e.target.value) || 30000 })}
+          className="rounded border border-[var(--color-bg-tertiary)] bg-[var(--color-bg-secondary)] px-3 py-2 text-sm text-slate-200 w-32"
+        />
+      </label>
+      <label className="flex items-center gap-2">
+        <input
+          type="checkbox"
+          checked={general.sslVerify}
+          onChange={e => setGeneral({ sslVerify: e.target.checked })}
+          className="rounded border-slate-600 text-[var(--color-accent)]"
+        />
+        <span className="text-sm text-slate-300">Verify SSL certificates</span>
+      </label>
+      <label className="flex items-center gap-2">
+        <input
+          type="checkbox"
+          checked={general.followRedirects}
+          onChange={e => setGeneral({ followRedirects: e.target.checked })}
+          className="rounded border-slate-600 text-[var(--color-accent)]"
+        />
+        <span className="text-sm text-slate-300">Follow redirects</span>
+      </label>
+      <label className="flex flex-col gap-1">
+        <span className="text-xs text-slate-400">Max redirects</span>
+        <input
+          type="number"
+          min={1}
+          max={20}
+          value={general.maxRedirects}
+          onChange={e => setGeneral({ maxRedirects: Number(e.target.value) || 5 })}
+          className="rounded border border-[var(--color-bg-tertiary)] bg-[var(--color-bg-secondary)] px-3 py-2 text-sm text-slate-200 w-24"
+        />
+      </label>
+    </div>
+  );
+}

@@ -147,3 +147,18 @@ export async function exportFullBackupJson(): Promise<string> {
   const data = await exportFullBackup();
   return JSON.stringify(data, null, 2);
 }
+
+/** Clear all app data (collections, folders, requests, environments, history). Keeps settings. */
+export async function clearAllData(): Promise<void> {
+  await db.transaction(
+    'rw',
+    [db.collections, db.folders, db.requests, db.environments, db.history],
+    async () => {
+      await db.collections.clear();
+      await db.folders.clear();
+      await db.requests.clear();
+      await db.environments.clear();
+      await db.history.clear();
+    }
+  );
+}

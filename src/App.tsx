@@ -1,11 +1,18 @@
+import { useEffect } from "react";
 import { Panel, Group, Separator } from "react-resizable-panels";
 import { AppLayout } from "./components/layout/app-layout";
 import { RequestTabBar } from "./components/request/request-tab-bar";
 import { RequestPanel } from "./components/request/request-panel";
 import { ResponsePanel } from "./components/response/response-panel";
+import { useSettingsStore } from "./stores/settings-store";
 import "./App.css";
 
 function App() {
+  const loadSettings = useSettingsStore(s => s.load);
+  useEffect(() => {
+    void loadSettings();
+  }, [loadSettings]);
+
   return (
     <AppLayout>
       <div className="flex h-full flex-col">
