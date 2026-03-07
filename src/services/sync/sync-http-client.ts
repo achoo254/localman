@@ -5,13 +5,21 @@
 import type { SyncConfig, ServerFileEntry } from '../../types/sync';
 
 function isTauri(): boolean {
-  return typeof window !== 'undefined' && !!(window as unknown as { __TAURI__?: unknown }).__TAURI__;
+  if (typeof window === 'undefined') return false;
+  return !!(window as unknown as { __TAURI__?: unknown }).__TAURI__
+    || !!(window as unknown as { __TAURI_INTERNALS__?: unknown }).__TAURI_INTERNALS__;
 }
 
 async function getFetch(): Promise<typeof fetch> {
   if (isTauri()) {
-    const { fetch: tauriFetch } = await import('@tauri-apps/plugin-http');
-    return tauriFetch;
+    try {
+      const { fetch: tauriFetch } = await import('@tauri-apps/plugin-http');
+      return tauriFetch;
+    } catch (err) {
+      const e = new Error('HTTP plugin unavailable. Sync requests cannot run in Tauri without the plugin.');
+      (e as Error & { cause?: unknown }).cause = err;
+      throw e;
+    }
   }
   return globalThis.fetch.bind(globalThis);
 }

@@ -1,19 +1,36 @@
 /**
  * Execute HTTP requests via Tauri plugin (bypasses CORS). Wraps fetch with timing and response parsing.
- * When not running in Tauri (e.g. browser dev), falls back to global fetch to avoid invoke errors.
+ * In Tauri: always use plugin-http; do not fallback to browser fetch (would hit CORS).
+ * In browser (e.g. pnpm dev): use globalThis.fetch.
  */
 
 import type { ResponseData, Cookie } from '../types/response';
 import type { PreparedRequest } from '../types/response';
 
+declare global {
+  interface Window {
+    __TAURI__?: unknown;
+    __TAURI_INTERNALS__?: unknown;
+  }
+}
+
 function isTauri(): boolean {
-  return typeof window !== 'undefined' && !!(window as unknown as { __TAURI__?: unknown }).__TAURI__;
+  if (typeof window === 'undefined') return false;
+  return !!(window.__TAURI__ ?? window.__TAURI_INTERNALS__);
 }
 
 async function getFetch(): Promise<typeof fetch> {
   if (isTauri()) {
-    const { fetch: tauriFetch } = await import('@tauri-apps/plugin-http');
-    return tauriFetch;
+    try {
+      const { fetch: tauriFetch } = await import('@tauri-apps/plugin-http');
+      return tauriFetch;
+    } catch (err) {
+      const e = new Error(
+        'HTTP plugin unavailable. Request cannot bypass CORS in Tauri. Restart the app or check plugin-http registration.'
+      );
+      (e as Error & { cause?: unknown }).cause = err;
+      throw e;
+    }
   }
   return globalThis.fetch.bind(globalThis);
 }
