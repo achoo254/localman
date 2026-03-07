@@ -1,9 +1,8 @@
 /**
- * Create or rename collection — Radix Dialog with name input.
+ * Create or rename collection — thin wrapper around NameInputDialog.
  */
 
-import { useState, useEffect } from 'react';
-import * as Dialog from '@radix-ui/react-dialog';
+import { NameInputDialog } from '../common/name-input-dialog';
 
 interface CreateCollectionDialogProps {
   open: boolean;
@@ -20,65 +19,15 @@ export function CreateCollectionDialog({
   mode,
   onConfirm,
 }: CreateCollectionDialogProps) {
-  const [name, setName] = useState(initialName);
-  const [saving, setSaving] = useState(false);
-
-  useEffect(() => {
-    if (open) setName(initialName);
-  }, [open, initialName]);
-
-  const handleOpenChange = (next: boolean) => {
-    if (!next) setName(initialName);
-    onOpenChange(next);
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const trimmed = name.trim();
-    if (!trimmed) return;
-    setSaving(true);
-    try {
-      await onConfirm(trimmed);
-      handleOpenChange(false);
-    } finally {
-      setSaving(false);
-    }
-  };
-
   return (
-    <Dialog.Root open={open} onOpenChange={handleOpenChange}>
-      <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 bg-black/50" />
-        <Dialog.Content className="fixed left-1/2 top-1/2 w-full max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-lg border border-[var(--color-bg-tertiary)] bg-[var(--color-bg-secondary)] p-4 shadow-lg">
-          <Dialog.Title className="text-sm font-medium">
-            {mode === 'create' ? 'New collection' : 'Rename collection'}
-          </Dialog.Title>
-          <form onSubmit={handleSubmit} className="mt-3 flex flex-col gap-3">
-            <input
-              type="text"
-              value={name}
-              onChange={e => setName(e.target.value)}
-              placeholder="Collection name"
-              className="rounded border border-[var(--color-bg-tertiary)] bg-[var(--color-bg-primary)] px-3 py-2 text-sm focus:border-[var(--color-accent)] focus:outline-none"
-              autoFocus
-            />
-            <div className="flex justify-end gap-2">
-              <Dialog.Close asChild>
-                <button type="button" className="rounded px-3 py-1.5 text-sm text-gray-400 hover:text-[var(--foreground)]">
-                  Cancel
-                </button>
-              </Dialog.Close>
-              <button
-                type="submit"
-                disabled={!name.trim() || saving}
-                className="rounded bg-[var(--color-accent)] px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50"
-              >
-                {saving ? '…' : mode === 'create' ? 'Create' : 'Save'}
-              </button>
-            </div>
-          </form>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog.Root>
+    <NameInputDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title={mode === 'create' ? 'New collection' : 'Rename collection'}
+      placeholder="Collection name"
+      initialName={initialName}
+      confirmLabel={mode === 'create' ? 'Create' : 'Save'}
+      onConfirm={onConfirm}
+    />
   );
 }
