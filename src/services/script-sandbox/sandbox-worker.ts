@@ -21,7 +21,7 @@ self.onmessage = async (e: MessageEvent<SandboxPayload>) => {
   const vars: Record<string, string> = { ...payload.variables };
   const consoleLogs: string[] = [];
   const tests: { name: string; fnHandle: QuickJSHandle }[] = [];
-  let testResults: TestResult[] = [];
+  const testResults: TestResult[] = [];
 
   const timeoutId = setTimeout(() => {
     postMessage({ error: 'Script timeout (5s)' });

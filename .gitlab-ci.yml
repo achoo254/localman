@@ -1,0 +1,70 @@
+## GitLab CI/CD — Localman Desktop
+##
+## Runners available: Linux amd64 (no Windows runner).
+## - verify stage: lint + type-check + test (runs on Linux — pure JS/TS, no native deps)
+## - build stage: frontend-only Vite build to verify compilation
+##
+## NOTE: Windows .msi/.exe Tauri builds require a Windows runner.
+## Until a Windows runner is registered, produce installers locally:
+##   pnpm tauri build
+## Then attach artifacts manually to GitLab Releases.
+
+stages:
+  - verify
+  - build
+
+variables:
+  # Use project-local pnpm store for caching
+  PNPM_STORE_PATH: "$CI_PROJECT_DIR/.pnpm-store"
+
+# Reusable node cache anchored to pnpm-lock.yaml
+.node-cache: &node-cache
+  cache:
+    key:
+      files:
+        - pnpm-lock.yaml
+    paths:
+      - node_modules/
+      - .pnpm-store/
+    policy: pull-push
+
+# ── Verify: lint + type-check + unit tests ───────────────────────────────────
+lint-and-test:
+  stage: verify
+  image: node:22-slim
+  <<: *node-cache
+  before_script:
+    - corepack enable
+    - corepack prepare pnpm@latest --activate
+    - pnpm config set store-dir "$PNPM_STORE_PATH"
+    - pnpm install --frozen-lockfile
+  script:
+    - pnpm lint
+    - pnpm type-check
+    - pnpm test
+  rules:
+    # Run on every push and merge request
+    - if: '$CI_PIPELINE_SOURCE == "push"'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+
+# ── Build: verify frontend compiles cleanly ──────────────────────────────────
+# Runs only on version tags (v*). Tauri build skipped — no Windows runner.
+# This at minimum catches frontend compilation errors before a release.
+build-frontend:
+  stage: build
+  image: node:22-slim
+  <<: *node-cache
+  before_script:
+    - corepack enable
+    - corepack prepare pnpm@latest --activate
+    - pnpm config set store-dir "$PNPM_STORE_PATH"
+    - pnpm install --frozen-lockfile
+  script:
+    - pnpm build
+  artifacts:
+    name: "localman-frontend-$CI_COMMIT_TAG"
+    paths:
+      - dist/
+    expire_in: 30 days
+  rules:
+    - if: '$CI_COMMIT_TAG =~ /^v/'
