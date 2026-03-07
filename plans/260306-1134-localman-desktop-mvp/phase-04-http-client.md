@@ -7,7 +7,7 @@
 
 ## Overview
 - **Priority:** P1
-- **Status:** pending
+- **Status:** completed
 - **Estimate:** 4 days
 - **Description:** Execute HTTP requests via Tauri native HTTP plugin (bypasses CORS), display responses with JSON syntax highlighting, headers, cookies, timing info.
 
