@@ -50,7 +50,7 @@ Request execution: React -> Tauri IPC -> Rust HTTP client (bypass CORS) -> Respo
 | 02 | [Database Layer](phase-02-database-layer.md) | 3d | completed |
 | 03 | [Request Builder](phase-03-request-builder.md) | 5d | completed |
 | 04 | [HTTP Client & Response](phase-04-http-client.md) | 4d | completed |
-| 05 | [Collections & Sidebar](phase-05-collections-sidebar.md) | 5d | pending |
+| 05 | [Collections & Sidebar](phase-05-collections-sidebar.md) | 5d | completed |
 | 06 | [Environments](phase-06-environments.md) | 4d | pending |
 | 07 | [History](phase-07-history.md) | 2d | pending |
 | 08 | [Import/Export](phase-08-import-export.md) | 4d | pending |

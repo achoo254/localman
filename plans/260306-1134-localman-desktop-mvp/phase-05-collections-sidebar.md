@@ -6,7 +6,7 @@
 
 ## Overview
 - **Priority:** P1
-- **Status:** pending
+- **Status:** completed
 - **Estimate:** 5 days
 - **Description:** Collections CRUD with nested folders, sidebar tree view, drag-and-drop reorder, search, and bulk operations.
 
