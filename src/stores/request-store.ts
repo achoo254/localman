@@ -1,0 +1,134 @@
+/**
+ * Zustand store for active request and tab management.
+ */
+
+import { create } from 'zustand';
+import type { ApiRequest } from '../types/models';
+import * as requestService from '../db/services/request-service';
+import { newId, now } from '../db/utils';
+
+export interface TabInfo {
+  id: string;
+  name: string;
+  method: ApiRequest['method'];
+  isDirty: boolean;
+}
+
+interface RequestStore {
+  openTabs: TabInfo[];
+  activeTabId: string | null;
+  activeRequest: ApiRequest | null;
+  isDirty: boolean;
+
+  openRequest: (request: ApiRequest) => void;
+  closeTab: (id: string) => void;
+  setActiveTab: (id: string | null) => void;
+  updateActiveRequest: (partial: Partial<ApiRequest>) => void;
+  createNewRequest: (collectionId: string, folderId: string | null) => Promise<ApiRequest>;
+  saveRequest: () => Promise<void>;
+  loadRequest: (id: string | null) => Promise<void>;
+}
+
+const defaultBody = { type: 'none' as const };
+const defaultAuth = { type: 'none' as const };
+
+export const useRequestStore = create<RequestStore>((set, get) => ({
+  openTabs: [],
+  activeTabId: null,
+  activeRequest: null,
+  isDirty: false,
+
+  openRequest(request: ApiRequest) {
+    const { openTabs } = get();
+    const existing = openTabs.find(t => t.id === request.id);
+    if (existing) {
+      set({ activeTabId: request.id, activeRequest: request, isDirty: false });
+      return;
+    }
+    const tab: TabInfo = {
+      id: request.id,
+      name: request.name || 'Untitled',
+      method: request.method,
+      isDirty: false,
+    };
+    set({
+      openTabs: [...openTabs, tab],
+      activeTabId: request.id,
+      activeRequest: request,
+      isDirty: false,
+    });
+  },
+
+  closeTab(id: string) {
+    const { openTabs, activeTabId } = get();
+    const idx = openTabs.findIndex(t => t.id === id);
+    if (idx === -1) return;
+    const next = openTabs.filter(t => t.id !== id);
+    const nextActive = activeTabId === id
+      ? (next[idx] ?? next[idx - 1] ?? null)?.id ?? null
+      : activeTabId;
+    set({
+      openTabs: next,
+      activeTabId: nextActive,
+      activeRequest: nextActive && get().activeRequest?.id === nextActive ? get().activeRequest : null,
+      isDirty: false,
+    });
+  },
+
+  setActiveTab(id: string | null) {
+    set({ activeTabId: id, activeRequest: id && get().activeRequest?.id === id ? get().activeRequest : null });
+  },
+
+  updateActiveRequest(partial: Partial<ApiRequest>) {
+    const { activeRequest } = get();
+    if (!activeRequest) return;
+    const updated = { ...activeRequest, ...partial };
+    set({ activeRequest: updated, isDirty: true });
+    const tabs = get().openTabs.map(t =>
+      t.id === activeRequest.id ? { ...t, name: updated.name ?? t.name, method: updated.method, isDirty: true } : t
+    );
+    set({ openTabs: tabs });
+  },
+
+  async createNewRequest(collectionId: string, folderId: string | null) {
+    const ts = now();
+    const request: ApiRequest = {
+      id: newId(),
+      collection_id: collectionId,
+      folder_id: folderId,
+      name: 'New Request',
+      method: 'GET',
+      url: '',
+      params: [],
+      headers: [],
+      body: defaultBody,
+      auth: defaultAuth,
+      sort_order: 0,
+      created_at: ts,
+      updated_at: ts,
+    };
+    await requestService.create(request);
+    get().openRequest(request);
+    return request;
+  },
+
+  async saveRequest() {
+    const { activeRequest } = get();
+    if (!activeRequest || !get().isDirty) return;
+    await requestService.update(activeRequest.id, activeRequest);
+    set({ isDirty: false });
+    const tabs = get().openTabs.map(t =>
+      t.id === activeRequest.id ? { ...t, isDirty: false } : t
+    );
+    set({ openTabs: tabs });
+  },
+
+  async loadRequest(id: string | null) {
+    if (!id) {
+      set({ activeRequest: null });
+      return;
+    }
+    const req = await requestService.getById(id);
+    if (req) set({ activeRequest: req });
+  },
+}));

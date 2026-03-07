@@ -9,6 +9,7 @@ export interface KeyValuePair {
   key: string;
   value: string;
   enabled: boolean;
+  description?: string;
 }
 
 export interface RequestBody {
