@@ -1,9 +1,11 @@
 /**
  * URL/input with {{variable}} highlighted in accent color.
+ * When focused, shows native input for correct cursor/selection.
+ * When blurred, shows overlay with colored variable highlights.
  * Optional tooltip showing resolved value when getResolvedValue is provided.
  */
 
-import { useRef, useEffect, useState, useCallback } from 'react';
+import { useRef, useState, useCallback } from 'react';
 import * as Tooltip from '@radix-ui/react-tooltip';
 
 interface VariableHighlightInputProps {
@@ -48,61 +50,51 @@ export function VariableHighlightInput({
   const inputRef = useRef<HTMLInputElement>(null);
   const segments = segmentize(value);
   const resolved = getResolvedValue?.() ?? '';
+  const hasVars = segments.some(s => s.isVar);
 
-  const handleScroll = useCallback(() => {
-    const el = inputRef.current;
-    if (el) {
-      const wrap = el.parentElement?.querySelector('[data-overlay]');
-      if (wrap) wrap.scrollLeft = el.scrollLeft;
-    }
+  const handleFocus = useCallback(() => setFocused(true), []);
+  const handleBlur = useCallback(() => setFocused(false), []);
+
+  const handleOverlayClick = useCallback(() => {
+    inputRef.current?.focus();
   }, []);
 
-  useEffect(() => {
-    const el = inputRef.current;
-    if (!el) return;
-    const wrap = el.parentElement;
-    if (!wrap) return;
-    const overlay = wrap.querySelector('[data-overlay]');
-    if (overlay) (overlay as HTMLElement).scrollLeft = el.scrollLeft;
-  }, [value]);
-
   const inputBlock = (
-    <div className="relative flex min-w-0 flex-1">
-      <div
-        data-overlay
-        aria-hidden
-        className="pointer-events-none absolute inset-0 flex items-center overflow-hidden rounded bg-[var(--color-bg-secondary)] px-3 py-2 font-mono text-sm"
-      >
-        {value ? (
-          <span className="whitespace-pre text-[var(--foreground)]">
-            {segments.map((s, i) =>
-              s.isVar ? (
-                <span key={i} className="text-[var(--color-accent)]">
-                  {s.text}
-                </span>
-              ) : (
-                <span key={i}>{s.text}</span>
-              )
-            )}
-          </span>
-        ) : null}
-      </div>
+    <div className={`relative min-w-0 flex-1 rounded bg-[var(--color-bg-secondary)] ${
+      focused ? 'ring-1 ring-[var(--color-accent)]' : ''
+    }`}>
+      {/* Highlighted overlay — only visible when NOT focused */}
+      {!focused && hasVars && value && (
+        <div
+          aria-hidden
+          onClick={handleOverlayClick}
+          className="absolute inset-0 flex cursor-text items-center overflow-hidden whitespace-pre rounded px-3 font-mono text-sm"
+        >
+          {segments.map((s, i) =>
+            s.isVar ? (
+              <span key={i} className="text-[var(--color-accent)]">
+                {s.text}
+              </span>
+            ) : (
+              <span key={i} className="text-[var(--foreground)]">{s.text}</span>
+            )
+          )}
+        </div>
+      )}
+      {/* Real input — text is transparent only when overlay is shown (blurred + has vars) */}
       <input
         ref={inputRef}
         type="text"
         value={value}
         onChange={e => onChange(e.target.value)}
-        onFocus={() => setFocused(true)}
-        onBlur={() => setFocused(false)}
-        onScroll={handleScroll}
+        onFocus={handleFocus}
+        onBlur={handleBlur}
         onKeyDown={onKeyDown}
         placeholder={placeholder}
-        className={`w-full min-w-0 rounded bg-transparent px-3 py-2 font-mono text-sm outline-none placeholder:text-gray-500 ${
-          focused ? 'ring-1 ring-[var(--color-accent)]' : ''
-        } ${className}`}
+        className={`relative w-full min-w-0 rounded bg-transparent px-3 py-2 font-mono text-sm outline-none placeholder:text-gray-500 ${className}`}
         style={{
-          color: 'var(--foreground)',
-          WebkitTextFillColor: 'transparent',
+          color: (!focused && hasVars && value) ? 'transparent' : 'var(--foreground)',
+          caretColor: 'var(--foreground)',
         }}
         spellCheck={false}
       />
@@ -131,3 +123,4 @@ export function VariableHighlightInput({
 
   return inputBlock;
 }
+
