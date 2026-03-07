@@ -4,18 +4,11 @@
 
 import { db } from '../../db/database';
 import { exportAll } from '../../db/services/backup-service';
+import { CURRENT_SCHEMA_VERSION } from '../../db/migrations';
 import type { BackupData } from '../../db/services/backup-service';
-import type { Collection, Folder, ApiRequest } from '../../types/models';
+import type { NativeCollectionExport } from '../../types/models';
 
-export interface NativeCollectionExport {
-  schema_version: number;
-  exported_at: string;
-  collection: Collection;
-  folders: Folder[];
-  requests: ApiRequest[];
-}
-
-const SCHEMA_VERSION = 1;
+export type { NativeCollectionExport };
 
 /**
  * Export a single collection with its folders and requests.
@@ -30,7 +23,7 @@ export async function exportCollectionToNative(
   ]);
   if (!collection) throw new Error(`Collection not found: ${collectionId}`);
   return {
-    schema_version: SCHEMA_VERSION,
+    schema_version: CURRENT_SCHEMA_VERSION,
     exported_at: new Date().toISOString(),
     collection,
     folders,

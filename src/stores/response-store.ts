@@ -126,7 +126,6 @@ export const useResponseStore = create<ResponseStore>((set, get) => ({
         request_snapshot: {
           method: request.method,
           url: request.url,
-          name: request.name,
           headers: request.headers,
           params: request.params,
           body: request.body,

@@ -45,7 +45,7 @@ export function ResponseBodyViewer({ body, contentType }: ResponseBodyViewerProp
           <button
             type="button"
             onClick={() => setMode('pretty')}
-            className={`rounded px-2 py-1 text-sm ${mode === 'pretty' ? 'bg-[var(--color-accent)] text-white' : 'text-gray-400 hover:text-[var(--foreground)]'}`}
+            className={`rounded px-3 py-1 text-sm font-medium transition-colors ${mode === 'pretty' ? 'bg-[var(--color-bg-tertiary)] text-[var(--foreground)] shadow-sm' : 'text-slate-400 hover:text-[var(--foreground)] hover:bg-white/[0.03]'}`}
           >
             Pretty
           </button>
@@ -53,7 +53,7 @@ export function ResponseBodyViewer({ body, contentType }: ResponseBodyViewerProp
         <button
           type="button"
           onClick={() => setMode('raw')}
-          className={`rounded px-2 py-1 text-sm ${mode === 'raw' ? 'bg-[var(--color-accent)] text-white' : 'text-gray-400 hover:text-[var(--foreground)]'}`}
+          className={`rounded px-3 py-1 text-sm font-medium transition-colors ${mode === 'raw' ? 'bg-[var(--color-bg-tertiary)] text-[var(--foreground)] shadow-sm' : 'text-slate-400 hover:text-[var(--foreground)] hover:bg-white/[0.03]'}`}
         >
           Raw
         </button>
@@ -61,7 +61,7 @@ export function ResponseBodyViewer({ body, contentType }: ResponseBodyViewerProp
           <button
             type="button"
             onClick={() => setMode('preview')}
-            className={`rounded px-2 py-1 text-sm ${mode === 'preview' ? 'bg-[var(--color-accent)] text-white' : 'text-gray-400 hover:text-[var(--foreground)]'}`}
+            className={`rounded px-3 py-1 text-sm font-medium transition-colors ${mode === 'preview' ? 'bg-[var(--color-bg-tertiary)] text-[var(--foreground)] shadow-sm' : 'text-slate-400 hover:text-[var(--foreground)] hover:bg-white/[0.03]'}`}
           >
             Preview
           </button>

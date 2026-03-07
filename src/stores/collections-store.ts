@@ -77,13 +77,13 @@ export const useCollectionsStore = create<CollectionsStore>((set, get) => ({
 
   async createCollection(name: string) {
     const list = await collectionService.getAll();
-    const sortOrder = list.length > 0 ? Math.max(...list.map(c => c.sort_order)) + 1 : 0;
+    const sortOrder = list.length > 0 ? list.reduce((max, c) => c.sort_order > max ? c.sort_order : max, 0) + 1 : 0;
     return collectionService.create({ name, description: '', sort_order: sortOrder });
   },
 
   async createFolder(collectionId: string, parentId: string | null, name: string) {
     const siblings = await folderService.getChildren(parentId, collectionId);
-    const sortOrder = siblings.length > 0 ? Math.max(...siblings.map(f => f.sort_order)) + 1 : 0;
+    const sortOrder = siblings.length > 0 ? siblings.reduce((max, f) => f.sort_order > max ? f.sort_order : max, 0) + 1 : 0;
     return folderService.create({ collection_id: collectionId, parent_id: parentId, name, sort_order: sortOrder });
   },
 

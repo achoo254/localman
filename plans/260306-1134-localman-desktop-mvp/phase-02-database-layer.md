@@ -191,17 +191,17 @@ Component -> useStore (Zustand) -> dbService -> Dexie table -> IndexedDB
    - Backup export/import roundtrip
 
 ## Todo List
-- [ ] Define TypeScript interfaces and enums
-- [ ] Create Dexie DB class with schema v1
-- [ ] Implement collection service (CRUD + cascade delete)
-- [ ] Implement folder service (CRUD + tree ops)
-- [ ] Implement request service (CRUD + duplicate + move)
-- [ ] Implement environment service (CRUD + active toggle)
-- [ ] Implement history service (log + query + clear)
-- [ ] Implement settings service (get/set)
-- [ ] Implement backup service (export/import)
-- [ ] Create liveQuery React hook
-- [ ] Integration tests
+- [x] Define TypeScript interfaces and enums
+- [x] Create Dexie DB class with schema v1
+- [x] Implement collection service (CRUD + cascade delete)
+- [x] Implement folder service (CRUD + tree ops)
+- [x] Implement request service (CRUD + duplicate + move)
+- [x] Implement environment service (CRUD + active toggle)
+- [x] Implement history service (log + query + clear)
+- [x] Implement settings service (get/set)
+- [x] Implement backup service (export/import)
+- [x] Create liveQuery React hook
+- [x] Integration tests
 
 ## Success Criteria
 - All CRUD ops work for every entity

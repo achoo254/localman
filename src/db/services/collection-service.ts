@@ -16,9 +16,22 @@ export async function getById(id: string): Promise<Collection | undefined> {
 
 export async function create(data: Omit<Collection, 'id' | 'created_at' | 'updated_at'>): Promise<Collection> {
   const ts = now();
+  const isDefaultName = !data.name || data.name === 'Untitled Collection' || data.name === 'New Collection' || data.name === 'Default';
+  const baseName = isDefaultName ? (data.name || 'Untitled Collection') : data.name;
+  let finalName = baseName;
+
+  if (isDefaultName) {
+    const existing = await db.collections.toArray();
+    const sameNameCount = existing.filter(c => c.name === baseName || c.name.startsWith(`${baseName} `)).length;
+    if (sameNameCount > 0) {
+      finalName = `${baseName} ${sameNameCount + 1}`;
+    }
+  }
+
   const collection: Collection = {
     id: newId(),
     ...data,
+    name: finalName,
     created_at: ts,
     updated_at: ts,
   };

@@ -30,33 +30,60 @@ export function buildTree(
   const matchFolder = (f: Folder) => !q || f.name.toLowerCase().includes(q);
   const matchCollection = (c: Collection) => !q || c.name.toLowerCase().includes(q);
 
+  // Pre-build O(1) lookup maps to avoid O(n²/n³) re-scanning inside recursion
+
+  // childFolders: parentId → Folder[]  (null key = root-level folders)
+  const childFoldersByParent = new Map<string | null, Folder[]>();
+  for (const f of folders) {
+    const key = f.parent_id;
+    const arr = childFoldersByParent.get(key) ?? [];
+    arr.push(f);
+    childFoldersByParent.set(key, arr);
+  }
+  // requestsByFolder: folderId → ApiRequest[], '__root__' sentinel for top-level
+  const requestsByFolder = new Map<string, ApiRequest[]>();
+  // requestCountByCollection: collectionId → total request count
+  const requestCountByCollection = new Map<string, number>();
+  for (const r of requests) {
+    const folderKey = r.folder_id ?? '__root__';
+    const arr = requestsByFolder.get(folderKey) ?? [];
+    arr.push(r);
+    requestsByFolder.set(folderKey, arr);
+    requestCountByCollection.set(r.collection_id, (requestCountByCollection.get(r.collection_id) ?? 0) + 1);
+  }
+
   function folderHasMatch(folderId: string): boolean {
-    if (folders.some(f => f.parent_id === folderId && matchFolder(f))) return true;
-    if (requests.some(r => r.folder_id === folderId && matchRequest(r))) return true;
-    return folders.filter(f => f.parent_id === folderId).some(f => folderHasMatch(f.id));
+    const childFolders = childFoldersByParent.get(folderId) ?? [];
+    if (childFolders.some(f => matchFolder(f))) return true;
+    const childRequests = requestsByFolder.get(folderId) ?? [];
+    if (childRequests.some(r => matchRequest(r))) return true;
+    return childFolders.some(f => folderHasMatch(f.id));
   }
 
   function collectionHasMatch(collectionId: string): boolean {
-    // Guard: if collection not found, treat as no match
     const collection = collections.find(c => c.id === collectionId);
     if (!collection) return false;
     if (matchCollection(collection)) return true;
-    const rootFolders = folders.filter(f => f.collection_id === collectionId && f.parent_id === null);
-    const rootRequests = requests.filter(r => r.collection_id === collectionId && r.folder_id === null);
+    const rootFolders = (childFoldersByParent.get(null) ?? []).filter(
+      f => f.collection_id === collectionId
+    );
+    const rootRequests = (requestsByFolder.get('__root__') ?? []).filter(
+      r => r.collection_id === collectionId
+    );
     if (rootRequests.some(matchRequest)) return true;
     return rootFolders.some(f => matchFolder(f) || folderHasMatch(f.id));
   }
 
   function buildFolderNodes(collectionId: string, parentId: string | null): TreeNode[] {
-    const list = folders
-      .filter(f => f.collection_id === collectionId && f.parent_id === parentId)
+    const list = (childFoldersByParent.get(parentId) ?? [])
+      .filter(f => f.collection_id === collectionId)
       .sort((a, b) => a.sort_order - b.sort_order);
     const out: TreeNode[] = [];
     for (const f of list) {
       if (q && !matchFolder(f) && !folderHasMatch(f.id)) continue;
       const childFolders = buildFolderNodes(collectionId, f.id);
-      const childRequests = requests
-        .filter(r => r.collection_id === collectionId && r.folder_id === f.id)
+      const childRequests = (requestsByFolder.get(f.id) ?? [])
+        .filter(r => r.collection_id === collectionId)
         .sort((a, b) => a.sort_order - b.sort_order);
       const reqNodes: TreeNode[] = [];
       for (const r of childRequests) {
@@ -90,8 +117,8 @@ export function buildTree(
   for (const c of sorted) {
     if (q && !collectionHasMatch(c.id)) continue;
     const rootFolders = buildFolderNodes(c.id, null);
-    const rootRequests = requests
-      .filter(r => r.collection_id === c.id && r.folder_id === null)
+    const rootRequests = (requestsByFolder.get('__root__') ?? [])
+      .filter(r => r.collection_id === c.id)
       .sort((a, b) => a.sort_order - b.sort_order);
     const rootReqNodes: TreeNode[] = [];
     for (const r of rootRequests) {
@@ -107,7 +134,7 @@ export function buildTree(
         folderId: null,
       });
     }
-    const requestCount = requests.filter(r => r.collection_id === c.id).length;
+    const requestCount = requestCountByCollection.get(c.id) ?? 0;
     result.push({
       id: c.id,
       type: 'collection',

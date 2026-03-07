@@ -59,6 +59,7 @@ export function NameInputDialog({
           <form onSubmit={handleSubmit} className="mt-3 flex flex-col gap-3">
             <input
               type="text"
+              aria-label={title}
               value={name}
               onChange={e => setName(e.target.value)}
               placeholder={placeholder}

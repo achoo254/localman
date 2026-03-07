@@ -11,8 +11,12 @@ export async function getByCollection(collectionId: string): Promise<ApiRequest[
 }
 
 export async function getByFolder(folderId: string | null, collectionId: string): Promise<ApiRequest[]> {
-  const all = await db.requests.where('collection_id').equals(collectionId).toArray();
-  return all.filter(r => r.folder_id === folderId).sort((a, b) => a.sort_order - b.sort_order);
+  // Use compound index [collection_id+folder_id] — avoids full-table scan
+  const results = await db.requests
+    .where('[collection_id+folder_id]')
+    .equals([collectionId, folderId as string])
+    .toArray();
+  return results.sort((a, b) => a.sort_order - b.sort_order);
 }
 
 export async function getById(id: string): Promise<ApiRequest | undefined> {
@@ -21,9 +25,21 @@ export async function getById(id: string): Promise<ApiRequest | undefined> {
 
 export async function create(data: Omit<ApiRequest, 'id' | 'created_at' | 'updated_at'>): Promise<ApiRequest> {
   const ts = now();
+  const baseName = data.name && data.name !== 'New Request' ? data.name : 'New Request';
+  let finalName = baseName;
+
+  if (!data.name || data.name === 'New Request') {
+    const existing = await db.requests.where('collection_id').equals(data.collection_id).toArray();
+    const sameNameCount = existing.filter(r => r.name === baseName || r.name.startsWith(`${baseName} `)).length;
+    if (sameNameCount > 0) {
+      finalName = `${baseName} ${sameNameCount + 1}`;
+    }
+  }
+
   const request: ApiRequest = {
     id: newId(),
     ...data,
+    name: finalName,
     created_at: ts,
     updated_at: ts,
   };

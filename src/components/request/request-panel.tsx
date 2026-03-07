@@ -2,7 +2,7 @@
  * Request panel: URL bar + tabs, wired to request store and HTTP execution.
  */
 
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useState } from 'react';
 import { useRequestStore } from '../../stores/request-store';
 import { useResponseStore } from '../../stores/response-store';
 import { useEnvironmentStore } from '../../stores/environment-store';
@@ -23,6 +23,8 @@ export function RequestPanel() {
   const executeRequest = useResponseStore(s => s.executeRequest);
   const cancelRequest = useResponseStore(s => s.cancelRequest);
   const isLoading = useResponseStore(s => s.isLoading);
+
+  const [sendError, setSendError] = useState<string | null>(null);
 
   useAutoSave();
 
@@ -48,7 +50,7 @@ export function RequestPanel() {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-4 p-8 text-slate-500 bg-[var(--color-bg-primary)]">
         <div className="p-4 rounded-full bg-slate-800/50">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="opacity-50"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
+          <svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="opacity-50"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
         </div>
         <p className="text-sm">Select a request from the sidebar or create a new one.</p>
         <button
@@ -68,13 +70,23 @@ export function RequestPanel() {
   };
 
   const handleSend = async () => {
-    await saveRequest();
-    const latest = useRequestStore.getState().activeRequest;
-    if (latest) executeRequest(latest);
+    setSendError(null);
+    try {
+      await saveRequest();
+      const latest = useRequestStore.getState().activeRequest;
+      if (latest) executeRequest(latest);
+    } catch (err) {
+      setSendError(err instanceof Error ? err.message : 'Failed to send request.');
+    }
   };
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
+      {sendError && (
+        <div className="shrink-0 mx-2 mt-2 rounded-md bg-red-500/10 px-3 py-2 text-xs text-red-400 border border-red-500/20">
+          {sendError}
+        </div>
+      )}
       <div className="shrink-0 p-2">
         <UrlBar
           method={activeRequest.method}

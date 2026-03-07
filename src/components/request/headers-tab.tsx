@@ -29,7 +29,15 @@ export function HeadersTab({ headers, onChange }: HeadersTabProps) {
         <span>Suggest:</span>
         <div className="flex gap-1 flex-wrap">
           {SUGGESTED_HEADERS.map(h => (
-            <span key={h} className="rounded bg-slate-800/50 px-1.5 py-0.5 text-slate-300">{h}</span>
+            <button
+              key={h}
+              onClick={() => {
+                onChange([...headers, { id: crypto.randomUUID(), key: h, value: '', enabled: true }]);
+              }}
+              className="rounded bg-slate-800/50 px-1.5 py-0.5 text-slate-300 hover:bg-slate-700 hover:text-white transition-colors cursor-pointer"
+            >
+              {h}
+            </button>
           ))}
         </div>
       </div>

@@ -163,17 +163,17 @@ function buildTree(collections, folders, requests): TreeNode[]
     - Active request highlighted in sidebar
 
 ## Todo List
-- [ ] Create collections Zustand store
-- [ ] Create tree builder utility
-- [ ] Build recursive collection tree component
-- [ ] Build collection/folder/request item components
-- [ ] Build context menus (Radix)
-- [ ] Build create/rename dialogs
-- [ ] Implement drag-and-drop (dnd-kit)
-- [ ] Build search with filtering
-- [ ] Build sidebar tabs (Collections/History/Envs)
-- [ ] Integrate sidebar with request panel
-- [ ] Handle bulk delete with confirmation
+- [x] Create collections Zustand store
+- [x] Create tree builder utility
+- [x] Build recursive collection tree component
+- [x] Build collection/folder/request item components
+- [x] Build context menus (Radix)
+- [x] Build create/rename dialogs
+- [x] Implement drag-and-drop (dnd-kit)
+- [x] Build search with filtering
+- [x] Build sidebar tabs (Collections/History/Envs)
+- [x] Integrate sidebar with request panel
+- [x] Handle bulk delete with confirmation
 
 ## Success Criteria
 - Create, rename, delete collections/folders/requests works

@@ -171,19 +171,19 @@ interface ResponseData {
     - Loading spinner overlay during request
 
 ## Todo List
-- [ ] Create HTTP client service (Tauri fetch wrapper)
-- [ ] Create request preparer (auth, headers, body)
-- [ ] Create auth handler service
-- [ ] Create response Zustand store
-- [ ] Build response status bar (status + time + size)
-- [ ] Build JSON viewer (collapsible tree + highlight)
-- [ ] Build response body viewer (JSON/Raw/Preview tabs)
-- [ ] Build response headers table
-- [ ] Build response cookies table
-- [ ] Build response action buttons (copy, save)
-- [ ] Integrate request + response split pane
-- [ ] Handle large responses (truncation/virtualization)
-- [ ] Implement request cancellation
+- [x] Create HTTP client service (Tauri fetch wrapper)
+- [x] Create request preparer (auth, headers, body)
+- [x] Create auth handler service
+- [x] Create response Zustand store
+- [x] Build response status bar (status + time + size)
+- [x] Build JSON viewer (collapsible tree + highlight)
+- [x] Build response body viewer (JSON/Raw/Preview tabs)
+- [x] Build response headers table
+- [x] Build response cookies table
+- [x] Build response action buttons (copy, save)
+- [x] Integrate request + response split pane
+- [x] Handle large responses (truncation/virtualization)
+- [x] Implement request cancellation
 
 ## Success Criteria
 - GET/POST/PUT/PATCH/DELETE requests work against any URL (no CORS)

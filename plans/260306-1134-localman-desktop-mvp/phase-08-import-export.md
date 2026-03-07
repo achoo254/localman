@@ -155,7 +155,7 @@ function exportFullBackup(): FullBackupData
 - [x] Build import dialog UI
 - [x] Build export dialog UI
 - [x] Integrate import/export into menus
-- [ ] Test with real Postman collection files
+- [x] Test with real Postman collection files
 
 ## Success Criteria
 - cURL from Chrome DevTools imports correctly

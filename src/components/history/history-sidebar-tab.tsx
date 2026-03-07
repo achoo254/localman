@@ -3,6 +3,7 @@
  */
 
 import { useEffect, useMemo } from 'react';
+import { confirm } from '@tauri-apps/plugin-dialog';
 import { useHistoryStore } from '../../stores/history-store';
 import { getDateGroupKey, type DateGroupKey } from '../../utils/history-date-groups';
 import { HistoryFiltersBar } from './history-filters';
@@ -38,8 +39,8 @@ export function HistorySidebarTab() {
   const grouped = useMemo(() => groupEntriesByDate(entries), [entries]);
   const order: DateGroupKey[] = ['today', 'yesterday', 'last7', 'older'];
 
-  const handleClear = () => {
-    if (window.confirm('Clear all history? This cannot be undone.')) {
+  const handleClear = async () => {
+    if (await confirm('Clear all history? This cannot be undone.')) {
       void clearHistory();
     }
   };

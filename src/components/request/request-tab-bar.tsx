@@ -3,17 +3,7 @@
  */
 
 import { useRequestStore } from '../../stores/request-store';
-import type { HttpMethod } from '../../types/enums';
-
-const METHOD_COLORS: Record<HttpMethod, string> = {
-  GET: 'var(--color-method-get)',
-  POST: 'var(--color-method-post)',
-  PUT: 'var(--color-method-put)',
-  PATCH: 'var(--color-method-patch)',
-  DELETE: 'var(--color-method-delete)',
-  HEAD: 'var(--color-method-get)',
-  OPTIONS: 'var(--color-method-get)',
-};
+import { METHOD_COLORS } from '../../utils/method-colors';
 
 export function RequestTabBar() {
   const openTabs = useRequestStore(s => s.openTabs);
@@ -23,9 +13,7 @@ export function RequestTabBar() {
 
   if (openTabs.length === 0) {
     return (
-      <div className="border-b border-[var(--color-bg-tertiary)] px-4 py-2.5 text-sm text-slate-500 bg-[#0B1120]">
-        No request open — create or open a request from the sidebar.
-      </div>
+      <div className="border-b border-[var(--color-bg-tertiary)] h-[37px] bg-[#0B1120]" />
     );
   }
 

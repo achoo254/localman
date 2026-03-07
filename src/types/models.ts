@@ -58,6 +58,19 @@ export interface Environment {
   updated_at: string;
 }
 
+/**
+ * Focused snapshot stored inside HistoryEntry — only the fields needed
+ * to display or replay a past request. Tighter than Partial<ApiRequest>.
+ */
+export interface RequestSnapshot {
+  method: HttpMethod;
+  url: string;
+  headers: KeyValuePair[];
+  body: RequestBody;
+  auth: AuthConfig;
+  params?: KeyValuePair[];
+}
+
 export interface HistoryEntry {
   id?: number;
   request_id: string;
@@ -66,7 +79,7 @@ export interface HistoryEntry {
   status_code: number;
   response_time: number;
   response_size: number;
-  request_snapshot: Partial<ApiRequest>;
+  request_snapshot: RequestSnapshot;
   response_body?: string;
   response_headers?: Record<string, string>;
   timestamp: string;
@@ -75,4 +88,13 @@ export interface HistoryEntry {
 export interface Setting {
   key: string;
   value: unknown;
+}
+
+/** Shared type for single-collection native JSON export/import. */
+export interface NativeCollectionExport {
+  schema_version: number;
+  exported_at: string;
+  collection: Collection;
+  folders: Folder[];
+  requests: ApiRequest[];
 }

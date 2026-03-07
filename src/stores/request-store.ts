@@ -18,6 +18,8 @@ interface RequestStore {
   activeTabId: string | null;
   activeRequest: ApiRequest | null;
   isDirty: boolean;
+  /** Tracks which request id is currently being loaded — used to discard stale loads. */
+  _loadingRequestId: string | null;
 
   openRequest: (request: ApiRequest) => void;
   closeTab: (id: string) => void;
@@ -36,6 +38,7 @@ export const useRequestStore = create<RequestStore>((set, get) => ({
   activeTabId: null,
   activeRequest: null,
   isDirty: false,
+  _loadingRequestId: null,
 
   openRequest(request: ApiRequest) {
     const { openTabs } = get();
@@ -119,20 +122,30 @@ export const useRequestStore = create<RequestStore>((set, get) => ({
   async saveRequest() {
     const { activeRequest } = get();
     if (!activeRequest || !get().isDirty) return;
-    await requestService.update(activeRequest.id, activeRequest);
-    set({ isDirty: false });
-    const tabs = get().openTabs.map(t =>
-      t.id === activeRequest.id ? { ...t, isDirty: false } : t
-    );
-    set({ openTabs: tabs });
+    // Snapshot before async write — edits made during the DB write are NOT lost
+    const snapshot = activeRequest;
+    await requestService.update(snapshot.id, snapshot);
+    // Only clear dirty flag if no newer edit arrived during the async save
+    if (get().activeRequest?.updated_at === snapshot.updated_at) {
+      set({ isDirty: false });
+      const tabs = get().openTabs.map(t =>
+        t.id === snapshot.id ? { ...t, isDirty: false } : t
+      );
+      set({ openTabs: tabs });
+    }
   },
 
   async loadRequest(id: string | null) {
     if (!id) {
-      set({ activeRequest: null });
+      set({ activeRequest: null, _loadingRequestId: null });
       return;
     }
+    // Record which request we're loading — rapid tab switches update this,
+    // causing the stale load to discard its result below.
+    set({ _loadingRequestId: id });
     const req = await requestService.getById(id);
+    // Discard result if another loadRequest call superseded this one
+    if (get()._loadingRequestId !== id) return;
     if (req) set({ activeRequest: req });
   },
 }));

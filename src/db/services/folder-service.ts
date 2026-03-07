@@ -11,8 +11,17 @@ export async function getByCollection(collectionId: string): Promise<Folder[]> {
 }
 
 export async function getChildren(parentId: string | null, collectionId: string): Promise<Folder[]> {
-  const all = await db.folders.where('collection_id').equals(collectionId).toArray();
-  return all.filter(f => f.parent_id === parentId).sort((a, b) => a.sort_order - b.sort_order);
+  if (parentId === null) {
+    // null is not a valid IndexedDB key — filter root folders via collection_id index
+    const all = await db.folders.where('collection_id').equals(collectionId).toArray();
+    return all.filter(f => f.parent_id === null).sort((a, b) => a.sort_order - b.sort_order);
+  }
+  // Use compound index [collection_id+parent_id] for non-root folders
+  const results = await db.folders
+    .where('[collection_id+parent_id]')
+    .equals([collectionId, parentId])
+    .toArray();
+  return results.sort((a, b) => a.sort_order - b.sort_order);
 }
 
 export async function getById(id: string): Promise<Folder | undefined> {

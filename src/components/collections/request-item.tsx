@@ -5,16 +5,7 @@
 import type { TreeNode } from '../../utils/tree-builder';
 import type { ContextMenuCallbacks } from './collection-tree';
 import { CollectionContextMenu } from './collection-context-menu';
-
-const METHOD_COLORS: Record<string, string> = {
-  GET: 'var(--color-method-get)',
-  POST: 'var(--color-method-post)',
-  PUT: 'var(--color-method-put)',
-  PATCH: 'var(--color-method-patch)',
-  DELETE: 'var(--color-method-delete)',
-  HEAD: 'var(--color-method-get)',
-  OPTIONS: 'var(--color-method-get)',
-};
+import { METHOD_COLORS } from '../../utils/method-colors';
 
 interface RequestItemProps {
   node: TreeNode;

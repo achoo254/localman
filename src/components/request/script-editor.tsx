@@ -4,6 +4,7 @@
 
 import { useMemo } from 'react';
 import { javascript } from '@codemirror/lang-javascript';
+import { placeholder as cmPlaceholder } from '@codemirror/view';
 import { useCodemirrorEditor } from '../../hooks/use-codemirror-editor';
 
 interface ScriptEditorProps {
@@ -12,8 +13,13 @@ interface ScriptEditorProps {
   placeholder?: string;
 }
 
-export function ScriptEditor({ value, onChange }: ScriptEditorProps) {
-  const extensions = useMemo(() => [javascript()], []);
+export function ScriptEditor({ value, onChange, placeholder }: ScriptEditorProps) {
+  const extensions = useMemo(
+    () => [javascript(), ...(placeholder ? [cmPlaceholder(placeholder)] : [])],
+    // placeholder identity is stable per render; resetKey handles re-mount if it changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [placeholder]
+  );
 
   const containerRef = useCodemirrorEditor(value ?? '', {
     onChange,

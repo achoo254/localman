@@ -15,6 +15,7 @@ export async function getById(id: string): Promise<Environment | undefined> {
 }
 
 export async function getActive(): Promise<Environment | undefined> {
+  // Boolean fields are not valid IndexedDB index keys — filter in JS
   const all = await db.environments.toArray();
   return all.find(e => e.is_active);
 }

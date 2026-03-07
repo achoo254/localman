@@ -86,6 +86,12 @@ export async function executeHttp(
   }
   const bodySize = new Blob([text]).size;
 
+  if (response.ok || response.status > 0) {
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('app:network-success'));
+    }
+  }
+
   return {
     status: response.status,
     statusText: response.statusText,

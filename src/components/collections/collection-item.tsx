@@ -38,7 +38,7 @@ export function CollectionItem({
         type="button"
         className="shrink-0 p-0.5 rounded hover:bg-[var(--color-bg-tertiary)]"
         aria-expanded={isExpanded}
-        onClick={e => e.stopPropagation()}
+        onClick={e => { e.stopPropagation(); onToggle(); }}
       >
         <ChevronRight
           className={`h-4 w-4 text-gray-400 transition-transform ${isExpanded ? 'rotate-90' : ''}`}
@@ -47,7 +47,7 @@ export function CollectionItem({
       <Folder className="h-4 w-4 shrink-0 text-[var(--color-accent)]" />
       <span className="truncate text-sm flex-1">{node.name}</span>
       {node.requestCount != null && node.requestCount > 0 && (
-        <span className="text-xs text-gray-500 shrink-0">{node.requestCount}</span>
+        <span className="text-xs text-gray-500 shrink-0" title={`${node.requestCount} request${node.requestCount !== 1 ? 's' : ''}`}>{node.requestCount}</span>
       )}
     </div>
   );

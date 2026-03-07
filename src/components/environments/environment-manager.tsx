@@ -4,6 +4,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
+import { confirm } from '@tauri-apps/plugin-dialog';
 import { Plus, Trash2 } from 'lucide-react';
 import type { EnvVariable } from '../../types/models';
 import { VariableTable } from './variable-table';
@@ -41,7 +42,7 @@ export function EnvironmentManager({ open, onOpenChange }: EnvironmentManagerPro
 
   const handleEnvDelete = useCallback(
     async (id: string) => {
-      if (!window.confirm('Delete this environment and its variables?')) return;
+      if (!await confirm('Delete this environment and its variables?')) return;
       await deleteEnvironment(id);
       if (selection.type === 'env' && selection.id === id) setSelection({ type: 'globals' });
     },

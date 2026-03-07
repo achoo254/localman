@@ -39,7 +39,7 @@ export function FolderItem({
         type="button"
         className="shrink-0 p-0.5 rounded"
         aria-expanded={isExpanded}
-        onClick={e => e.stopPropagation()}
+        onClick={e => { e.stopPropagation(); toggleExpand(node.id); }}
       >
         <ChevronRight
           className={`h-4 w-4 text-gray-400 transition-transform ${isExpanded ? 'rotate-90' : ''}`}
