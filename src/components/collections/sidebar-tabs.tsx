@@ -2,7 +2,7 @@
  * Sidebar tabs: Collections (active), History placeholder, Environments placeholder.
  */
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Folder, History, Layers } from 'lucide-react';
 import { CollectionSearch } from './collection-search';
 import { CollectionTree } from './collection-tree';
@@ -13,10 +13,15 @@ import * as requestService from '../../db/services/request-service';
 import { CreateCollectionDialog } from './create-collection-dialog';
 import { CreateFolderDialog } from './create-folder-dialog';
 import { MoveRequestDialog } from './move-request-dialog';
+import { EnvironmentSidebarTab } from '../environments/environment-sidebar-tab';
 
 type TabId = 'collections' | 'history' | 'environments';
 
-export function SidebarTabs() {
+interface SidebarTabsProps {
+  onOpenEnvironmentManager?: () => void;
+}
+
+export function SidebarTabs({ onOpenEnvironmentManager }: SidebarTabsProps) {
   const [activeTab, setActiveTab] = useState<TabId>('collections');
   const [collectionDialog, setCollectionDialog] = useState<'create' | 'rename' | null>(null);
   const [folderDialog, setFolderDialog] = useState<'create' | 'rename' | null>(null);
@@ -30,6 +35,7 @@ export function SidebarTabs() {
   const { tree, isLoading } = useCollectionTree();
   const activeRequestId = useRequestStore(s => s.activeRequest?.id ?? null);
   const openRequest = useRequestStore(s => s.openRequest);
+  const createNewRequest = useRequestStore(s => s.createNewRequest);
   const createCollection = useCollectionsStore(s => s.createCollection);
   const createFolder = useCollectionsStore(s => s.createFolder);
   const renameCollection = useCollectionsStore(s => s.renameCollection);
@@ -38,6 +44,7 @@ export function SidebarTabs() {
   const deleteFolder = useCollectionsStore(s => s.deleteFolder);
   const duplicateRequest = useCollectionsStore(s => s.duplicateRequest);
   const deleteRequest = useCollectionsStore(s => s.deleteRequest);
+  const moveRequestToCollection = useCollectionsStore(s => s.moveRequestToCollection);
 
   const handleOpenRequest = async (requestId: string) => {
     const req = await requestService.getById(requestId);
@@ -45,7 +52,7 @@ export function SidebarTabs() {
   };
 
   const handleNewRequest = (collectionId: string, folderId: string | null) => {
-    useRequestStore.getState().createNewRequest(collectionId, folderId);
+    createNewRequest(collectionId, folderId);
   };
 
   const handleNewFolder = (collectionId: string, parentId: string | null) => {
@@ -94,11 +101,12 @@ export function SidebarTabs() {
 
   const handleMoveRequestConfirm = async (collectionId: string, folderId: string | null) => {
     if (!moveRequestId) return;
-    await useCollectionsStore.getState().moveRequestToCollection(moveRequestId, collectionId, folderId);
+    await moveRequestToCollection(moveRequestId, collectionId, folderId);
     setMoveRequestId(null);
   };
 
-  const contextMenuCallbacks = {
+  // Memoize to avoid passing a new object reference on every render
+  const contextMenuCallbacks = useMemo(() => ({
     onNewRequest: handleNewRequest,
     onNewFolder: handleNewFolder,
     onRenameCollection: handleRenameCollection,
@@ -108,16 +116,24 @@ export function SidebarTabs() {
     onDuplicateRequest: handleDuplicateRequest,
     onMoveRequest: handleMoveRequest,
     onDeleteRequest: handleDeleteRequest,
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }), [deleteCollection, deleteFolder, deleteRequest, duplicateRequest, moveRequestToCollection, openRequest]);
+
+  const handleCollectionDialogOpenChange = (open: boolean) => {
+    if (!open) {
+      setCollectionDialog(null);
+      setRenameCollectionId(null);
+    }
   };
 
   return (
     <>
       <div className="flex flex-1 min-h-0">
-        <div className="flex flex-col border-r border-[var(--color-bg-tertiary)] w-10 shrink-0 py-2 gap-1">
+        <div className="flex flex-col border-r border-[var(--color-bg-tertiary)] w-12 shrink-0 py-3 gap-2 items-center bg-[#0B1120]">
           <button
             type="button"
             onClick={() => setActiveTab('collections')}
-            className={`p-2 rounded ${activeTab === 'collections' ? 'bg-[var(--color-bg-tertiary)] text-[var(--color-accent)]' : 'text-gray-500 hover:text-[var(--foreground)]'}`}
+            className={`p-2.5 rounded-xl transition-all duration-200 ${activeTab === 'collections' ? 'bg-[var(--color-bg-tertiary)] text-[var(--color-accent)] shadow-sm' : 'text-slate-500 hover:text-slate-200 hover:bg-white/5'}`}
             title="Collections"
           >
             <Folder className="h-5 w-5" />
@@ -125,7 +141,7 @@ export function SidebarTabs() {
           <button
             type="button"
             onClick={() => setActiveTab('history')}
-            className={`p-2 rounded ${activeTab === 'history' ? 'bg-[var(--color-bg-tertiary)] text-[var(--color-accent)]' : 'text-gray-500 hover:text-[var(--foreground)]'}`}
+            className={`p-2.5 rounded-xl transition-all duration-200 ${activeTab === 'history' ? 'bg-[var(--color-bg-tertiary)] text-[var(--color-accent)] shadow-sm' : 'text-slate-500 hover:text-slate-200 hover:bg-white/5'}`}
             title="History"
           >
             <History className="h-5 w-5" />
@@ -133,7 +149,7 @@ export function SidebarTabs() {
           <button
             type="button"
             onClick={() => setActiveTab('environments')}
-            className={`p-2 rounded ${activeTab === 'environments' ? 'bg-[var(--color-bg-tertiary)] text-[var(--color-accent)]' : 'text-gray-500 hover:text-[var(--foreground)]'}`}
+            className={`p-2.5 rounded-xl transition-all duration-200 ${activeTab === 'environments' ? 'bg-[var(--color-bg-tertiary)] text-[var(--color-accent)] shadow-sm' : 'text-slate-500 hover:text-slate-200 hover:bg-white/5'}`}
             title="Environments"
           >
             <Layers className="h-5 w-5" />
@@ -143,43 +159,63 @@ export function SidebarTabs() {
           {activeTab === 'collections' && (
             <>
               <CollectionSearch />
-              <div className="flex-1 overflow-auto min-h-0">
+              <div className="flex-1 overflow-auto min-h-0 custom-scrollbar pb-2">
                 {isLoading ? (
                   <p className="p-4 text-sm text-gray-500">Loading…</p>
                 ) : tree.length === 0 ? (
-                  <p className="p-4 text-sm text-gray-500">No collections</p>
+                  <div className="flex flex-col items-center justify-center p-6 gap-4 text-center mt-10">
+                    <div className="p-3 bg-slate-800/50 rounded-full">
+                      <Folder className="h-6 w-6 text-slate-500" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-semibold text-slate-300">No collections yet</h3>
+                      <p className="text-xs text-slate-500 mt-1">Create a collection to organize requests</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setCollectionDialog('create')}
+                      className="rounded-lg bg-[var(--color-accent)] px-5 py-2 text-[13px] font-semibold text-white transition-all hover:bg-[var(--color-accent-hover)] hover:shadow-md active:scale-95"
+                    >
+                      Create Collection
+                    </button>
+                  </div>
                 ) : (
-                  <CollectionTree
-                    tree={tree}
-                    onOpenRequest={handleOpenRequest}
-                    activeRequestId={activeRequestId}
-                    contextMenuCallbacks={contextMenuCallbacks}
-                  />
+                  <div className="flex flex-col">
+                    <CollectionTree
+                      tree={tree}
+                      onOpenRequest={handleOpenRequest}
+                      activeRequestId={activeRequestId}
+                      contextMenuCallbacks={contextMenuCallbacks}
+                    />
+                    <div className="px-3 mt-4">
+                      <button
+                        type="button"
+                        onClick={() => setCollectionDialog('create')}
+                        className="w-full rounded-lg border border-dashed border-slate-700/60 py-2.5 text-[13px] font-medium text-slate-400 transition-colors hover:text-slate-200 hover:border-slate-500 hover:bg-white/[0.02]"
+                      >
+                        + New collection
+                      </button>
+                    </div>
+                  </div>
                 )}
-              </div>
-              <div className="p-2 border-t border-[var(--color-bg-tertiary)]">
-                <button
-                  type="button"
-                  onClick={() => setCollectionDialog('create')}
-                  className="w-full rounded border border-dashed border-[var(--color-bg-tertiary)] py-2 text-sm text-gray-500 hover:text-[var(--foreground)] hover:border-[var(--color-accent)]"
-                >
-                  New collection
-                </button>
               </div>
             </>
           )}
           {activeTab === 'history' && (
             <div className="p-4 text-sm text-gray-500">History (Phase 07)</div>
           )}
-          {activeTab === 'environments' && (
-            <div className="p-4 text-sm text-gray-500">Environments (Phase 06)</div>
-          )}
+          {activeTab === 'environments' &&
+            (onOpenEnvironmentManager ? (
+              <EnvironmentSidebarTab onOpenManager={onOpenEnvironmentManager} />
+            ) : (
+              <div className="p-4 text-sm text-gray-500">Environments</div>
+            ))}
         </div>
       </div>
 
       <CreateCollectionDialog
         open={collectionDialog !== null}
-        onOpenChange={open => !open && (setCollectionDialog(null), setRenameCollectionId(null))}
+        onOpenChange={handleCollectionDialogOpenChange}
         initialName={collectionDialog === 'rename' ? renameCollectionName : ''}
         mode={collectionDialog === 'rename' ? 'rename' : 'create'}
         onConfirm={async name => {
@@ -194,7 +230,7 @@ export function SidebarTabs() {
 
       <MoveRequestDialog
         open={moveRequestId !== null}
-        onOpenChange={open => !open && setMoveRequestId(null)}
+        onOpenChange={open => { if (!open) setMoveRequestId(null); }}
         onConfirm={handleMoveRequestConfirm}
       />
 

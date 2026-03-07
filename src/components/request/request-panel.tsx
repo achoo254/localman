@@ -2,13 +2,15 @@
  * Request panel: URL bar + tabs, wired to request store and HTTP execution.
  */
 
-import { useEffect } from 'react';
+import { useEffect, useCallback } from 'react';
 import { useRequestStore } from '../../stores/request-store';
 import { useResponseStore } from '../../stores/response-store';
+import { useEnvironmentStore } from '../../stores/environment-store';
 import { useAutoSave } from '../../hooks/use-auto-save';
 import { UrlBar } from './url-bar';
 import { RequestTabs } from './request-tabs';
 import { parseQueryFromUrl, buildUrlWithParams } from '../../utils/url-params';
+import { interpolateString } from '../../services/interpolation-engine';
 import * as collectionService from '../../db/services/collection-service';
 
 export function RequestPanel() {
@@ -23,6 +25,11 @@ export function RequestPanel() {
   const isLoading = useResponseStore(s => s.isLoading);
 
   useAutoSave();
+
+  const getResolvedUrl = useCallback(() => {
+    const ctx = useEnvironmentStore.getState().getInterpolationContext();
+    return interpolateString(activeRequest?.url ?? '', ctx);
+  }, [activeRequest?.url]);
 
   useEffect(() => {
     loadRequest(activeTabId);
@@ -39,12 +46,15 @@ export function RequestPanel() {
 
   if (!activeRequest) {
     return (
-      <div className="flex flex-1 flex-col items-center justify-center gap-4 p-8 text-gray-500">
-        <p>Select a request from the sidebar or create a new one.</p>
+      <div className="flex flex-1 flex-col items-center justify-center gap-4 p-8 text-slate-500 bg-[var(--color-bg-primary)]">
+        <div className="p-4 rounded-full bg-slate-800/50">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="opacity-50"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
+        </div>
+        <p className="text-sm">Select a request from the sidebar or create a new one.</p>
         <button
           type="button"
           onClick={handleNewRequest}
-          className="rounded bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-white hover:opacity-90"
+          className="rounded-lg bg-[var(--color-accent)] px-6 py-2.5 text-sm font-semibold text-white transition-all hover:bg-[var(--color-accent-hover)] hover:shadow-md active:scale-95"
         >
           New request
         </button>
@@ -59,7 +69,8 @@ export function RequestPanel() {
 
   const handleSend = async () => {
     await saveRequest();
-    executeRequest(activeRequest);
+    const latest = useRequestStore.getState().activeRequest;
+    if (latest) executeRequest(latest);
   };
 
   return (
@@ -73,6 +84,7 @@ export function RequestPanel() {
           onSend={handleSend}
           onCancel={cancelRequest}
           isLoading={isLoading}
+          getResolvedUrl={getResolvedUrl}
         />
       </div>
       <div className="min-h-0 flex-1 overflow-auto">

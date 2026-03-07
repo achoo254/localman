@@ -8,6 +8,7 @@ import type { ResponseData } from '../types/response';
 import { prepareRequest } from '../services/request-preparer';
 import { executeHttp } from '../services/http-client';
 import * as historyService from '../db/services/history-service';
+import { useEnvironmentStore } from './environment-store';
 
 interface ResponseStore {
   response: ResponseData | null;
@@ -37,7 +38,8 @@ export const useResponseStore = create<ResponseStore>((set, get) => ({
       abortController: controller,
     });
     try {
-      const prepared = prepareRequest(request);
+      const context = useEnvironmentStore.getState().getInterpolationContext();
+      const prepared = prepareRequest(request, context);
       const data = await executeHttp(prepared, { signal: controller.signal });
       set({
         response: data,

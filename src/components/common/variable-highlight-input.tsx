@@ -1,9 +1,10 @@
 /**
  * URL/input with {{variable}} highlighted in accent color.
- * Overlay approach: hidden input + div with highlighted segments.
+ * Optional tooltip showing resolved value when getResolvedValue is provided.
  */
 
 import { useRef, useEffect, useState, useCallback } from 'react';
+import * as Tooltip from '@radix-ui/react-tooltip';
 
 interface VariableHighlightInputProps {
   value: string;
@@ -11,6 +12,8 @@ interface VariableHighlightInputProps {
   placeholder?: string;
   className?: string;
   onKeyDown?: (e: React.KeyboardEvent) => void;
+  /** When provided, tooltip on hover shows this resolved string (e.g. URL with vars replaced). */
+  getResolvedValue?: () => string;
 }
 
 const VAR_PATTERN = /\{\{[^}]+\}\}/g;
@@ -39,10 +42,12 @@ export function VariableHighlightInput({
   placeholder = '',
   className = '',
   onKeyDown,
+  getResolvedValue,
 }: VariableHighlightInputProps) {
   const [focused, setFocused] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const segments = segmentize(value);
+  const resolved = getResolvedValue?.() ?? '';
 
   const handleScroll = useCallback(() => {
     const el = inputRef.current;
@@ -61,27 +66,12 @@ export function VariableHighlightInput({
     if (overlay) (overlay as HTMLElement).scrollLeft = el.scrollLeft;
   }, [value]);
 
-  return (
+  const inputBlock = (
     <div className="relative flex min-w-0 flex-1">
-      <input
-        ref={inputRef}
-        type="text"
-        value={value}
-        onChange={e => onChange(e.target.value)}
-        onFocus={() => setFocused(true)}
-        onBlur={() => setFocused(false)}
-        onScroll={handleScroll}
-        onKeyDown={onKeyDown}
-        placeholder={placeholder}
-        className={`w-full min-w-0 rounded bg-[var(--color-bg-secondary)] px-3 py-2 font-mono text-sm text-transparent outline-none caret-[var(--foreground)] placeholder:text-gray-500 ${
-          focused ? 'ring-1 ring-[var(--color-accent)]' : ''
-        } ${className}`}
-        spellCheck={false}
-      />
       <div
         data-overlay
         aria-hidden
-        className="pointer-events-none absolute inset-0 flex items-center overflow-hidden rounded px-3 py-2 font-mono text-sm"
+        className="pointer-events-none absolute inset-0 flex items-center overflow-hidden rounded bg-[var(--color-bg-secondary)] px-3 py-2 font-mono text-sm"
       >
         {value ? (
           <span className="whitespace-pre text-[var(--foreground)]">
@@ -97,6 +87,43 @@ export function VariableHighlightInput({
           </span>
         ) : null}
       </div>
+      <input
+        ref={inputRef}
+        type="text"
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+        onScroll={handleScroll}
+        onKeyDown={onKeyDown}
+        placeholder={placeholder}
+        className={`w-full min-w-0 rounded bg-transparent px-3 py-2 font-mono text-sm text-transparent outline-none caret-[var(--foreground)] placeholder:text-gray-500 ${
+          focused ? 'ring-1 ring-[var(--color-accent)]' : ''
+        } ${className}`}
+        spellCheck={false}
+      />
     </div>
   );
+
+  if (getResolvedValue) {
+    return (
+      <Tooltip.Provider delayDuration={300}>
+        <Tooltip.Root>
+          <Tooltip.Trigger asChild>
+            <div className="min-w-0 flex-1">{inputBlock}</div>
+          </Tooltip.Trigger>
+          <Tooltip.Portal>
+            <Tooltip.Content
+              side="bottom"
+              className="max-w-md break-all rounded border border-[var(--color-bg-tertiary)] bg-[var(--color-bg-secondary)] px-2 py-1.5 font-mono text-xs shadow-lg"
+            >
+              {resolved || '(empty)'}
+            </Tooltip.Content>
+          </Tooltip.Portal>
+        </Tooltip.Root>
+      </Tooltip.Provider>
+    );
+  }
+
+  return inputBlock;
 }
