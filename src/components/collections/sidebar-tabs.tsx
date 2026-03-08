@@ -14,6 +14,8 @@ import * as requestService from '../../db/services/request-service';
 import { CreateCollectionDialog } from './create-collection-dialog';
 import { CreateFolderDialog } from './create-folder-dialog';
 import { MoveRequestDialog } from './move-request-dialog';
+import { NameInputDialog } from '../common/name-input-dialog';
+import { toast } from '../common/toast-provider';
 import { ExportDialog } from '../import-export/export-dialog';
 import { EnvironmentSidebarTab } from '../environments/environment-sidebar-tab';
 import { HistorySidebarTab } from '../history/history-sidebar-tab';
@@ -37,6 +39,8 @@ export function SidebarTabs({ onOpenEnvironmentManager }: SidebarTabsProps) {
   const [renameFolderName, setRenameFolderName] = useState('');
   const [newFolderContext, setNewFolderContext] = useState<{ collectionId: string; parentId: string | null } | null>(null);
   const [moveRequestId, setMoveRequestId] = useState<string | null>(null);
+  const [renameRequestId, setRenameRequestId] = useState<string | null>(null);
+  const [renameRequestName, setRenameRequestName] = useState('');
   const [exportCollectionId, setExportCollectionId] = useState<string | null>(null);
   const [exportCollectionName, setExportCollectionName] = useState('');
 
@@ -49,6 +53,8 @@ export function SidebarTabs({ onOpenEnvironmentManager }: SidebarTabsProps) {
   const createFolder = useCollectionsStore(s => s.createFolder);
   const renameCollection = useCollectionsStore(s => s.renameCollection);
   const renameFolder = useCollectionsStore(s => s.renameFolder);
+  const renameRequest = useCollectionsStore(s => s.renameRequest);
+  const setRequestName = useRequestStore(s => s.setRequestName);
   const deleteCollection = useCollectionsStore(s => s.deleteCollection);
   const deleteFolder = useCollectionsStore(s => s.deleteFolder);
   const duplicateRequest = useCollectionsStore(s => s.duplicateRequest);
@@ -113,6 +119,11 @@ export function SidebarTabs({ onOpenEnvironmentManager }: SidebarTabsProps) {
     setMoveRequestId(id);
   };
 
+  const handleRenameRequest = (id: string, name: string) => {
+    setRenameRequestId(id);
+    setRenameRequestName(name);
+  };
+
   const handleMoveRequestConfirm = async (collectionId: string, folderId: string | null) => {
     if (!moveRequestId) return;
     await moveRequestToCollection(moveRequestId, collectionId, folderId);
@@ -145,6 +156,7 @@ export function SidebarTabs({ onOpenEnvironmentManager }: SidebarTabsProps) {
     onDeleteRequest: handleDeleteRequest,
     onExportCollection: handleExportCollection,
     onCopyAsCurl: handleCopyAsCurl,
+    onRenameRequest: handleRenameRequest,
   // eslint-disable-next-line react-hooks/exhaustive-deps -- stable callback object; handlers are stable in practice
   }), [handleDeleteCollection, handleDeleteFolder, handleDeleteRequest, handleDuplicateRequest, handleCopyAsCurl]);
 
@@ -262,6 +274,29 @@ export function SidebarTabs({ onOpenEnvironmentManager }: SidebarTabsProps) {
         open={moveRequestId !== null}
         onOpenChange={open => { if (!open) setMoveRequestId(null); }}
         onConfirm={handleMoveRequestConfirm}
+      />
+
+      <NameInputDialog
+        open={renameRequestId !== null}
+        onOpenChange={open => { if (!open) setRenameRequestId(null); }}
+        title="Rename request"
+        placeholder="Request name"
+        initialName={renameRequestName}
+        confirmLabel="Rename"
+        onConfirm={async name => {
+          if (!renameRequestId) return;
+          try {
+            await renameRequest(renameRequestId, name);
+            setRequestName(renameRequestId, name);
+            setRenameRequestId(null);
+          } catch (e) {
+            toast('Rename failed', {
+              description: e instanceof Error ? e.message : 'Unknown error',
+              variant: 'error',
+            });
+            throw e;
+          }
+        }}
       />
 
       <CreateFolderDialog

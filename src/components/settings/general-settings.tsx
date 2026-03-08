@@ -9,9 +9,27 @@ const METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'];
 export function GeneralSettings() {
   const { general, setGeneral } = useSettingsStore();
 
+  const uiFontSizeOptions = [
+    { value: 'small' as const, label: 'Small (12px)' },
+    { value: 'medium' as const, label: 'Medium (14px)' },
+    { value: 'large' as const, label: 'Large (16px)' },
+  ];
+
   return (
     <div className="flex flex-col gap-4 p-4">
       <h2 className="text-sm font-semibold text-slate-200">General</h2>
+      <label className="flex flex-col gap-1">
+        <span className="text-xs text-slate-400">UI font size</span>
+        <select
+          value={general.uiFontSize}
+          onChange={e => setGeneral({ uiFontSize: e.target.value as 'small' | 'medium' | 'large' })}
+          className="rounded border border-[var(--color-bg-tertiary)] bg-[var(--color-bg-secondary)] px-3 py-2 text-sm text-slate-200"
+        >
+          {uiFontSizeOptions.map(opt => (
+            <option key={opt.value} value={opt.value}>{opt.label}</option>
+          ))}
+        </select>
+      </label>
       <label className="flex flex-col gap-1">
         <span className="text-xs text-slate-400">Default HTTP method</span>
         <select

@@ -38,6 +38,7 @@ interface CollectionsStore {
   deleteFolder: (id: string) => Promise<void>;
   deleteRequest: (id: string) => Promise<void>;
   duplicateRequest: (id: string) => Promise<ApiRequest | undefined>;
+  renameRequest: (id: string, name: string) => Promise<void>;
   moveRequestToFolder: (requestId: string, folderId: string | null) => Promise<void>;
   moveRequestToCollection: (requestId: string, collectionId: string, folderId: string | null) => Promise<void>;
 }
@@ -109,6 +110,10 @@ export const useCollectionsStore = create<CollectionsStore>((set, get) => ({
 
   async duplicateRequest(id: string) {
     return requestService.duplicate(id);
+  },
+
+  async renameRequest(id: string, name: string) {
+    await requestService.update(id, { name });
   },
 
   async moveRequestToFolder(requestId: string, folderId: string | null) {

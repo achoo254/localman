@@ -92,6 +92,7 @@ export function RequestTabs({ request, onUpdate }: RequestTabsProps) {
         <AuthTab auth={request.auth} onChange={auth => onUpdate({ auth })} />
       </Tabs.Content>
       <Tabs.Content value="pre" className="mt-0 flex-1 overflow-auto p-4">
+        <p className="text-xs text-slate-500 mb-2">Environment variables: lm.variables.get('varName'), lm.variables.set('key', 'value')</p>
         <Suspense fallback={<EditorFallback />}>
           <ScriptEditor
             value={request.pre_script ?? ''}
@@ -100,6 +101,7 @@ export function RequestTabs({ request, onUpdate }: RequestTabsProps) {
         </Suspense>
       </Tabs.Content>
       <Tabs.Content value="post" className="mt-0 flex-1 overflow-auto p-4">
+        <p className="text-xs text-slate-500 mb-2">Environment variables: lm.variables.get('varName'), lm.variables.set('key', 'value')</p>
         <Suspense fallback={<EditorFallback />}>
           <ScriptEditor
             value={request.post_script ?? ''}

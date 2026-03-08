@@ -46,7 +46,7 @@ export function FolderItem({
         />
       </button>
       <FolderOpen className="h-4 w-4 shrink-0 text-gray-500" />
-      <span className="truncate text-sm flex-1">{node.name}</span>
+      <span className="truncate text-sm flex-1 min-w-0" title={node.name}>{node.name}</span>
     </div>
   );
 

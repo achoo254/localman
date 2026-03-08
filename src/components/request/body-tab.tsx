@@ -58,10 +58,13 @@ export function BodyTab({ body, onChange, disabled }: BodyTabProps) {
           </p>
         )}
         {body.type === 'json' && (
-          <BodyJsonEditor
-            value={body.raw ?? '{\n  \n}'}
-            onChange={setRaw}
-          />
+          <>
+            <p className="text-xs text-slate-500 mb-1 px-2">Use {'{{varName}}'} for environment variables.</p>
+            <BodyJsonEditor
+              value={body.raw ?? '{\n  \n}'}
+              onChange={setRaw}
+            />
+          </>
         )}
         {body.type === 'form' && (
           <BodyFormEditor
@@ -76,18 +79,24 @@ export function BodyTab({ body, onChange, disabled }: BodyTabProps) {
           />
         )}
         {body.type === 'raw' && (
-          <BodyRawEditor
-            value={body.raw ?? ''}
-            onChange={setRaw}
-            language="plain"
-          />
+          <>
+            <p className="text-xs text-slate-500 mb-1 px-2">Use {'{{varName}}'} for environment variables.</p>
+            <BodyRawEditor
+              value={body.raw ?? ''}
+              onChange={setRaw}
+              language="plain"
+            />
+          </>
         )}
         {body.type === 'xml' && (
-          <BodyRawEditor
-            value={body.raw ?? ''}
-            onChange={setRaw}
-            language="xml"
-          />
+          <>
+            <p className="text-xs text-slate-500 mb-1 px-2">Use {'{{varName}}'} for environment variables.</p>
+            <BodyRawEditor
+              value={body.raw ?? ''}
+              onChange={setRaw}
+              language="xml"
+            />
+          </>
         )}
         {body.type === 'binary' && (
           <BodyBinaryPicker

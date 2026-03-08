@@ -4,6 +4,8 @@
 
 import { KeyValueEditor } from '../common/key-value-editor';
 import type { KeyValuePair } from '../../types/common';
+import { useEnvironmentStore } from '../../stores/environment-store';
+import { interpolateString } from '../../services/interpolation-engine';
 
 const SUGGESTED_HEADERS = [
   'Accept',
@@ -22,6 +24,7 @@ interface HeadersTabProps {
 }
 
 export function HeadersTab({ headers, onChange }: HeadersTabProps) {
+  const getInterpolationContext = useEnvironmentStore(s => s.getInterpolationContext);
   return (
     <div className="p-4">
       <div className="mb-3 text-[13px] font-medium text-slate-500 flex items-center gap-2">
@@ -45,7 +48,8 @@ export function HeadersTab({ headers, onChange }: HeadersTabProps) {
         pairs={headers}
         onChange={onChange}
         placeholderKey="Header name"
-        placeholderValue="Value"
+        placeholderValue="Value ({{var}})"
+        getResolvedValue={v => interpolateString(v, getInterpolationContext())}
       />
     </div>
   );
