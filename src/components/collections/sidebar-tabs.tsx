@@ -4,7 +4,7 @@
 
 import { useState, useMemo, useCallback } from 'react';
 import { confirm } from '@tauri-apps/plugin-dialog';
-import { Folder, History, Layers } from 'lucide-react';
+import { Folder, History, Layers, BookOpen } from 'lucide-react';
 import { CollectionSearch } from './collection-search';
 import { CollectionTree } from './collection-tree';
 import { useCollectionTree } from '../../hooks/use-collection-tree';
@@ -19,11 +19,12 @@ import { toast } from '../common/toast-provider';
 import { ExportDialog } from '../import-export/export-dialog';
 import { EnvironmentSidebarTab } from '../environments/environment-sidebar-tab';
 import { HistorySidebarTab } from '../history/history-sidebar-tab';
+import { DocsViewerPage } from '../docs/docs-viewer-page';
 import { getCurlForRequest } from '../../services/import-export-service';
 import { useEnvironmentStore } from '../../stores/environment-store';
 import { useSyncStore } from '../../stores/sync-store';
 
-type TabId = 'collections' | 'history' | 'environments';
+type TabId = 'collections' | 'history' | 'environments' | 'docs';
 
 interface SidebarTabsProps {
   onOpenEnvironmentManager?: () => void;
@@ -48,7 +49,7 @@ export function SidebarTabs({ onOpenEnvironmentManager }: SidebarTabsProps) {
   const getInterpolationContext = useEnvironmentStore(s => s.getInterpolationContext);
   const activeRequestId = useRequestStore(s => s.activeRequest?.id ?? null);
   const openRequest = useRequestStore(s => s.openRequest);
-  const createNewRequest = useRequestStore(s => s.createNewRequest);
+  const createDraftTab = useRequestStore(s => s.createDraftTab);
   const createCollection = useCollectionsStore(s => s.createCollection);
   const createFolder = useCollectionsStore(s => s.createFolder);
   const renameCollection = useCollectionsStore(s => s.renameCollection);
@@ -67,7 +68,7 @@ export function SidebarTabs({ onOpenEnvironmentManager }: SidebarTabsProps) {
   };
 
   const handleNewRequest = (collectionId: string, folderId: string | null) => {
-    createNewRequest(collectionId, folderId);
+    createDraftTab(collectionId, folderId);
   };
 
   const handleNewFolder = (collectionId: string, parentId: string | null) => {
@@ -198,6 +199,15 @@ export function SidebarTabs({ onOpenEnvironmentManager }: SidebarTabsProps) {
           >
             <Layers className="h-5 w-5" />
           </button>
+          <button
+            type="button"
+            aria-label="API Docs"
+            onClick={() => setActiveTab('docs')}
+            className={`p-2.5 rounded-xl transition-all duration-200 ${activeTab === 'docs' ? 'bg-[var(--color-bg-tertiary)] text-[var(--color-accent)] shadow-sm' : 'text-slate-500 hover:text-slate-200 hover:bg-white/5'}`}
+            title="API Docs"
+          >
+            <BookOpen className="h-5 w-5" />
+          </button>
         </div>
         <div className="flex-1 flex flex-col min-w-0">
           {activeTab === 'collections' && (
@@ -252,6 +262,7 @@ export function SidebarTabs({ onOpenEnvironmentManager }: SidebarTabsProps) {
             ) : (
               <div className="p-4 text-sm text-gray-500">Environments</div>
             ))}
+          {activeTab === 'docs' && <DocsViewerPage />}
         </div>
       </div>
 

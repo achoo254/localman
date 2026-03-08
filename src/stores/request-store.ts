@@ -11,6 +11,9 @@ export interface TabInfo {
   name: string;
   method: ApiRequest['method'];
   isDirty: boolean;
+  isDraft: boolean;
+  prefillCollectionId?: string;
+  prefillFolderId?: string | null;
 }
 
 interface RequestStore {
@@ -20,6 +23,8 @@ interface RequestStore {
   isDirty: boolean;
   /** Tracks which request id is currently being loaded — used to discard stale loads. */
   _loadingRequestId: string | null;
+  /** In-memory draft requests (not persisted to DB until explicit save). */
+  drafts: Record<string, ApiRequest>;
 
   openRequest: (request: ApiRequest) => void;
   closeTab: (id: string) => void;
@@ -27,6 +32,8 @@ interface RequestStore {
   setRequestName: (id: string, name: string) => void;
   updateActiveRequest: (partial: Partial<ApiRequest>) => void;
   createNewRequest: (collectionId: string, folderId: string | null) => Promise<ApiRequest>;
+  createDraftTab: (prefillCollectionId?: string, prefillFolderId?: string | null) => void;
+  saveDraftToCollection: (tabId: string, collectionId: string, folderId: string | null) => Promise<void>;
   saveRequest: () => Promise<void>;
   loadRequest: (id: string | null) => Promise<void>;
 }
@@ -40,6 +47,7 @@ export const useRequestStore = create<RequestStore>((set, get) => ({
   activeRequest: null,
   isDirty: false,
   _loadingRequestId: null,
+  drafts: {},
 
   openRequest(request: ApiRequest) {
     const { openTabs } = get();
@@ -53,6 +61,7 @@ export const useRequestStore = create<RequestStore>((set, get) => ({
       name: request.name || 'Untitled',
       method: request.method,
       isDirty: false,
+      isDraft: false,
     };
     set({
       openTabs: [...openTabs, tab],
@@ -63,10 +72,16 @@ export const useRequestStore = create<RequestStore>((set, get) => ({
   },
 
   closeTab(id: string) {
-    const { openTabs, activeTabId } = get();
+    const { openTabs, activeTabId, drafts } = get();
     const idx = openTabs.findIndex(t => t.id === id);
     if (idx === -1) return;
     const next = openTabs.filter(t => t.id !== id);
+
+    // Clean up draft data if closing a draft tab
+    if (drafts[id]) {
+      const remainingDrafts = Object.fromEntries(Object.entries(drafts).filter(([k]) => k !== id));
+      set({ drafts: remainingDrafts });
+    }
 
     // Fix #1: only update activeRequest when closing the currently active tab
     if (activeTabId !== id) {
@@ -104,11 +119,92 @@ export const useRequestStore = create<RequestStore>((set, get) => ({
     const { activeRequest } = get();
     if (!activeRequest) return;
     const updated = { ...activeRequest, ...partial };
+    const tab = get().openTabs.find(t => t.id === activeRequest.id);
+    const isDraft = tab?.isDraft ?? false;
+
     set({ activeRequest: updated, isDirty: true });
+
+    // Keep drafts map in sync
+    if (isDraft) {
+      set({ drafts: { ...get().drafts, [activeRequest.id]: updated } });
+    }
+
     const tabs = get().openTabs.map(t =>
       t.id === activeRequest.id ? { ...t, name: updated.name ?? t.name, method: updated.method, isDirty: true } : t
     );
     set({ openTabs: tabs });
+  },
+
+  createDraftTab(prefillCollectionId?: string, prefillFolderId?: string | null) {
+    const id = `draft_${crypto.randomUUID()}`;
+    const ts = new Date().toISOString();
+    const draft: ApiRequest = {
+      id,
+      collection_id: prefillCollectionId ?? '',
+      folder_id: prefillFolderId ?? null,
+      name: 'New Request',
+      method: 'GET',
+      url: '',
+      params: [],
+      headers: [],
+      body: defaultBody,
+      auth: defaultAuth,
+      sort_order: 0,
+      created_at: ts,
+      updated_at: ts,
+    };
+    const tab: TabInfo = {
+      id,
+      name: 'New Request',
+      method: 'GET',
+      isDirty: false,
+      isDraft: true,
+      prefillCollectionId,
+      prefillFolderId,
+    };
+    set({
+      drafts: { ...get().drafts, [id]: draft },
+      openTabs: [...get().openTabs, tab],
+      activeTabId: id,
+      activeRequest: draft,
+      isDirty: false,
+    });
+  },
+
+  async saveDraftToCollection(tabId: string, collectionId: string, folderId: string | null) {
+    const draft = get().drafts[tabId];
+    if (!draft) return;
+
+    const saved = await requestService.create({
+      collection_id: collectionId,
+      folder_id: folderId,
+      name: draft.name,
+      method: draft.method,
+      url: draft.url,
+      params: draft.params,
+      headers: draft.headers,
+      body: draft.body,
+      auth: draft.auth,
+      description: draft.description,
+      pre_script: draft.pre_script,
+      post_script: draft.post_script,
+      sort_order: draft.sort_order,
+    });
+
+    const remainingDrafts = Object.fromEntries(Object.entries(get().drafts).filter(([k]) => k !== tabId));
+    const tabs = get().openTabs.map(t =>
+      t.id === tabId
+        ? { ...t, id: saved.id, isDraft: false, isDirty: false, prefillCollectionId: undefined, prefillFolderId: undefined }
+        : t
+    );
+
+    set({
+      drafts: remainingDrafts,
+      openTabs: tabs,
+      activeTabId: get().activeTabId === tabId ? saved.id : get().activeTabId,
+      activeRequest: get().activeTabId === tabId ? saved : get().activeRequest,
+      isDirty: false,
+    });
   },
 
   async createNewRequest(collectionId: string, folderId: string | null) {
@@ -132,6 +228,9 @@ export const useRequestStore = create<RequestStore>((set, get) => ({
   async saveRequest() {
     const { activeRequest } = get();
     if (!activeRequest || !get().isDirty) return;
+    // Don't save drafts to DB — they're saved explicitly via saveDraftToCollection
+    const tab = get().openTabs.find(t => t.id === activeRequest.id);
+    if (tab?.isDraft) return;
     // Snapshot before async write — edits made during the DB write are NOT lost
     const snapshot = activeRequest;
     await requestService.update(snapshot.id, snapshot);
@@ -148,6 +247,12 @@ export const useRequestStore = create<RequestStore>((set, get) => ({
   async loadRequest(id: string | null) {
     if (!id) {
       set({ activeRequest: null, _loadingRequestId: null });
+      return;
+    }
+    // Check drafts first — no DB fetch needed
+    const draft = get().drafts[id];
+    if (draft) {
+      set({ activeRequest: draft, _loadingRequestId: null });
       return;
     }
     // Record which request we're loading — rapid tab switches update this,
