@@ -24,6 +24,7 @@ interface RequestStore {
   openRequest: (request: ApiRequest) => void;
   closeTab: (id: string) => void;
   setActiveTab: (id: string | null) => void;
+  setRequestName: (id: string, name: string) => void;
   updateActiveRequest: (partial: Partial<ApiRequest>) => void;
   createNewRequest: (collectionId: string, folderId: string | null) => Promise<ApiRequest>;
   saveRequest: () => Promise<void>;
@@ -88,6 +89,15 @@ export const useRequestStore = create<RequestStore>((set, get) => ({
     // Fix #2: clear activeRequest then load from DB
     set({ activeTabId: id, activeRequest: null });
     if (id) void get().loadRequest(id);
+  },
+
+  setRequestName(id: string, name: string) {
+    const { openTabs, activeRequest } = get();
+    const nextTabs = openTabs.map(t => (t.id === id ? { ...t, name } : t));
+    set({
+      openTabs: nextTabs,
+      ...(activeRequest?.id === id ? { activeRequest: { ...activeRequest, name } } : {}),
+    });
   },
 
   updateActiveRequest(partial: Partial<ApiRequest>) {

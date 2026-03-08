@@ -45,7 +45,7 @@ export function CollectionItem({
         />
       </button>
       <Folder className="h-4 w-4 shrink-0 text-[var(--color-accent)]" />
-      <span className="truncate text-sm flex-1">{node.name}</span>
+      <span className="truncate text-sm flex-1 min-w-0" title={node.name}>{node.name}</span>
       {node.requestCount != null && node.requestCount > 0 && (
         <span className="text-xs text-gray-500 shrink-0" title={`${node.requestCount} request${node.requestCount !== 1 ? 's' : ''}`}>{node.requestCount}</span>
       )}

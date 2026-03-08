@@ -9,6 +9,7 @@ export const SETTINGS_KEYS = {
   GENERAL_SSL_VERIFY: 'settings.general.sslVerify',
   GENERAL_FOLLOW_REDIRECTS: 'settings.general.followRedirects',
   GENERAL_MAX_REDIRECTS: 'settings.general.maxRedirects',
+  GENERAL_UI_FONT_SIZE: 'settings.general.uiFontSize',
   EDITOR_FONT_SIZE: 'settings.editor.fontSize',
   EDITOR_TAB_SIZE: 'settings.editor.tabSize',
   EDITOR_WORD_WRAP: 'settings.editor.wordWrap',
@@ -21,6 +22,8 @@ export const SETTINGS_KEYS = {
   PROXY_PASSWORD: 'settings.proxy.password',
 } as const;
 
+export type UiFontSize = 'small' | 'medium' | 'large';
+
 export const DEFAULTS = {
   defaultMethod: 'GET',
   defaultContentType: 'application/json',
@@ -28,6 +31,7 @@ export const DEFAULTS = {
   sslVerify: true,
   followRedirects: true,
   maxRedirects: 5,
+  uiFontSize: 'medium' as UiFontSize,
   fontSize: 14,
   tabSize: 2,
   wordWrap: false,
@@ -47,6 +51,7 @@ export interface GeneralSettings {
   sslVerify: boolean;
   followRedirects: boolean;
   maxRedirects: number;
+  uiFontSize: UiFontSize;
 }
 
 export interface EditorSettings {

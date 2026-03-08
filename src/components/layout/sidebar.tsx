@@ -11,12 +11,15 @@ const SIDEBAR_WIDTH = 260;
 
 interface SidebarProps {
   collapsed?: boolean;
+  /** When expanded, use this width (px). If omitted, falls back to SIDEBAR_WIDTH. */
+  width?: number;
   onToggleCollapsed?: () => void;
   onOpenEnvironmentManager?: () => void;
 }
 
 export function Sidebar({
   collapsed = false,
+  width,
   onToggleCollapsed,
   onOpenEnvironmentManager,
 }: SidebarProps) {
@@ -45,10 +48,11 @@ export function Sidebar({
     );
   }
 
+  const effectiveWidth = width ?? SIDEBAR_WIDTH;
   return (
     <aside
       className="flex shrink-0 flex-col overflow-hidden bg-slate-900/50 border-r border-[var(--color-bg-tertiary)]"
-      style={{ width: SIDEBAR_WIDTH }}
+      style={{ width: effectiveWidth }}
     >
       <div className="flex items-center justify-end border-b border-[var(--color-bg-tertiary)] px-1 py-1">
         <button

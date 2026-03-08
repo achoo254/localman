@@ -32,7 +32,7 @@ export function RequestItem({ node, depth, onOpenRequest, isActive, contextMenuC
       >
         {node.method ?? 'GET'}
       </span>
-      <span className="truncate text-sm flex-1">{node.name}</span>
+      <span className="truncate text-sm flex-1 min-w-0" title={node.name}>{node.name}</span>
     </div>
   );
 

@@ -34,8 +34,9 @@
   --foreground: #F8FAFC;
   --muted: #94A3B8;
   --border: var(--color-bg-tertiary);
+  --font-size-base: 14px;
   font-family: var(--font-sans);
-  font-size: 14px;
+  font-size: var(--font-size-base);
   color: var(--foreground);
   background-color: var(--background);
   color-scheme: dark;

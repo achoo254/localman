@@ -19,6 +19,7 @@ interface CollectionContextMenuProps {
   onDeleteRequest: (id: string) => void;
   onExportCollection?: (collectionId: string, collectionName: string) => void;
   onCopyAsCurl?: (requestId: string) => void;
+  onRenameRequest?: (id: string, name: string) => void;
 }
 
 export function CollectionContextMenu({
@@ -35,6 +36,7 @@ export function CollectionContextMenu({
   onDeleteRequest,
   onExportCollection,
   onCopyAsCurl,
+  onRenameRequest,
 }: CollectionContextMenuProps) {
   return (
     <ContextMenu.Root>
@@ -132,6 +134,14 @@ export function CollectionContextMenu({
               >
                 Move
               </ContextMenu.Item>
+              {onRenameRequest && (
+                <ContextMenu.Item
+                  className="px-3 py-1.5 text-sm outline-none hover:bg-[var(--color-bg-tertiary)] cursor-pointer"
+                  onSelect={() => onRenameRequest(node.id, node.name)}
+                >
+                  Rename
+                </ContextMenu.Item>
+              )}
               <ContextMenu.Separator className="h-px bg-[var(--color-bg-tertiary)] my-1" />
               <ContextMenu.Item
                 className="px-3 py-1.5 text-sm text-red-400 outline-none hover:bg-[var(--color-bg-tertiary)] cursor-pointer"

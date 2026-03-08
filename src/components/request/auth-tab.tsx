@@ -4,6 +4,9 @@
 
 import type { AuthConfig } from '../../types/common';
 import type { AuthType } from '../../types/enums';
+import { useEnvironmentStore } from '../../stores/environment-store';
+import { interpolateString } from '../../services/interpolation-engine';
+import { VariableHighlightInput } from '../common/variable-highlight-input';
 
 const AUTH_TYPES: { value: AuthType; label: string }[] = [
   { value: 'none', label: 'No Auth' },
@@ -19,6 +22,7 @@ interface AuthTabProps {
 
 export function AuthTab({ auth, onChange }: AuthTabProps) {
   const setType = (type: AuthType) => onChange({ ...auth, type });
+  const getInterpolationContext = useEnvironmentStore(s => s.getInterpolationContext);
 
   return (
     <div className="flex flex-col gap-4 p-4">
@@ -41,36 +45,33 @@ export function AuthTab({ auth, onChange }: AuthTabProps) {
       </div>
       {auth.type === 'bearer' && (
         <div className="flex flex-col gap-2">
-          <label htmlFor="auth-bearer-token" className="text-sm text-gray-400">Token</label>
-          <input
-            id="auth-bearer-token"
-            type="password"
+          <label className="text-sm text-gray-400">Token</label>
+          <VariableHighlightInput
             value={auth.bearerToken ?? ''}
-            onChange={e => onChange({ ...auth, bearerToken: e.target.value })}
-            placeholder="Bearer token"
-            className="rounded border border-[var(--color-bg-tertiary)] bg-[var(--color-bg-secondary)] px-3 py-2 font-mono text-sm outline-none focus:ring-1 focus:ring-[var(--color-accent)]"
+            onChange={v => onChange({ ...auth, bearerToken: v })}
+            placeholder="Bearer token ({{token}})"
+            type="password"
+            getResolvedValue={() => interpolateString(auth.bearerToken ?? '', getInterpolationContext())}
           />
         </div>
       )}
       {auth.type === 'basic' && (
         <div className="flex flex-col gap-2">
-          <label htmlFor="auth-basic-username" className="text-sm text-gray-400">Username</label>
-          <input
-            id="auth-basic-username"
-            type="text"
+          <label className="text-sm text-gray-400">Username</label>
+          <VariableHighlightInput
             value={auth.username ?? ''}
-            onChange={e => onChange({ ...auth, username: e.target.value })}
-            placeholder="Username"
-            className="rounded border border-[var(--color-bg-tertiary)] bg-[var(--color-bg-secondary)] px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-[var(--color-accent)]"
+            onChange={v => onChange({ ...auth, username: v })}
+            placeholder="Username ({{user}})"
+            type="text"
+            getResolvedValue={() => interpolateString(auth.username ?? '', getInterpolationContext())}
           />
-          <label htmlFor="auth-basic-password" className="text-sm text-gray-400">Password</label>
-          <input
-            id="auth-basic-password"
-            type="password"
+          <label className="text-sm text-gray-400">Password</label>
+          <VariableHighlightInput
             value={auth.password ?? ''}
-            onChange={e => onChange({ ...auth, password: e.target.value })}
-            placeholder="Password"
-            className="rounded border border-[var(--color-bg-tertiary)] bg-[var(--color-bg-secondary)] px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-[var(--color-accent)]"
+            onChange={v => onChange({ ...auth, password: v })}
+            placeholder="Password ({{pass}})"
+            type="password"
+            getResolvedValue={() => interpolateString(auth.password ?? '', getInterpolationContext())}
           />
         </div>
       )}
@@ -85,14 +86,13 @@ export function AuthTab({ auth, onChange }: AuthTabProps) {
             placeholder="X-API-Key"
             className="rounded border border-[var(--color-bg-tertiary)] bg-[var(--color-bg-secondary)] px-3 py-2 font-mono text-sm outline-none focus:ring-1 focus:ring-[var(--color-accent)]"
           />
-          <label htmlFor="auth-apikey-value" className="text-sm text-gray-400">Value</label>
-          <input
-            id="auth-apikey-value"
-            type="password"
+          <label className="text-sm text-gray-400">Value</label>
+          <VariableHighlightInput
             value={auth.apiKeyValue ?? ''}
-            onChange={e => onChange({ ...auth, apiKeyValue: e.target.value })}
-            placeholder="API key value"
-            className="rounded border border-[var(--color-bg-tertiary)] bg-[var(--color-bg-secondary)] px-3 py-2 font-mono text-sm outline-none focus:ring-1 focus:ring-[var(--color-accent)]"
+            onChange={v => onChange({ ...auth, apiKeyValue: v })}
+            placeholder="API key value ({{var}})"
+            type="password"
+            getResolvedValue={() => interpolateString(auth.apiKeyValue ?? '', getInterpolationContext())}
           />
         </div>
       )}

@@ -1,9 +1,16 @@
 /**
  * Import/Export orchestrator: file dialogs, format detection, run importers/exporters.
+ * File open/save use Tauri APIs — only available in desktop app (pnpm tauri dev / tauri build).
  */
 
 import { open, save } from '@tauri-apps/plugin-dialog';
 import { readTextFile, writeTextFile } from '@tauri-apps/plugin-fs';
+
+function isTauri(): boolean {
+  if (typeof window === 'undefined') return false;
+  const w = window as unknown as { __TAURI__?: unknown; __TAURI_INTERNALS__?: unknown };
+  return !!(w.__TAURI__ ?? w.__TAURI_INTERNALS__);
+}
 import { parseCurl } from './importers/curl-parser';
 import { importPostmanCollection } from './importers/postman-importer';
 import { importNative, importNativeCollection, isNativeBackup, isNativeCollectionExport } from './importers/native-importer';
@@ -36,6 +43,9 @@ function detectFormat(json: unknown): ImportFormat | null {
 }
 
 export async function openImportFile(): Promise<{ path: string; content: string } | null> {
+  if (!isTauri()) {
+    throw new Error('Import from file is only available in the desktop app. Run with pnpm tauri dev or use the cURL tab.');
+  }
   const path = await open({
     multiple: false,
     filters: [{ name: 'JSON', extensions: ['json'] }, { name: 'All', extensions: ['*'] }],
@@ -122,6 +132,9 @@ export async function importFromCurl(curlCommand: string): Promise<ImportPreview
 }
 
 export async function saveExportFile(defaultName: string, content: string): Promise<boolean> {
+  if (!isTauri()) {
+    throw new Error('Save to file is only available in the desktop app. Run with pnpm tauri dev.');
+  }
   const path = await save({ defaultPath: defaultName });
   if (!path) return false;
   await writeTextFile(path, content);

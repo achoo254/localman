@@ -16,6 +16,7 @@ interface VariableHighlightInputProps {
   onKeyDown?: (e: React.KeyboardEvent) => void;
   /** When provided, tooltip on hover shows this resolved string (e.g. URL with vars replaced). */
   getResolvedValue?: () => string;
+  type?: 'text' | 'password';
 }
 
 const VAR_PATTERN = /\{\{[^}]+\}\}/g;
@@ -45,6 +46,7 @@ export function VariableHighlightInput({
   className = '',
   onKeyDown,
   getResolvedValue,
+  type = 'text',
 }: VariableHighlightInputProps) {
   const [focused, setFocused] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -84,7 +86,7 @@ export function VariableHighlightInput({
       {/* Real input — text is transparent only when overlay is shown (blurred + has vars) */}
       <input
         ref={inputRef}
-        type="text"
+        type={type}
         value={value}
         onChange={e => onChange(e.target.value)}
         onFocus={handleFocus}

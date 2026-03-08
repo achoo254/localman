@@ -5,6 +5,8 @@
 
 import { KeyValueEditor } from '../common/key-value-editor';
 import type { KeyValuePair } from '../../types/common';
+import { useEnvironmentStore } from '../../stores/environment-store';
+import { interpolateString } from '../../services/interpolation-engine';
 
 interface ParamsTabProps {
   params: KeyValuePair[];
@@ -12,13 +14,15 @@ interface ParamsTabProps {
 }
 
 export function ParamsTab({ params, onChange }: ParamsTabProps) {
+  const getInterpolationContext = useEnvironmentStore(s => s.getInterpolationContext);
   return (
     <div className="p-4">
       <KeyValueEditor
         pairs={params}
         onChange={onChange}
         placeholderKey="Query key"
-        placeholderValue="Value"
+        placeholderValue="Value ({{var}})"
+        getResolvedValue={v => interpolateString(v, getInterpolationContext())}
       />
     </div>
   );

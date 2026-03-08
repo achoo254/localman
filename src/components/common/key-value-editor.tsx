@@ -1,10 +1,12 @@
 /**
  * Reusable key-value table for params, headers, form data.
+ * When getResolvedValue is provided, value cell uses VariableHighlightInput for {{var}} highlight + tooltip.
  */
 
 import { useCallback } from 'react';
 import type { KeyValuePair } from '../../types/common';
 import { newId } from '../../db/utils';
+import { VariableHighlightInput } from './variable-highlight-input';
 
 interface KeyValueEditorProps {
   pairs: KeyValuePair[];
@@ -12,6 +14,8 @@ interface KeyValueEditorProps {
   placeholderKey?: string;
   placeholderValue?: string;
   showDescription?: boolean;
+  /** When provided, value cells use VariableHighlightInput with resolved tooltip. */
+  getResolvedValue?: (value: string) => string;
 }
 
 export function KeyValueEditor({
@@ -20,6 +24,7 @@ export function KeyValueEditor({
   placeholderKey = 'Key',
   placeholderValue = 'Value',
   showDescription = false,
+  getResolvedValue,
 }: KeyValueEditorProps) {
   const update = useCallback(
     (idx: number, patch: Partial<KeyValuePair>) => {
@@ -74,13 +79,25 @@ export function KeyValueEditor({
                   className="w-full rounded-md border border-transparent bg-transparent px-2 py-1.5 font-mono text-[13px] outline-none transition-colors hover:border-[var(--color-bg-tertiary)] focus:border-[var(--color-accent)] focus:bg-[var(--color-bg-secondary)]"
                 />
               </td>
-              <td className="p-1">
-                <input
-                  value={p.value}
-                  onChange={e => update(idx, { value: e.target.value })}
-                  placeholder={placeholderValue}
-                  className="w-full rounded-md border border-transparent bg-transparent px-2 py-1.5 font-mono text-[13px] outline-none transition-colors hover:border-[var(--color-bg-tertiary)] focus:border-[var(--color-accent)] focus:bg-[var(--color-bg-secondary)]"
-                />
+              <td className="p-1 min-w-0">
+                {getResolvedValue ? (
+                  <div className="min-w-0 w-full">
+                    <VariableHighlightInput
+                      value={p.value}
+                      onChange={v => update(idx, { value: v })}
+                      placeholder={placeholderValue}
+                      getResolvedValue={() => getResolvedValue(p.value)}
+                      className="py-1.5"
+                    />
+                  </div>
+                ) : (
+                  <input
+                    value={p.value}
+                    onChange={e => update(idx, { value: e.target.value })}
+                    placeholder={placeholderValue}
+                    className="w-full rounded-md border border-transparent bg-transparent px-2 py-1.5 font-mono text-[13px] outline-none transition-colors hover:border-[var(--color-bg-tertiary)] focus:border-[var(--color-accent)] focus:bg-[var(--color-bg-secondary)]"
+                  />
+                )}
               </td>
               {showDescription && (
                 <td className="p-1">

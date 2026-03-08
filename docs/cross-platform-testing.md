@@ -14,6 +14,7 @@ Manual verification for Localman desktop builds across Windows, macOS, and Linux
 - [ ] Install from `.msi` or run `.exe` — no SmartScreen block (or accept warning for unsigned)
 - [ ] App starts; window shows titlebar, env bar, sidebar, request/response panes
 - [ ] Sidebar collapse/expand works
+- [ ] Sidebar resize: drag handle between sidebar and main works; width clamped 200–480px and persisted (localStorage)
 - [ ] Create collection, add request, send HTTP request — response appears
 - [ ] Environment switch and variable interpolation in URL
 - [ ] Settings open from gear icon; General/Editor/Proxy/Data/About sections
