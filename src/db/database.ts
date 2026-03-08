@@ -30,6 +30,8 @@ export class LocalmanDB extends Dexie {
       history: '++id, request_id, timestamp, method, status_code',
       settings: 'key',
     });
+    // v2: Add optional description field to requests (no data migration needed)
+    this.version(2).stores({});
   }
 }
 

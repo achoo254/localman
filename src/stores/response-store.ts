@@ -116,24 +116,27 @@ export const useResponseStore = create<ResponseStore>((set, get) => ({
         scriptResults,
       });
 
-      void useHistoryStore.getState().logEntry({
-        request_id: request.id,
-        method: request.method,
-        url: prepared.url,
-        status_code: data.status,
-        response_time: data.responseTime,
-        response_size: data.bodySize,
-        request_snapshot: {
+      // Skip history for draft requests (not yet saved to a collection)
+      if (!request.id.startsWith('draft_')) {
+        void useHistoryStore.getState().logEntry({
+          request_id: request.id,
           method: request.method,
-          url: request.url,
-          headers: request.headers,
-          params: request.params,
-          body: request.body,
-          auth: request.auth,
-        },
-        response_body: historyService.truncateBody(data.body ?? ''),
-        response_headers: data.headers,
-      });
+          url: prepared.url,
+          status_code: data.status,
+          response_time: data.responseTime,
+          response_size: data.bodySize,
+          request_snapshot: {
+            method: request.method,
+            url: request.url,
+            headers: request.headers,
+            params: request.params,
+            body: request.body,
+            auth: request.auth,
+          },
+          response_body: historyService.truncateBody(data.body ?? ''),
+          response_headers: data.headers,
+        });
+      }
     } catch (err) {
       if (err instanceof Error && err.name === 'AbortError') {
         set({ isLoading: false, abortController: null });

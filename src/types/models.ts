@@ -35,6 +35,7 @@ export interface ApiRequest {
   headers: KeyValuePair[];
   body: RequestBody;
   auth: AuthConfig;
+  description?: string;
   pre_script?: string;
   post_script?: string;
   sort_order: number;

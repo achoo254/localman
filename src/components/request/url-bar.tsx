@@ -19,6 +19,9 @@ interface UrlBarProps {
   disabled?: boolean;
   /** Resolved URL for tooltip preview (vars replaced). */
   getResolvedUrl?: () => string;
+  /** Toggle code snippet panel */
+  isSnippetOpen?: boolean;
+  onToggleSnippet?: () => void;
 }
 
 export function UrlBar({
@@ -31,6 +34,8 @@ export function UrlBar({
   isLoading,
   disabled,
   getResolvedUrl,
+  isSnippetOpen,
+  onToggleSnippet,
 }: UrlBarProps) {
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
@@ -56,7 +61,17 @@ export function UrlBar({
           getResolvedValue={getResolvedUrl}
         />
       </div>
-      <div className="shrink-0 flex items-center pr-1">
+      <div className="shrink-0 flex items-center gap-1 pr-1">
+        {onToggleSnippet && (
+          <button
+            type="button"
+            onClick={onToggleSnippet}
+            title="Code snippet"
+            className={`flex items-center justify-center rounded-lg px-2.5 py-2 text-sm font-mono transition-colors ${isSnippetOpen ? 'bg-[var(--color-accent)]/15 text-[var(--color-accent)]' : 'text-slate-500 hover:text-slate-200 hover:bg-white/5'}`}
+          >
+            &lt;/&gt;
+          </button>
+        )}
         {isLoading && onCancel ? (
           <button
             type="button"

@@ -9,7 +9,6 @@ import { ImportDialog } from '../import-export/import-dialog';
 import { SettingsPage } from '../settings/settings-page';
 import { KeyboardShortcutsModal } from '../common/keyboard-shortcuts-modal';
 import { useRequestStore } from '../../stores/request-store';
-import * as collectionService from '../../db/services/collection-service';
 
 const SIDEBAR_WIDTH_MIN = 200;
 const SIDEBAR_WIDTH_MAX = 480;
@@ -86,16 +85,7 @@ export function AppLayout({ children }: AppLayoutProps) {
         setShortcutsOpen(o => !o);
       } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 't') {
         e.preventDefault();
-        collectionService.getAll().then(collections => {
-          const col = collections[0];
-          if (!col) {
-            collectionService.create({ name: 'Default', description: '', sort_order: 0 }).then(newCol => {
-              useRequestStore.getState().createNewRequest(newCol.id, null);
-            });
-          } else {
-            useRequestStore.getState().createNewRequest(col.id, null);
-          }
-        });
+        useRequestStore.getState().createDraftTab();
       }
     }
     window.addEventListener('keydown', onKeyDown);
