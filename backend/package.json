@@ -1,0 +1,34 @@
+{
+  "name": "localman-backend",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "start:prod": "node dist/index.js",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio",
+    "auth:generate": "npx @better-auth/cli generate"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.19.11",
+    "better-auth": "^1.5.4",
+    "drizzle-orm": "^0.45.1",
+    "hono": "^4.12.5",
+    "postgres": "^3.4.8",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/node": "^25.3.5",
+    "drizzle-kit": "^0.31.9",
+    "tsx": "^4.21.0",
+    "typescript": "~5.8.3"
+  }
+}
