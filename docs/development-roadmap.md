@@ -18,6 +18,8 @@ Localman phases 00–11, with completion status and key milestones.
 | 09 | Error Handling & UI Polish | ✅ Complete | P1 | Error boundaries, toast notifications, layout polish | 2026-02 |
 | 10 | Packaging & CI/CD | ✅ Complete | P1 | GitLab CI/CD, Windows MSI/EXE builds, cross-platform testing | 2026-03 |
 | 11 | Code Snippet & API Docs | ✅ Complete | P2 | 16 language snippet generators, docs viewer, HTML/Markdown export | 2026-03-08 |
+| 12 | Draft Tab System | ✅ Complete | P2 | Ctrl+T draft requests, explicit save workflow, draft lifecycle | 2026-03-08 |
+| 13 | Cloud Sync Phase 2 | ✅ Complete | P1 | Backend API (Hono + PostgreSQL), Better Auth, pull/push sync | 2026-03-09 |
 
 ## Phase 11 Details: Code Snippet, Preview & API Docs
 
@@ -62,6 +64,56 @@ Localman phases 00–11, with completion status and key milestones.
 - `src/components/request/request-panel.tsx`
 - `src/components/collections/sidebar-tabs.tsx`
 - `package.json`
+
+## Phase 13 Details: Cloud Sync Phase 2 — Backend & Better Auth
+
+**Completed:** 2026-03-09
+
+### Features Delivered
+
+1. **Backend API Server** (Node.js + Hono + PostgreSQL + Better Auth)
+   - Health check endpoint: `GET /api/health`
+   - Cloud sync endpoints: `POST /api/sync/pull`, `POST /api/sync/push`
+   - Better Auth integration for OAuth (GitHub, etc.) and session management
+   - JWT-based authentication with auth guard middleware
+   - Comprehensive error handling
+
+2. **Database Layer** (PostgreSQL + Drizzle ORM)
+   - `sync_collections` and `sync_requests` tables for cloud-synced data
+   - Better Auth schema (user, account, session, verification)
+   - TypeScript-first schema with migration support
+
+3. **Frontend Cloud Sync Integration**
+   - `CloudAuthClient` — Better Auth session management (login, logout, getSession)
+   - `CloudSyncService` — Pull/push with Last-Write-Wins conflict resolution
+   - `CloudLoginForm` component in settings
+   - Support for both offline-only (legacy) and cloud sync modes
+   - Automatic token refresh on expiry, fallback to offline if backend unavailable
+
+4. **Monorepo Setup** (pnpm workspaces)
+   - Separate frontend and backend packages
+   - Shared TypeScript configuration
+   - Unified development workflow
+
+### Files Added
+- Backend: 18 new files (app, routes, middleware, DB, auth, types, config)
+- Frontend: 5 new files (auth client, sync service, login form, types, HTTP utils)
+
+### Files Modified
+- `src/stores/sync-store.ts` — support cloud sync mode
+- `src/components/settings/sync-settings.tsx` — integrate login form
+- `package.json` — workspace definition
+- `pnpm-workspace.yaml` — new monorepo config
+
+### Success Criteria Met
+✅ Backend API runs with Hono on Node.js
+✅ PostgreSQL schema with Drizzle migrations
+✅ Better Auth integration for login/signup/OAuth
+✅ Frontend connects to backend via HTTPS
+✅ Pull/push sync with conflict resolution
+✅ Fallback to offline mode if backend unavailable
+✅ All endpoints secured with JWT auth guard
+✅ Type-safe API contracts (TypeScript)
 
 ## Phase 12 Details: Draft Tab — New Request
 
@@ -109,24 +161,26 @@ Localman phases 00–11, with completion status and key milestones.
 
 ## Upcoming Phases (Future)
 
-### Phase 13: Cloud Sync Phase 2 (Planned)
-- Full offline queue with pending_sync store
-- Bi-directional sync with conflict resolution
-- Share collections with team members
-- Real-time collaboration (WebSocket)
-
 ### Phase 14: Advanced Features (Planned)
 - GraphQL support
 - WebSocket client
 - Mock server mode
 - Performance profiling
 - Custom variables (computed, dynamic)
+- Team collections sharing (API ready in Phase 13, UI in Phase 14)
 
 ### Phase 15: Team & Analytics (Planned)
 - Team workspaces
 - Audit logs
 - Usage analytics
 - Custom themes/branding
+- Collection versioning and branching
+
+### Phase 16: Offline Queue & Real-Time (Planned)
+- Full offline queue with `pending_sync` store
+- Automatic retry on network restore
+- WebSocket real-time collaboration
+- Live cursor tracking
 
 ## Dependencies & Constraints
 
@@ -137,22 +191,26 @@ Localman phases 00–11, with completion status and key milestones.
 
 ## Success Metrics
 
-✅ Phase 11 fully delivered and tested
-✅ All 16 snippet generators working with correct syntax
-✅ API docs viewer rendering collections with markdown support
-✅ Export functions producing valid HTML and Markdown files
-✅ Code snippet panel lazy-loaded, no bundle regression
+✅ Phase 13: Backend deployed with all endpoints tested
+✅ Phase 13: Better Auth integration for OAuth login/signup
+✅ Phase 13: Pull/push sync working with conflict resolution
+✅ Phase 13: Frontend fallback to offline mode works correctly
+✅ Phase 12: Draft tab system fully functional
+✅ Phase 11: All 16 snippet generators working with correct syntax
+✅ Phase 11: API docs viewer rendering collections with markdown support
 ✅ All type checks and unit tests passing
 
 ## Known Limitations
 
-- Docs export doesn't include example request/response bodies yet (Phase 2)
-- TOC scroll-spy uses simple IntersectionObserver (works but not pixel-perfect)
+- Team collections not yet accessible via UI (Phase 14)
+- No pending sync queue for offline changes (Phase 16)
+- No WebSocket real-time collaboration (Phase 16)
+- Docs export doesn't include example request/response bodies yet
 - No docs versioning (single live docs per collection)
 
 ## Next Steps
 
-1. Gather user feedback on snippet generators and docs viewer
-2. Identify UX improvements for Phase 12
-3. Plan cloud sync Phase 2 (pending sync queue, team sharing)
-4. Consider GraphQL support based on user demand
+1. Implement team collections sharing UI (Phase 14)
+2. Add pending sync queue for offline changes (Phase 16)
+3. Plan GraphQL support based on user demand (Phase 14)
+4. Consider WebSocket real-time collaboration (Phase 16)
