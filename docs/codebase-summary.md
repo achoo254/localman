@@ -6,56 +6,65 @@ High-level overview of Localman's directory structure, key modules, and architec
 
 ```
 localman/
-├── src/
+├── backend/                   # Backend API server (NEW — Phase 13)
+│   ├── src/
+│   │   ├── routes/           # API route handlers
+│   │   │   ├── health.ts     # GET /api/health
+│   │   │   └── sync.ts       # Sync endpoints (pull/push)
+│   │   ├── middleware/       # Express/Hono middleware
+│   │   │   ├── auth-guard.ts # JWT authentication
+│   │   │   └── error-handler.ts
+│   │   ├── db/               # Database layer
+│   │   │   ├── schema.ts     # Drizzle ORM schema (sync, users)
+│   │   │   ├── auth-schema.ts # Better Auth schema
+│   │   │   └── client.ts     # PostgreSQL client
+│   │   ├── types/            # TypeScript types
+│   │   │   └── context.ts    # Request context, auth user
+│   │   ├── app.ts            # Hono app setup
+│   │   ├── auth.ts           # Better Auth config
+│   │   ├── env.ts            # Environment variable validation
+│   │   └── index.ts          # Server entry point
+│   ├── drizzle.config.ts     # Drizzle migration config
+│   ├── package.json          # Backend dependencies
+│   ├── tsconfig.json         # TypeScript config
+│   └── .env.example          # Environment template
+├── src/                       # Frontend React app
 │   ├── components/           # React UI components
 │   │   ├── collections/      # Collection tree, sidebar, context menu
 │   │   ├── request/          # Request builder, URL bar, tabs, auth, body, etc.
 │   │   ├── common/           # Shared UI components (key-value editor, syntax input)
-│   │   ├── docs/             # API docs viewer, TOC, request cards (NEW)
-│   │   ├── settings/         # Settings/preferences
+│   │   ├── docs/             # API docs viewer, TOC, request cards
+│   │   ├── settings/         # Settings/preferences, cloud sync login form
 │   │   ├── layout/           # Main layout, titlebar, sidebar
 │   │   └── (individual .tsx files for features)
 │   ├── stores/               # Zustand state management
 │   │   ├── collections-store.ts
 │   │   ├── request-store.ts
 │   │   ├── settings-store.ts
+│   │   ├── sync-store.ts     # Cloud sync state (NEW)
 │   │   └── (other stores)
 │   ├── services/             # Business logic, HTTP client, utilities
-│   │   ├── snippet-generators/       # 16 code snippet generators (NEW)
-│   │   │   ├── snippet-generator-registry.ts
-│   │   │   ├── generator-curl.ts
-│   │   │   ├── generator-javascript-fetch.ts
-│   │   │   ├── generator-javascript-axios.ts
-│   │   │   ├── generator-python-requests.ts
-│   │   │   ├── generator-go-native.ts
-│   │   │   ├── generator-java-*.ts (2 files)
-│   │   │   ├── generator-php-curl.ts
-│   │   │   ├── generator-csharp-httpclient.ts
-│   │   │   ├── generator-ruby-net-http.ts
-│   │   │   ├── generator-swift-urlsession.ts
-│   │   │   ├── generator-kotlin-okhttp.ts
-│   │   │   ├── generator-dart-http.ts
-│   │   │   ├── generator-rust-reqwest.ts
-│   │   │   ├── generator-powershell.ts
-│   │   │   ├── generator-httpie.ts
-│   │   │   └── index.ts (barrel export)
-│   │   ├── docs-export-service.ts    # HTML + Markdown export (NEW)
+│   │   ├── snippet-generators/       # 16 code snippet generators
+│   │   ├── sync/                     # Cloud sync services (NEW)
+│   │   │   ├── cloud-auth-client.ts  # Better Auth client wrapper
+│   │   │   └── cloud-sync-service.ts # Pull/push sync with backend
+│   │   ├── docs-export-service.ts    # HTML + Markdown export
 │   │   ├── request-preparer.ts       # Variable interpolation, auth setup
 │   │   ├── import-export-service.ts  # cURL, Postman, OpenAPI import/export
 │   │   ├── http-client.ts            # Tauri HTTP plugin wrapper
 │   │   ├── script-executor.ts        # QuickJS sandbox, pre/post scripts
-│   │   ├── sync-service.ts           # Cloud sync, conflict resolution
-│   │   ├── collection-service.ts     # Collection tree operations
 │   │   └── (other services)
 │   ├── db/                   # Dexie.js IndexedDB layer
 │   │   └── database.ts       # Schema, stores, migrations
 │   ├── types/                # TypeScript type definitions
 │   │   ├── models.ts         # ApiRequest, Collection, Environment, etc.
 │   │   ├── response.ts       # PreparedRequest, HttpResponse, etc.
+│   │   ├── cloud-sync.ts     # Cloud sync types (NEW)
 │   │   ├── settings.ts       # Settings types
 │   │   └── (other types)
 │   ├── utils/                # Utility functions
 │   │   ├── variable-interpolation.ts
+│   │   ├── tauri-http-client.ts  # Tauri HTTP wrapper (NEW)
 │   │   ├── clipboard.ts
 │   │   ├── format.ts
 │   │   └── (other utilities)
@@ -72,10 +81,11 @@ localman/
 ├── e2e/                      # Playwright E2E tests
 ├── docs/                     # Project documentation
 ├── plans/                    # Development plans and phase docs
-├── package.json              # Frontend dependencies
-├── tsconfig.json             # TypeScript config
+├── package.json              # Frontend + workspace root dependencies
+├── pnpm-workspace.yaml       # pnpm workspace config (monorepo)
+├── tsconfig.json             # TypeScript config (shared)
 ├── tailwind.config.js        # Tailwind CSS config
-├── vite.config.ts            # Vite config
+├── vite.config.ts            # Vite config (frontend)
 └── README.md                 # Project overview
 ```
 
@@ -116,10 +126,13 @@ localman/
 - Variable interpolation context available
 - Serial queue (one script at a time)
 
-#### Sync Service (`sync-service.ts`)
-- HTTP sync to cloud API (Phase 2 in progress)
-- Last-Write-Wins conflict resolution by `updated_at`
-- Offline queue in `pending_sync` store (planned)
+#### Cloud Sync Services (`services/sync/`)
+- **Cloud Auth Client** (`cloud-auth-client.ts`) — Better Auth wrapper for login, logout, session management
+- **Cloud Sync Service** (`cloud-sync-service.ts`) — Pull/push collections to backend API
+  - POST /api/sync/pull — fetch remote collections
+  - POST /api/sync/push — upload local changes
+  - Last-Write-Wins conflict resolution by `updated_at`
+  - Supports both legacy (offline-only) and cloud sync modes
 
 ### Components (`src/components/`)
 
@@ -329,6 +342,86 @@ pnpm test                 # Vitest unit tests
 pnpm test:e2e             # Playwright E2E
 ```
 
+## Backend Architecture (Phase 13 — NEW)
+
+### Technology Stack
+- **Framework**: Hono v4 (lightweight, edge-first)
+- **Runtime**: Node.js (@hono/node-server)
+- **Database**: PostgreSQL
+- **ORM**: Drizzle ORM
+- **Authentication**: Better Auth (account/session/OAuth)
+- **Deployment**: PM2 + systemd + Nginx reverse proxy
+
+### Database Schema
+
+#### Collections & Sync
+| Table | Purpose |
+|-------|---------|
+| `sync_collections` | Synced collections from desktop (id, userId, name, description, metadata, updatedAt) |
+| `sync_requests` | Synced requests (id, collectionId, method, url, headers, body, auth, etc.) |
+| `sync_history` | Execution history (optional, for later phases) |
+
+#### Authentication (Better Auth)
+| Tables | Purpose |
+|--------|---------|
+| `account`, `session`, `user`, `verification` | Better Auth built-in tables |
+| `user_settings` | User preferences (sync mode, theme, etc.) |
+
+### API Endpoints
+
+#### Health Check
+```
+GET /api/health
+Response: { status: "ok" }
+```
+
+#### Sync Endpoints (Authenticated)
+```
+POST /api/sync/pull
+Body: { since?: number }
+Response: { collections, requests, updatedAt }
+
+POST /api/sync/push
+Body: { collections, requests, deletions }
+Response: { success: true, syncedAt }
+```
+
+#### Authentication (Better Auth)
+```
+POST /api/auth/signup
+POST /api/auth/login
+POST /api/auth/logout
+POST /api/auth/session
+GET /api/auth/signin/github  (or other OAuth providers)
+```
+
+### Middleware
+- **Error Handler**: Catches all errors, returns consistent `{ error, code, details }` JSON
+- **Auth Guard**: Validates JWT token, attaches user to request context
+- **CORS**: Allows localhost + Tauri webview origins
+
+### Deployment Pattern
+1. **Development**: `npm run dev` (Hono dev server on port 3000)
+2. **Production**:
+   - Build: `npm run build` (compile TypeScript)
+   - PM2 start: `pm2 start dist/index.js --name localman-api`
+   - Systemd service (optional): Auto-restart PM2 on system reboot
+   - Nginx: Reverse proxy to PM2, TLS termination, static file serving
+   - PostgreSQL: Cloud-hosted or local Docker
+
+### Integration with Frontend
+
+**Desktop Sync Mode** (new in Phase 13)
+- User logs in via `CloudLoginForm` component
+- Better Auth session stored in IndexedDB `settings` store
+- `CloudSyncService` periodically pulls/pushes changes
+- Fallback to offline-only mode if backend is unavailable
+
+**API Contract**
+- All sync requests include `Authorization: Bearer {access_token}`
+- Requests must validate collection ownership (userId)
+- 409 Conflict response on push with stale `updatedAt` (client retries)
+
 ## Key Insights
 
 1. **Offline-First**: IndexedDB is source of truth. API is optional. ✅
@@ -337,6 +430,41 @@ pnpm test:e2e             # Playwright E2E
 4. **Lazy Loading**: Heavy components (docs viewer, snippet panel) lazy-loaded to reduce initial bundle.
 5. **Reuse**: `PreparedRequest` used by HTTP client, snippet generators, and script executor.
 6. **Extensible**: Plugin pattern for snippet generators makes adding new languages frictionless.
+
+## Phase 13 Additions (Cloud Sync Phase 2) — NEW
+
+### New Backend (`backend/` directory)
+- **Backend App** (`src/app.ts`, `src/index.ts`) — Hono server setup + route mounting
+- **Database Layer**:
+  - `src/db/schema.ts` — Drizzle sync collections/requests schema
+  - `src/db/auth-schema.ts` — Better Auth schema
+  - `src/db/client.ts` — PostgreSQL connection
+- **Routes**:
+  - `src/routes/health.ts` — GET /api/health endpoint
+  - `src/routes/sync.ts` — POST /api/sync/pull, POST /api/sync/push endpoints
+- **Authentication**:
+  - `src/auth.ts` — Better Auth configuration
+  - `src/middleware/auth-guard.ts` — JWT token validation middleware
+- **Middleware**:
+  - `src/middleware/error-handler.ts` — Error handling + JSON response formatting
+- **Configuration**:
+  - `src/env.ts` — Environment variable schema validation
+  - `src/types/context.ts` — Request context + auth user type
+  - `drizzle.config.ts` — Drizzle migration configuration
+
+### New Frontend Files
+- **Cloud Sync Services** (`src/services/sync/`):
+  - `cloud-auth-client.ts` — Better Auth client wrapper (login, logout, getSession)
+  - `cloud-sync-service.ts` — Pull/push sync logic with conflict resolution
+- **Cloud Login UI** (`src/components/settings/cloud-login-form.tsx`) — Login/logout form
+- **Cloud Sync Types** (`src/types/cloud-sync.ts`) — CloudSyncCollection, CloudSyncRequest types
+- **HTTP Utilities** (`src/utils/tauri-http-client.ts`) — Tauri HTTP wrapper for cloud requests
+
+### Modified Frontend Files
+- `src/stores/sync-store.ts` — support cloud + legacy sync modes
+- `src/components/settings/sync-settings.tsx` — cloud login UI integration
+- `package.json` — new `backend` workspace in pnpm
+- `pnpm-workspace.yaml` — monorepo configuration
 
 ## Phase 12 Additions
 

@@ -2,6 +2,71 @@
 
 All notable changes to Localman documented here. Format based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [Phase 13] — 2026-03-09
+
+### Added
+
+- **Backend API Server** (Node.js + Hono + PostgreSQL + Drizzle ORM + Better Auth)
+  - Health check endpoint: `GET /api/health`
+  - Cloud sync endpoints: `POST /api/sync/pull`, `POST /api/sync/push`
+  - Better Auth integration: signup, login, logout, OAuth (GitHub, etc.)
+  - JWT-based authentication with auth guard middleware
+  - Comprehensive error handling with JSON response formatting
+
+- **Database Layer** (PostgreSQL + Drizzle ORM)
+  - `sync_collections` and `sync_requests` tables for cloud-synced data
+  - Better Auth schema: user, account, session, verification tables
+  - Migration support via Drizzle migrations
+  - TypeScript-first schema definitions
+
+- **Frontend Cloud Sync Integration**
+  - `CloudAuthClient` — Better Auth session management (login, logout, getSession)
+  - `CloudSyncService` — Pull/push sync with Last-Write-Wins conflict resolution
+  - `CloudLoginForm` component — Login/logout UI in settings
+  - Support for both offline-only (legacy) and cloud sync modes
+  - Better Auth session stored in IndexedDB settings store
+  - Automatic token refresh on expiry
+  - Fallback to offline mode if backend unavailable
+
+- **Monorepo Setup**
+  - pnpm workspace configuration (frontend + backend packages)
+  - Shared TypeScript config
+  - Separate build/dev scripts for frontend and backend
+
+### Modified
+
+- `src/stores/sync-store.ts` — support cloud sync mode selection
+- `src/components/settings/sync-settings.tsx` — integrate cloud login form
+- `package.json` — workspace definition + backend dependency
+- `pnpm-workspace.yaml` — new file for monorepo structure
+
+### New Files
+
+**Backend** (18 total):
+- `backend/src/app.ts` — Hono application setup
+- `backend/src/index.ts` — Server entry point
+- `backend/src/auth.ts` — Better Auth configuration
+- `backend/src/env.ts` — Environment variable validation
+- `backend/src/routes/health.ts` — Health check route
+- `backend/src/routes/sync.ts` — Sync endpoints
+- `backend/src/middleware/auth-guard.ts` — JWT validation
+- `backend/src/middleware/error-handler.ts` — Error handling
+- `backend/src/db/client.ts` — PostgreSQL connection
+- `backend/src/db/schema.ts` — Drizzle sync schema
+- `backend/src/db/auth-schema.ts` — Better Auth schema
+- `backend/src/types/context.ts` — Request context types
+- `backend/package.json` — Backend dependencies
+- `backend/tsconfig.json` — Backend TypeScript config
+- `backend/drizzle.config.ts` — Drizzle migration config
+- `backend/.env.example` — Environment template
+
+**Frontend**:
+- `src/services/sync/cloud-auth-client.ts` — Better Auth wrapper
+- `src/services/sync/cloud-sync-service.ts` — Sync service
+- `src/components/settings/cloud-login-form.tsx` — Login form
+- `src/types/cloud-sync.ts` — Cloud sync types
+- `src/utils/tauri-http-client.ts` — Tauri HTTP wrapper
+
 ## [Phase 12] — 2026-03-08
 
 ### Added
