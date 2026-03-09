@@ -27,6 +27,13 @@ export default defineConfig(async () => ({
           port: 1421,
         }
       : undefined,
+    // Proxy /api requests to backend for browser dev mode (non-Tauri sync)
+    proxy: {
+      "/api": {
+        target: process.env.VITE_BACKEND_URL || "http://localhost:3001",
+        changeOrigin: true,
+      },
+    },
     watch: {
       // 3. tell Vite to ignore watching `src-tauri`
       ignored: ["**/src-tauri/**"],
