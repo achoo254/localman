@@ -62,7 +62,7 @@ function formatRequestMarkdown(req: ApiRequest): string {
     lines.push('| Key | Value |');
     lines.push('|-----|-------|');
     for (const h of enabledHeaders) {
-      lines.push(`| ${h.key} | ${h.value} |`);
+      lines.push(`| ${escapePipe(h.key)} | ${escapePipe(h.value)} |`);
     }
     lines.push('');
   }
@@ -74,7 +74,7 @@ function formatRequestMarkdown(req: ApiRequest): string {
     lines.push('| Key | Value | Description |');
     lines.push('|-----|-------|-------------|');
     for (const p of enabledParams) {
-      lines.push(`| ${p.key} | ${p.value} | ${p.description ?? ''} |`);
+      lines.push(`| ${escapePipe(p.key)} | ${escapePipe(p.value)} | ${escapePipe(p.description ?? '')} |`);
     }
     lines.push('');
   }
@@ -87,8 +87,10 @@ function formatRequestMarkdown(req: ApiRequest): string {
 
   // Body
   if (req.body.type !== 'none' && req.body.raw) {
+    const langMap: Record<string, string> = { json: 'json', xml: 'xml', html: 'html', javascript: 'javascript' };
+    const fenceLang = langMap[req.body.type] ?? '';
     lines.push(`**Body** (\`${req.body.type}\`):`);
-    lines.push('```json');
+    lines.push(`\`\`\`${fenceLang}`);
     lines.push(req.body.raw);
     lines.push('```');
     lines.push('');
@@ -135,6 +137,11 @@ export function exportCollectionAsHtml(
 ${html}
 </body>
 </html>`;
+}
+
+/** Escape pipe characters in markdown table cell values */
+function escapePipe(s: string): string {
+  return s.replace(/\|/g, '\\|');
 }
 
 function escapeHtml(s: string): string {

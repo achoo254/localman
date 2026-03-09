@@ -25,5 +25,11 @@ export function escapePythonString(s: string): string {
 
 /** Escape a string for use inside double-quoted PowerShell strings. */
 export function escapePowershellString(s: string): string {
-  return s.replace(/"/g, '`"').replace(/\$/g, '`$').replace(/`/g, '``');
+  // Backtick MUST be escaped first to avoid double-escaping inserted backticks
+  return s.replace(/`/g, '``').replace(/"/g, '`"').replace(/\$/g, '`$');
+}
+
+/** Escape a string for use inside single-quoted PowerShell strings (double single-quotes). */
+export function escapePowershellSingleQuote(s: string): string {
+  return s.replace(/'/g, "''");
 }
