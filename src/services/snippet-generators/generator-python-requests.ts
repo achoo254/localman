@@ -11,7 +11,6 @@ function generatePythonRequests(req: PreparedRequest): string {
   const method = req.method.toLowerCase();
   const hasHeaders = Object.keys(req.headers).length > 0;
   const hasBody = !!req.body;
-  const isJson = req.headers['Content-Type']?.includes('application/json');
 
   const args: string[] = [`'${escapePythonString(req.url)}'`];
 
@@ -23,13 +22,8 @@ function generatePythonRequests(req: PreparedRequest): string {
   }
 
   if (hasBody) {
-    // Always pass body as string — let requests handle JSON serialization
-    if (isJson) {
-      lines.splice(1, 0, 'import json', '');
-      args.push(`json=json.loads('${escapePythonString(req.body!)}')`);
-    } else {
-      args.push(`data='${escapePythonString(req.body!)}'`);
-    }
+    // Use data= with raw string — Content-Type header handles encoding
+    args.push(`data='${escapePythonString(req.body!)}'`);
   }
 
   if (args.length === 1) {

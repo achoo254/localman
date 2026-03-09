@@ -4,7 +4,7 @@
 
 import type { PreparedRequest } from '../../types/response';
 import { registerGenerator } from './snippet-generator-registry';
-import { escapeDoubleQuoted, escapeShellArg } from './snippet-escape-utils';
+import { escapeDoubleQuoted, escapePowershellSingleQuote } from './snippet-escape-utils';
 
 function generatePowershell(req: PreparedRequest): string {
   const hasHeaders = Object.keys(req.headers).length > 0;
@@ -21,12 +21,12 @@ function generatePowershell(req: PreparedRequest): string {
   }
 
   if (hasBody) {
-    lines.push(`$body = '${escapeShellArg(req.body!)}'`);
+    lines.push(`$body = '${escapePowershellSingleQuote(req.body!)}'`);
     lines.push('');
   }
 
   const params: string[] = [];
-  params.push(`-Uri '${escapeShellArg(req.url)}'`);
+  params.push(`-Uri '${escapePowershellSingleQuote(req.url)}'`);
   params.push(`-Method ${req.method}`);
   if (hasHeaders) params.push('-Headers $headers');
   if (hasBody) params.push('-Body $body');
