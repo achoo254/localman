@@ -1,11 +1,13 @@
 /**
- * Cloud Sync settings: endpoints, headers, params, test connection, sync now.
+ * Cloud Sync settings: server URL, cloud login, legacy endpoint fallback.
  */
 
 import { useState, useEffect } from 'react';
-import { Cloud, Loader2 } from 'lucide-react';
+import { Cloud, Loader2, ChevronDown, ChevronRight } from 'lucide-react';
 import { useSyncStore } from '../../stores/sync-store';
+import { CloudLoginForm } from './cloud-login-form';
 import type { SyncConfig, SyncKeyValue } from '../../types/sync';
+import type { CloudSyncConfig } from '../../types/cloud-sync';
 
 function SyncKeyValueTable({
   pairs,
@@ -59,8 +61,21 @@ function SyncKeyValueTable({
 }
 
 export function SyncSettings() {
-  const { config, status, lastSyncAt, error, loadConfig, setConfig, syncAll, testConnection, clearError } = useSyncStore();
+  const {
+    config,
+    cloudConfig,
+    status,
+    loadConfig,
+    setConfig,
+    setCloudConfig,
+    setMode,
+    syncAll,
+    testConnection,
+    clearError,
+  } = useSyncStore();
+
   const [testResult, setTestResult] = useState<string | null>(null);
+  const [showLegacy, setShowLegacy] = useState(false);
 
   useEffect(() => {
     void loadConfig();
@@ -68,125 +83,155 @@ export function SyncSettings() {
 
   const c = config ?? { enabled: false, endpoints: { list: '', download: '', upload: '', delete: '' }, headers: [], params: [], lastSyncAt: null };
 
-  const update = (patch: Partial<SyncConfig>) => {
+  const updateLegacy = (patch: Partial<SyncConfig>) => {
     const next = { ...c, ...patch };
     void setConfig(next);
+  };
+
+  const updateCloud = (patch: Partial<CloudSyncConfig>) => {
+    const next = { ...cloudConfig, ...patch };
+    void setCloudConfig(next);
   };
 
   const handleTest = async () => {
     setTestResult(null);
     const r = await testConnection();
-    setTestResult(r.ok ? `OK — ${r.count ?? 0} file(s)` : `Failed: ${r.error ?? 'Unknown'}`);
-  };
-
-  const handleSync = () => {
-    setTestResult(null);
-    clearError();
-    void syncAll();
+    setTestResult(r.ok ? 'Connected' : `Failed: ${r.error ?? 'Unknown'}`);
   };
 
   return (
     <div className="flex flex-col gap-4 p-4">
       <h2 className="text-sm font-semibold text-slate-200">Cloud Sync</h2>
       <p className="text-xs text-slate-500">
-        Sync collections as Postman v2.1 JSON to your own HTTP endpoints. Use <code className="bg-black/20 px-1 rounded">{'{filename}'}</code> in URLs.
+        Sync collections and environments to your Localman server.
       </p>
-      <label className="flex items-center gap-2">
-        <input
-          type="checkbox"
-          checked={c.enabled}
-          onChange={e => update({ enabled: e.target.checked })}
-          className="rounded border-slate-600 text-[var(--color-accent)]"
-        />
-        <span className="text-sm text-slate-300">Enable Cloud Sync</span>
-      </label>
+
+      {/* Server URL */}
       <label className="flex flex-col gap-1">
-        <span className="text-xs text-slate-400">List (GET) — returns array of {"{ filename, updated_at? }"}</span>
-        <input
-          type="url"
-          value={c.endpoints.list}
-          onChange={e => update({ endpoints: { ...c.endpoints, list: e.target.value } })}
-          placeholder="https://api.example.com/sync/list"
-          className="rounded border border-[var(--color-bg-tertiary)] bg-[var(--color-bg-secondary)] px-3 py-2 text-sm text-slate-200"
-        />
+        <span className="text-xs text-slate-400">Server URL</span>
+        <div className="flex gap-2">
+          <input
+            type="url"
+            value={cloudConfig.serverUrl}
+            onChange={e => updateCloud({ serverUrl: e.target.value })}
+            placeholder="https://api.localman.app"
+            className="flex-1 rounded border border-[var(--color-bg-tertiary)] bg-[var(--color-bg-secondary)] px-3 py-2 text-sm text-slate-200"
+          />
+          <button
+            type="button"
+            onClick={handleTest}
+            disabled={!cloudConfig.serverUrl}
+            className="rounded bg-[var(--color-bg-tertiary)] px-3 py-2 text-xs text-slate-300 hover:bg-slate-700 disabled:opacity-50"
+          >
+            Test
+          </button>
+        </div>
+        {testResult && (
+          <p className={`text-xs ${testResult.startsWith('Connected') ? 'text-green-400' : 'text-red-400'}`}>
+            {testResult}
+          </p>
+        )}
       </label>
-      <label className="flex flex-col gap-1">
-        <span className="text-xs text-slate-400">Download (GET {"{filename}"})</span>
-        <input
-          type="url"
-          value={c.endpoints.download}
-          onChange={e => update({ endpoints: { ...c.endpoints, download: e.target.value } })}
-          placeholder="https://api.example.com/sync/{filename}"
-          className="rounded border border-[var(--color-bg-tertiary)] bg-[var(--color-bg-secondary)] px-3 py-2 text-sm text-slate-200"
-        />
-      </label>
-      <label className="flex flex-col gap-1">
-        <span className="text-xs text-slate-400">Upload (PUT {"{filename}"})</span>
-        <input
-          type="url"
-          value={c.endpoints.upload}
-          onChange={e => update({ endpoints: { ...c.endpoints, upload: e.target.value } })}
-          placeholder="https://api.example.com/sync/{filename}"
-          className="rounded border border-[var(--color-bg-tertiary)] bg-[var(--color-bg-secondary)] px-3 py-2 text-sm text-slate-200"
-        />
-      </label>
-      <label className="flex flex-col gap-1">
-        <span className="text-xs text-slate-400">Delete (DELETE {"{filename}"})</span>
-        <input
-          type="url"
-          value={c.endpoints.delete}
-          onChange={e => update({ endpoints: { ...c.endpoints, delete: e.target.value } })}
-          placeholder="https://api.example.com/sync/{filename}"
-          className="rounded border border-[var(--color-bg-tertiary)] bg-[var(--color-bg-secondary)] px-3 py-2 text-sm text-slate-200"
-        />
-      </label>
-      <div>
-        <p className="text-xs text-slate-400 mb-1">Headers (e.g. Authorization)</p>
-        <SyncKeyValueTable
-          pairs={c.headers}
-          onChange={headers => update({ headers })}
-          placeholderKey="Header name"
-          placeholderValue="Value"
-        />
-      </div>
-      <div>
-        <p className="text-xs text-slate-400 mb-1">Query params</p>
-        <SyncKeyValueTable
-          pairs={c.params}
-          onChange={params => update({ params })}
-          placeholderKey="Param"
-          placeholderValue="Value"
-        />
-      </div>
-      {error && (
-        <p className="text-xs text-red-400 rounded bg-red-500/10 px-3 py-2" role="alert">
-          {error}
-        </p>
-      )}
-      {testResult && (
-        <p className="text-xs text-slate-400">{testResult}</p>
-      )}
-      <div className="flex items-center gap-2">
+
+      {/* Cloud Auth + Sync */}
+      <CloudLoginForm />
+
+      {/* Legacy endpoint mode (collapsible) */}
+      <div className="border-t border-[var(--color-bg-tertiary)] pt-3 mt-1">
         <button
           type="button"
-          onClick={handleTest}
-          disabled={!c.endpoints.list}
-          className="rounded bg-[var(--color-bg-tertiary)] px-4 py-2 text-sm text-slate-200 hover:bg-slate-700 disabled:opacity-50"
+          onClick={() => setShowLegacy(!showLegacy)}
+          className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-300"
         >
-          Test connection
-        </button>
-        <button
-          type="button"
-          onClick={handleSync}
-          disabled={!c.enabled || status === 'syncing'}
-          className="flex items-center gap-2 rounded bg-[var(--color-accent)] px-4 py-2 text-sm text-white hover:opacity-90 disabled:opacity-50"
-        >
-          {status === 'syncing' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Cloud className="h-4 w-4" />}
-          Sync now
+          {showLegacy ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
+          Advanced: Custom endpoint sync
         </button>
       </div>
-      {lastSyncAt && (
-        <p className="text-xs text-slate-500">Last synced: {new Date(lastSyncAt).toLocaleString()}</p>
+
+      {showLegacy && (
+        <div className="flex flex-col gap-3 pl-2 border-l-2 border-[var(--color-bg-tertiary)]">
+          <p className="text-xs text-slate-500">
+            Use custom HTTP endpoints instead of Localman server. Requires 4 endpoint URLs.
+          </p>
+          <label className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={c.enabled}
+              onChange={e => { updateLegacy({ enabled: e.target.checked }); if (e.target.checked) setMode('legacy'); }}
+              className="rounded border-slate-600 text-[var(--color-accent)]"
+            />
+            <span className="text-sm text-slate-300">Enable legacy sync</span>
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-xs text-slate-400">List (GET)</span>
+            <input
+              type="url"
+              value={c.endpoints.list}
+              onChange={e => updateLegacy({ endpoints: { ...c.endpoints, list: e.target.value } })}
+              placeholder="https://api.example.com/sync/list"
+              className="rounded border border-[var(--color-bg-tertiary)] bg-[var(--color-bg-secondary)] px-3 py-2 text-sm text-slate-200"
+            />
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-xs text-slate-400">Download (GET)</span>
+            <input
+              type="url"
+              value={c.endpoints.download}
+              onChange={e => updateLegacy({ endpoints: { ...c.endpoints, download: e.target.value } })}
+              placeholder="https://api.example.com/sync/{filename}"
+              className="rounded border border-[var(--color-bg-tertiary)] bg-[var(--color-bg-secondary)] px-3 py-2 text-sm text-slate-200"
+            />
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-xs text-slate-400">Upload (PUT)</span>
+            <input
+              type="url"
+              value={c.endpoints.upload}
+              onChange={e => updateLegacy({ endpoints: { ...c.endpoints, upload: e.target.value } })}
+              placeholder="https://api.example.com/sync/{filename}"
+              className="rounded border border-[var(--color-bg-tertiary)] bg-[var(--color-bg-secondary)] px-3 py-2 text-sm text-slate-200"
+            />
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-xs text-slate-400">Delete (DELETE)</span>
+            <input
+              type="url"
+              value={c.endpoints.delete}
+              onChange={e => updateLegacy({ endpoints: { ...c.endpoints, delete: e.target.value } })}
+              placeholder="https://api.example.com/sync/{filename}"
+              className="rounded border border-[var(--color-bg-tertiary)] bg-[var(--color-bg-secondary)] px-3 py-2 text-sm text-slate-200"
+            />
+          </label>
+          <div>
+            <p className="text-xs text-slate-400 mb-1">Headers</p>
+            <SyncKeyValueTable
+              pairs={c.headers}
+              onChange={headers => updateLegacy({ headers })}
+              placeholderKey="Header name"
+              placeholderValue="Value"
+            />
+          </div>
+          <div>
+            <p className="text-xs text-slate-400 mb-1">Query params</p>
+            <SyncKeyValueTable
+              pairs={c.params}
+              onChange={params => updateLegacy({ params })}
+              placeholderKey="Param"
+              placeholderValue="Value"
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => { clearError(); setMode('legacy'); void syncAll(); }}
+              disabled={!c.enabled || status === 'syncing'}
+              className="flex items-center gap-2 rounded bg-[var(--color-accent)] px-4 py-2 text-sm text-white hover:opacity-90 disabled:opacity-50"
+            >
+              {status === 'syncing' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Cloud className="h-4 w-4" />}
+              Sync (legacy)
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );

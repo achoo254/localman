@@ -3,26 +3,7 @@
  */
 
 import type { SyncConfig, ServerFileEntry } from '../../types/sync';
-
-function isTauri(): boolean {
-  if (typeof window === 'undefined') return false;
-  return !!(window as unknown as { __TAURI__?: unknown }).__TAURI__
-    || !!(window as unknown as { __TAURI_INTERNALS__?: unknown }).__TAURI_INTERNALS__;
-}
-
-async function getFetch(): Promise<typeof fetch> {
-  if (isTauri()) {
-    try {
-      const { fetch: tauriFetch } = await import('@tauri-apps/plugin-http');
-      return tauriFetch;
-    } catch (err) {
-      const e = new Error('HTTP plugin unavailable. Sync requests cannot run in Tauri without the plugin.');
-      (e as Error & { cause?: unknown }).cause = err;
-      throw e;
-    }
-  }
-  return globalThis.fetch.bind(globalThis);
-}
+import { getHttpClient } from '../../utils/tauri-http-client';
 
 function buildUrl(template: string, filename: string): string {
   return template.replace(/\{filename\}/g, encodeURIComponent(filename));
@@ -51,7 +32,7 @@ export async function listFiles(config: SyncConfig): Promise<ServerFileEntry[]> 
   const url = applyParams(config.endpoints.list, config.params);
   const init: RequestInit = { method: 'GET' };
   applyHeaders(init, config.headers);
-  const f = await getFetch();
+  const f = await getHttpClient();
   const res = await f(url, init);
   if (!res.ok) throw new Error(`List failed: ${res.status} ${res.statusText}`);
   const data = await res.json();
@@ -70,7 +51,7 @@ export async function downloadFile(config: SyncConfig, filename: string): Promis
   const url = applyParams(buildUrl(config.endpoints.download, filename), config.params);
   const init: RequestInit = { method: 'GET' };
   applyHeaders(init, config.headers);
-  const f = await getFetch();
+  const f = await getHttpClient();
   const res = await f(url, init);
   if (!res.ok) throw new Error(`Download ${filename}: ${res.status}`);
   return res.text();
@@ -84,7 +65,7 @@ export async function uploadFile(config: SyncConfig, filename: string, body: str
     headers: { 'Content-Type': 'application/json' },
   };
   applyHeaders(init, config.headers);
-  const f = await getFetch();
+  const f = await getHttpClient();
   const res = await f(url, init);
   if (!res.ok) throw new Error(`Upload ${filename}: ${res.status}`);
 }
@@ -93,7 +74,7 @@ export async function deleteFile(config: SyncConfig, filename: string): Promise<
   const url = applyParams(buildUrl(config.endpoints.delete, filename), config.params);
   const init: RequestInit = { method: 'DELETE' };
   applyHeaders(init, config.headers);
-  const f = await getFetch();
+  const f = await getHttpClient();
   const res = await f(url, init);
   if (res.status === 404) return;
   if (!res.ok) throw new Error(`Delete ${filename}: ${res.status}`);
