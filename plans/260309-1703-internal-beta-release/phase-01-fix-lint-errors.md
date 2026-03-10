@@ -2,7 +2,7 @@
 
 ## Overview
 - **Priority:** P1 (blocks CI)
-- **Status:** Pending
+- **Status:** ✅ Complete
 - **Effort:** 30 min
 
 Fix 1 ESLint error + 4 warnings blocking CI pipeline.
@@ -73,11 +73,11 @@ Then remove the useEffect block (lines 37-44).
 
 ## Todo
 
-- [ ] Fix app-layout.tsx setState in effect
-- [ ] Fix 4 ESLint warnings
-- [ ] `pnpm lint` passes clean
-- [ ] `pnpm type-check` passes
-- [ ] `pnpm test --run` passes (41/41)
+- [x] Fix app-layout.tsx setState in effect
+- [x] Fix 4 ESLint warnings
+- [x] `pnpm lint` passes clean
+- [x] `pnpm type-check` passes
+- [x] `pnpm test --run` passes (41/41)
 
 ## Success Criteria
 

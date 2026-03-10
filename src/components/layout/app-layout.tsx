@@ -29,19 +29,15 @@ export function AppLayout({ children }: AppLayoutProps) {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [sidebarWidth, setSidebarWidth] = useState(SIDEBAR_WIDTH_DEFAULT);
+  const [sidebarWidth, setSidebarWidth] = useState(() => {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw == null) return SIDEBAR_WIDTH_DEFAULT;
+    const parsed = Number(raw);
+    return Number.isFinite(parsed) ? clampSidebarWidth(parsed) : SIDEBAR_WIDTH_DEFAULT;
+  });
   const [resizing, setResizing] = useState(false);
   const resizeStartRef = useRef<{ x: number; width: number } | null>(null);
   const lastWidthRef = useRef<number>(SIDEBAR_WIDTH_DEFAULT);
-
-  useEffect(() => {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw == null) return;
-    const parsed = Number(raw);
-    if (Number.isFinite(parsed)) {
-      setSidebarWidth(clampSidebarWidth(parsed));
-    }
-  }, []);
 
   const onResizeStart = useCallback((startX: number, startWidth: number) => {
     resizeStartRef.current = { x: startX, width: startWidth };

@@ -48,6 +48,7 @@ export function CodeSnippetPanel({ request }: CodeSnippetPanelProps) {
     } catch {
       return '// Could not generate snippet (check request body type)';
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- activeEnvId triggers regeneration on env switch
   }, [request, lang, getInterpolationContext, activeEnvId]);
 
   // Get CodeMirror language extension based on mode

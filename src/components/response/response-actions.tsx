@@ -23,7 +23,7 @@ export function ResponseActions({ body, onCopy }: ResponseActionsProps) {
     try {
       await writeTextFile(path, body);
     } catch (err) {
-      console.error('[ResponseActions] Failed to save response to file:', err);
+      void err; // save failed silently
     }
   }, [body]);
 

@@ -3,7 +3,7 @@
  */
 
 import { useCallback, useRef, useState, useEffect } from 'react';
-import { confirm } from '@tauri-apps/plugin-dialog';
+import { isTauri } from '../../utils/tauri-http-client';
 import { Plus, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useRequestStore } from '../../stores/request-store';
 import { hasMeaningfulContent } from './draft-utils';
@@ -83,10 +83,16 @@ export function RequestTabBar({ onRequestSaveDialog }: RequestTabBarProps) {
     if (tab.isDraft) {
       const draft = drafts[tabId];
       if (draft && hasMeaningfulContent(draft)) {
-        const shouldSave = await confirm(
-          'This request has unsaved changes. Save before closing?',
-          { title: 'Save request?', okLabel: 'Save', cancelLabel: "Don't Save" }
-        );
+        let shouldSave = false;
+        if (isTauri()) {
+          const { confirm } = await import('@tauri-apps/plugin-dialog');
+          shouldSave = await confirm(
+            'This request has unsaved changes. Save before closing?',
+            { title: 'Save request?', okLabel: 'Save', cancelLabel: "Don't Save" }
+          );
+        } else {
+          shouldSave = window.confirm('This request has unsaved changes. Save before closing?');
+        }
         if (shouldSave) {
           onRequestSaveDialog?.(tabId);
           return; // Don't close — save dialog handles it

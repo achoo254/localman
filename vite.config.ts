@@ -16,10 +16,10 @@ export default defineConfig(async () => ({
   // 2. tauri expects a fixed port, fail if that port is not available
   server: {
     port: 1420,
-    strictPort: true,
+    strictPort: false,
     host: host || false,
-    // Allow WebView origin (e.g. null or localhost) so @vite/client and HMR load in Tauri dev
-    cors: { origin: ["null", "http://localhost:1420", "http://127.0.0.1:1420"] },
+    // Allow WebView origin so @vite/client and HMR load in Tauri dev
+    cors: { origin: true },
     hmr: host
       ? {
           protocol: "ws",

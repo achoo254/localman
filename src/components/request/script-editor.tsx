@@ -16,8 +16,6 @@ interface ScriptEditorProps {
 export function ScriptEditor({ value, onChange, placeholder }: ScriptEditorProps) {
   const extensions = useMemo(
     () => [javascript(), ...(placeholder ? [cmPlaceholder(placeholder)] : [])],
-    // placeholder identity is stable per render; resetKey handles re-mount if it changes
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [placeholder]
   );
 

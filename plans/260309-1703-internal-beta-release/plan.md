@@ -21,8 +21,8 @@ Ship Localman v0.1.0 as internal beta on Windows + macOS. Feature-complete (Phas
 
 | # | Phase | Status | Effort | Link |
 |---|-------|--------|--------|------|
-| 1 | Fix lint errors | Pending | 30m | [phase-01](./phase-01-fix-lint-errors.md) |
-| 2 | Build artifacts | Pending | 1h | [phase-02-build-artifacts.md](./phase-02-build-artifacts.md) |
+| 1 | Fix lint errors | ✅ Complete | 30m | [phase-01](./phase-01-fix-lint-errors.md) |
+| 2 | Build artifacts | ✅ Complete | 1h | [phase-02-build-artifacts.md](./phase-02-build-artifacts.md) |
 | 3 | Smoke test | Pending | 1h | [phase-03-smoke-test.md](./phase-03-smoke-test.md) |
 | 4 | Distribute | Pending | 30m | [phase-04-distribute.md](./phase-04-distribute.md) |
 
