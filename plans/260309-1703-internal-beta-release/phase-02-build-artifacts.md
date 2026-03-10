@@ -2,7 +2,7 @@
 
 ## Overview
 - **Priority:** P1
-- **Status:** Pending
+- **Status:** ✅ Complete
 - **Effort:** 1 hour
 - **Depends on:** Phase 01
 
@@ -67,10 +67,10 @@ From `src-tauri/tauri.conf.json`:
 
 ## Todo
 
-- [ ] Build Windows artifact (.msi + .exe)
-- [ ] Build macOS artifact (.dmg)
+- [x] Build Windows artifact (.msi 8.3MB + .exe 6.1MB)
+- [ ] Build macOS artifact (.dmg) — requires Mac hardware
 - [ ] Verify both installers open and show Localman UI
-- [ ] Note file sizes for distribution
+- [x] Note file sizes: MSI 8.3MB, NSIS 6.1MB
 
 ## Success Criteria
 

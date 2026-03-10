@@ -90,7 +90,7 @@ export function RequestPanel({ onRequestSaveDialog }: RequestPanelProps) {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [activeTabId, openTabs, createDraftTab, handleCloseActiveTab, onRequestSaveDialog]);
+  }, [activeTabId, openTabs, createDraftTab, handleCloseActiveTab, onRequestSaveDialog, saveRequest]);
 
   function handleNewRequest() {
     createDraftTab();
