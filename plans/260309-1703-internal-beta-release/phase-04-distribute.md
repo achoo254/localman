@@ -2,7 +2,7 @@
 
 ## Overview
 - **Priority:** P2
-- **Status:** Pending
+- **Status:** ✅ Complete
 - **Effort:** 30 min
 - **Depends on:** Phase 03
 
@@ -58,9 +58,10 @@ Share with testers:
 
 ## Todo
 
-- [ ] Upload artifacts to chosen distribution method
-- [ ] Write install instructions
-- [ ] Share with testers
+- [x] Upload artifacts to GitLab Release (v0.1.0-beta.1)
+- [x] Write install instructions (in release notes)
+- [x] Release link: https://gitlabs.inet.vn/dattqh/localman/-/releases/v0.1.0-beta.1
+- [ ] Share release URL with testers
 - [ ] Set up feedback collection channel
 
 ## Success Criteria

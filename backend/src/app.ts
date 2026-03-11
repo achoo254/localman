@@ -8,6 +8,10 @@ import { sessionMiddleware } from "./middleware/auth-guard.js";
 import { errorHandler } from "./middleware/error-handler.js";
 import { healthRouter } from "./routes/health.js";
 import { syncRouter } from "./routes/sync.js";
+import { workspaceRouter } from "./routes/workspace-routes.js";
+import { collectionRouter } from "./routes/collection-routes.js";
+import { environmentRouter } from "./routes/environment-routes.js";
+import { entitySyncRouter } from "./routes/entity-sync-routes.js";
 import type { AppVariables } from "./types/context.js";
 
 const app = new Hono<{ Variables: AppVariables }>();
@@ -21,7 +25,7 @@ app.use(
         ? ["http://localhost:1420", "tauri://localhost", "https://tauri.localhost"]
         : env.CORS_ORIGINS.split(","),
     allowHeaders: ["Content-Type", "Authorization"],
-    allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     credentials: true,
   })
 );
@@ -38,6 +42,10 @@ app.use("/api/*", sessionMiddleware);
 // Routes
 app.route("/api", healthRouter);
 app.route("/api", syncRouter);
+app.route("/api", workspaceRouter);
+app.route("/api", collectionRouter);
+app.route("/api", environmentRouter);
+app.route("/api", entitySyncRouter);
 
 // Error handler
 app.onError(errorHandler);

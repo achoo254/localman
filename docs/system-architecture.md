@@ -204,29 +204,89 @@ GET  /api/auth/signin/github
 (OAuth providers configurable)
 ```
 
-#### Sync Endpoints (Authenticated)
+#### Workspace Routes (Authenticated)
 ```
-POST /api/sync/pull
-Headers: Authorization: Bearer {token}
-Body: { since?: number }
-Response: {
-  collections: [{ id, userId, name, description, updatedAt, ... }],
-  requests: [{ id, collectionId, method, url, headers, body, ... }],
-  updatedAt: number
-}
+GET /api/workspaces
+→ List user's workspaces (owner or member)
 
-POST /api/sync/push
-Headers: Authorization: Bearer {token}
+POST /api/workspaces
+Body: { name, slug }
+→ Create workspace (current user = owner)
+
+GET /api/workspaces/:workspaceId
+→ Get workspace details + members (require viewer role)
+
+PATCH /api/workspaces/:workspaceId
+Body: { name, slug }
+→ Update workspace (owner only)
+
+DELETE /api/workspaces/:workspaceId
+→ Delete workspace (owner only)
+
+POST /api/workspaces/:workspaceId/invite
+Body: { email, role }
+→ Create 24h invite link (owner only)
+
+POST /api/workspaces/:workspaceId/accept-invite
+Body: { token }
+→ Accept invite, add user to workspace
+
+PATCH /api/workspaces/:workspaceId/members/:userId/role
+Body: { role }
+→ Change member role (owner only)
+
+DELETE /api/workspaces/:workspaceId/members/:userId
+→ Remove member (owner only)
+```
+
+#### Entity Routes (Authenticated, Workspace-scoped)
+```
+POST /api/workspaces/:workspaceId/collections
+Body: { name, description }
+→ Create collection in workspace
+
+GET /api/workspaces/:workspaceId/collections
+→ List collections in workspace
+
+PATCH /api/workspaces/:workspaceId/collections/:collectionId
+Body: { name, description }
+→ Update collection (editor+ role)
+
+DELETE /api/workspaces/:workspaceId/collections/:collectionId
+→ Delete collection (editor+ role)
+
+POST /api/workspaces/:workspaceId/collections/:collectionId/requests
+Body: { name, method, url, headers, body, ... }
+→ Create request in collection
+
+GET /api/workspaces/:workspaceId/collections/:collectionId/requests
+→ List requests in collection (with nested folders)
+
+PATCH /api/workspaces/:workspaceId/requests/:requestId
+Body: { method, url, headers, body, ... }
+→ Update request (editor+ role)
+
+DELETE /api/workspaces/:workspaceId/requests/:requestId
+→ Delete request (editor+ role)
+
+[Similar routes for environments and folders]
+```
+
+#### Entity-Level Sync (Delta Sync)
+```
+POST /api/workspaces/:workspaceId/sync/pull
+Body: { entityType?, entityId?, since? }
+→ Pull entity changes since lastSeenVersion
+→ Response: { collections, folders, requests, environments, changeLog }
+
+POST /api/workspaces/:workspaceId/sync/push
 Body: {
-  collections: [...],
-  requests: [...],
-  deletions: { collectionIds: [], requestIds: [] }
+  collections: [{id, name, updatedAt, ...}],
+  requests: [{id, collectionId, url, ...}],
+  deletions: {collectionIds: [], requestIds: []}
 }
-Response: {
-  success: true,
-  syncedAt: number,
-  conflicts?: [{ type: 'collection'|'request', id, remoteUpdatedAt }]
-}
+→ Push entity changes (LWW conflict resolution by updatedAt)
+→ Response: { syncedAt, conflicts? }
 ```
 
 ### Middleware Stack
@@ -245,34 +305,109 @@ Error Handler (catches all errors, formats JSON)
 
 ### Database Schema (Drizzle)
 
-#### Sync Collections Table
+#### Workspaces & RBAC
 ```sql
-CREATE TABLE sync_collections (
-  id VARCHAR PRIMARY KEY,
-  userId VARCHAR NOT NULL,  -- Link to Better Auth user
-  name VARCHAR NOT NULL,
-  description TEXT,
-  metadata JSON,
+CREATE TABLE workspaces (
+  id UUID PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  slug VARCHAR(100) UNIQUE NOT NULL,
+  ownerId TEXT NOT NULL,
   createdAt TIMESTAMP,
-  updatedAt TIMESTAMP,
-  FOREIGN KEY (userId) REFERENCES user(id)
+  updatedAt TIMESTAMP
+);
+
+CREATE TABLE workspace_members (
+  id UUID PRIMARY KEY,
+  workspaceId UUID NOT NULL,
+  userId TEXT NOT NULL,
+  role VARCHAR(20) NOT NULL DEFAULT 'editor',  -- owner/editor/viewer
+  joinedAt TIMESTAMP
+);
+
+CREATE TABLE workspace_invites (
+  id UUID PRIMARY KEY,
+  workspaceId UUID NOT NULL,
+  email VARCHAR(255) NOT NULL,
+  role VARCHAR(20) NOT NULL DEFAULT 'editor',
+  token VARCHAR(64) UNIQUE NOT NULL,
+  expiresAt TIMESTAMP NOT NULL,  -- 24h expiry
+  acceptedAt TIMESTAMP,
+  createdAt TIMESTAMP
 );
 ```
 
-#### Sync Requests Table
+#### Normalized Entity Tables
 ```sql
-CREATE TABLE sync_requests (
-  id VARCHAR PRIMARY KEY,
-  collectionId VARCHAR NOT NULL,
-  method VARCHAR,  -- GET, POST, etc.
-  url VARCHAR,
-  headers JSON,
-  body TEXT,
-  auth JSON,
+CREATE TABLE collections (
+  id UUID PRIMARY KEY,
+  workspaceId UUID,  -- NULL for personal collections
+  userId TEXT NOT NULL,
+  name VARCHAR(255) NOT NULL,
   description TEXT,
+  sortOrder INTEGER DEFAULT 0,
+  isSynced BOOLEAN DEFAULT false,
+  version INTEGER DEFAULT 1,
   createdAt TIMESTAMP,
   updatedAt TIMESTAMP,
-  FOREIGN KEY (collectionId) REFERENCES sync_collections(id)
+  deletedAt TIMESTAMP  -- soft delete
+);
+
+CREATE TABLE folders (
+  id UUID PRIMARY KEY,
+  collectionId UUID NOT NULL,
+  parentId UUID,  -- nested folders
+  name VARCHAR(255) NOT NULL,
+  sortOrder INTEGER DEFAULT 0,
+  version INTEGER DEFAULT 1,
+  createdAt TIMESTAMP,
+  updatedAt TIMESTAMP,
+  deletedAt TIMESTAMP
+);
+
+CREATE TABLE requests (
+  id UUID PRIMARY KEY,
+  collectionId UUID NOT NULL,
+  folderId UUID,
+  name VARCHAR(255) NOT NULL,
+  method VARCHAR(10) NOT NULL,
+  url TEXT,
+  params JSONB,
+  headers JSONB,
+  body JSONB,
+  auth JSONB,
+  description TEXT,
+  preScript TEXT,
+  postScript TEXT,
+  version INTEGER DEFAULT 1,
+  createdAt TIMESTAMP,
+  updatedAt TIMESTAMP,
+  deletedAt TIMESTAMP
+);
+
+CREATE TABLE environments (
+  id UUID PRIMARY KEY,
+  workspaceId UUID,  -- workspace or personal
+  userId TEXT NOT NULL,
+  name VARCHAR(255) NOT NULL,
+  variables JSONB,
+  isActive BOOLEAN DEFAULT false,
+  isSynced BOOLEAN DEFAULT false,
+  version INTEGER DEFAULT 1,
+  createdAt TIMESTAMP,
+  updatedAt TIMESTAMP,
+  deletedAt TIMESTAMP
+);
+
+CREATE TABLE change_log (
+  id UUID PRIMARY KEY,
+  entityType VARCHAR(20) NOT NULL,  -- collection|folder|request|environment
+  entityId UUID NOT NULL,
+  workspaceId UUID,
+  userId TEXT NOT NULL,
+  fieldChanges JSONB NOT NULL,  -- {fieldName: newValue, ...}
+  fromVersion INTEGER NOT NULL,
+  toVersion INTEGER NOT NULL,
+  createdAt TIMESTAMP
 );
 ```
 
@@ -384,9 +519,11 @@ CREATE TABLE sync_requests (
 
 1. **No real-time collaboration** (Phase 16) — Sync is pull/push, not live WebSocket
 2. **Last-Write-Wins conflict resolution** — Simple but doesn't preserve concurrent edits
-3. **Single PostgreSQL database** — Vertical scaling only (sharding in Phase 16)
+3. **Single PostgreSQL database** — Vertical scaling only (sharding in Phase 16+)
 4. **IndexedDB quota** — ~50MB on most browsers (sufficient for local usage)
 5. **Offline queue not yet persisted** (Phase 16) — Pending sync lost on app restart
+6. **UI not yet updated for workspaces** (Phase 14) — Backend API ready, frontend wizard TBD
+7. **No audit logging** (Phase 15) — Track who changed what, when
 
 ## Unresolved Questions
 
