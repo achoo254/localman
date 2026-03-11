@@ -83,7 +83,7 @@ export function RequestTabBar({ onRequestSaveDialog }: RequestTabBarProps) {
     if (tab.isDraft) {
       const draft = drafts[tabId];
       if (draft && hasMeaningfulContent(draft)) {
-        let shouldSave = false;
+        let shouldSave;
         if (isTauri()) {
           const { confirm } = await import('@tauri-apps/plugin-dialog');
           shouldSave = await confirm(
