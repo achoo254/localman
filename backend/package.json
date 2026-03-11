@@ -12,7 +12,8 @@
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
-    "auth:generate": "npx @better-auth/cli generate"
+    "auth:generate": "npx @better-auth/cli generate",
+    "db:migrate-data": "tsx --env-file=.env src/scripts/migrate-user-files.ts"
   },
   "engines": {
     "node": ">=20.0.0"

@@ -2,6 +2,70 @@
 
 All notable changes to Localman documented here. Format based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [Phase 1: Cloud Sync → Team Workspace] — 2026-03-11
+
+### Added
+
+- **Workspace Management** — Team collaboration containers
+  - `workspaces` table: name, slug, owner
+  - `workspace_members` table: role-based access (owner/editor/viewer)
+  - `workspace_invites` table: link-based 24h expiry invitations (no email service)
+  - Routes: list, create, read, update, delete workspaces; invite, accept, manage members
+
+- **Normalized Entity Schema** (replaces blob-based userFiles)
+  - `collections` table: workspace-scoped, soft-deletes, version tracking
+  - `folders` table: nested support, sort order
+  - `requests` table: full request metadata (params, headers, body, auth, scripts)
+  - `environments` table: workspace and personal environment variables
+  - `change_log` table: field-level change tracking for delta sync (Phase 4)
+
+- **RBAC Middleware** (`workspace-rbac.ts`)
+  - Role enforcement: owner > editor > viewer
+  - Workspace context injection into request handlers
+  - Per-entity permission checks
+
+- **Entity-Level Sync Routes**
+  - `POST /api/workspaces/:workspaceId/sync/pull` — Delta sync by entityType, since version
+  - `POST /api/workspaces/:workspaceId/sync/push` — Push changes with LWW conflict resolution
+  - Change log tracking for field-level deltas
+
+- **Migration Script**
+  - `migrate-user-files.ts` — Convert legacy blob collections to normalized tables
+  - Preserves request data structure, creates personal workspace per user
+
+### Modified
+
+- Backend: All routes workspace-scoped via middleware, nullable `workspaceId` for backwards compatibility
+- Database: Drizzle schema expanded from 2 to 8 tables
+
+### New Files (Backend)
+
+- `backend/src/db/workspace-schema.ts` — Workspace + members + invites tables
+- `backend/src/db/entity-schema.ts` — Collections, folders, requests, environments, change_log
+- `backend/src/routes/workspace-routes.ts` — Workspace CRUD + invite management
+- `backend/src/routes/collection-routes.ts` — Collection CRUD
+- `backend/src/routes/environment-routes.ts` — Environment CRUD
+- `backend/src/routes/entity-sync-routes.ts` — Delta sync endpoints
+- `backend/src/middleware/workspace-rbac.ts` — Role-based access control
+- `backend/src/services/workspace-service.ts` — Workspace business logic
+- `backend/src/services/invite-service.ts` — Invite token generation + validation
+- `backend/src/scripts/migrate-user-files.ts` — Data migration script
+
+### Success Criteria Met
+✅ Backend database supports normalized entities + workspaces
+✅ RBAC middleware enforces role-based permissions
+✅ Invite system generates 24h link tokens
+✅ Entity routes support workspace-scoped CRUD
+✅ Delta sync endpoints track change_log for field-level syncs
+✅ Migration script handles legacy blob → normalized conversion
+✅ All routes secured with auth guard + workspace role checks
+
+### Not Yet Implemented (Phase 14)
+- Frontend UI for workspace creation, invitation, switching
+- Team member management UI
+- Entity CRUD UIs for workspace context
+- Workspace settings panel
+
 ## [Phase 13] — 2026-03-09
 
 ### Added

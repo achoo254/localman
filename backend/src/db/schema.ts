@@ -8,7 +8,7 @@ import {
   uniqueIndex,
   index,
 } from "drizzle-orm/pg-core";
-import { user } from "./auth-schema";
+import { user } from "./auth-schema.js";
 
 export const userFiles = pgTable(
   "user_files",
@@ -35,4 +35,4 @@ export const userFiles = pgTable(
 );
 
 // Re-export auth schema for drizzle-kit
-export { user, session, account, verification } from "./auth-schema";
+export { user, session, account, verification } from "./auth-schema.js";

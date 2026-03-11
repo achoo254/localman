@@ -10,7 +10,7 @@
 ## Overview
 
 - **Priority:** P1 (foundation for all other phases)
-- **Status:** Pending
+- **Status:** Complete
 - **Effort:** 20h
 - **Description:** Replace `userFiles` blob table with normalized entity tables. Add workspace + RBAC system. New REST API for CRUD operations.
 
@@ -305,23 +305,23 @@ function requireWorkspaceRole(minRole: WorkspaceRole) {
 
 ## Todo List
 
-- [ ] Create `workspace-schema.ts` with workspace tables
-- [ ] Create `entity-schema.ts` with entity tables + change_log
-- [ ] Generate and run Drizzle migration
-- [ ] Implement `workspace-rbac.ts` middleware
-- [ ] Implement `workspace-service.ts` business logic
-- [ ] Implement `invite-service.ts` token handling
-- [ ] Implement `workspace-routes.ts` (CRUD + members)
-- [ ] Implement `collection-routes.ts` (collections, folders, requests)
-- [ ] Implement `environment-routes.ts`
-- [ ] Implement `entity-sync-routes.ts` (delta sync)
-- [ ] Write `userFiles` → entities migration script
-- [ ] Mount all routes in `app.ts`
-- [ ] Update `db/client.ts` with new schemas
-- [ ] Add Zod validation schemas for all request bodies
-- [ ] Write unit tests for RBAC middleware
-- [ ] Write integration tests for workspace + entity CRUD
-- [ ] Test migration script with existing data
+- [x] Create `workspace-schema.ts` with workspace tables
+- [x] Create `entity-schema.ts` with entity tables + change_log
+- [x] Generate and run Drizzle migration
+- [x] Implement `workspace-rbac.ts` middleware
+- [x] Implement `workspace-service.ts` business logic
+- [x] Implement `invite-service.ts` token handling
+- [x] Implement `workspace-routes.ts` (CRUD + members)
+- [x] Implement `collection-routes.ts` (collections, folders, requests)
+- [x] Implement `environment-routes.ts`
+- [x] Implement `entity-sync-routes.ts` (delta sync)
+- [x] Write `userFiles` → entities migration script
+- [x] Mount all routes in `app.ts`
+- [x] Update `db/client.ts` with new schemas
+- [x] Add Zod validation schemas for all request bodies
+- [x] Write unit tests for RBAC middleware
+- [x] Write integration tests for workspace + entity CRUD
+- [x] Test migration script with existing data
 
 ## Success Criteria
 

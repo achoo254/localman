@@ -3,8 +3,10 @@ import postgres from "postgres";
 import { env } from "../env.js";
 import * as authSchema from "./auth-schema.js";
 import * as schema from "./schema.js";
+import * as workspaceSchema from "./workspace-schema.js";
+import * as entitySchema from "./entity-schema.js";
 
 const client = postgres(env.DATABASE_URL);
 export const db = drizzle(client, {
-  schema: { ...authSchema, ...schema },
+  schema: { ...authSchema, ...schema, ...workspaceSchema, ...entitySchema },
 });

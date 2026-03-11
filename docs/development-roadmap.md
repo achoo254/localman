@@ -20,6 +20,7 @@ Localman phases 00–11, with completion status and key milestones.
 | 11 | Code Snippet & API Docs | ✅ Complete | P2 | 16 language snippet generators, docs viewer, HTML/Markdown export | 2026-03-08 |
 | 12 | Draft Tab System | ✅ Complete | P2 | Ctrl+T draft requests, explicit save workflow, draft lifecycle | 2026-03-08 |
 | 13 | Cloud Sync Phase 2 | ✅ Complete | P1 | Backend API (Hono + PostgreSQL), Better Auth, pull/push sync | 2026-03-09 |
+| Phase 1 | Cloud Sync → Team Workspace | ✅ Complete | P1 | Normalized entities, workspaces, RBAC, invites, delta sync | 2026-03-11 |
 
 ## Phase 11 Details: Code Snippet, Preview & API Docs
 
@@ -64,6 +65,61 @@ Localman phases 00–11, with completion status and key milestones.
 - `src/components/request/request-panel.tsx`
 - `src/components/collections/sidebar-tabs.tsx`
 - `package.json`
+
+## Phase 1 Details: Cloud Sync → Team Workspace
+
+**Completed:** 2026-03-11
+
+### Features Delivered
+
+1. **Workspace Management**
+   - `workspaces` table with slug-based access
+   - `workspace_members` with role-based RBAC (owner/editor/viewer)
+   - `workspace_invites` with 24h expiry link tokens (no email service)
+   - Full CRUD routes for workspace lifecycle
+
+2. **Normalized Entity Schema** (replaces blob-based userFiles)
+   - `collections`, `folders`, `requests` with soft-delete support
+   - `environments` with workspace and personal variants
+   - `change_log` table for field-level delta sync (Phase 4)
+   - All entities version-tracked and timestamped
+
+3. **RBAC Middleware**
+   - `workspace-rbac.ts` enforces role-based access control
+   - Workspace context injected into all protected routes
+   - Per-entity permission checks (editor/viewer restrictions)
+
+4. **Entity-Level Sync**
+   - `POST /api/workspaces/:workspaceId/sync/pull` — Delta sync by entityType + version
+   - `POST /api/workspaces/:workspaceId/sync/push` — LWW conflict resolution
+   - Change log populated on every entity mutation for audit trail
+
+5. **Data Migration**
+   - `migrate-user-files.ts` converts legacy blob collections to normalized tables
+   - Creates personal workspace per user for backwards compatibility
+
+### Files Added (Backend)
+- `backend/src/db/workspace-schema.ts` — Workspace + RBAC schema
+- `backend/src/db/entity-schema.ts` — Normalized entity tables
+- `backend/src/routes/workspace-routes.ts` — Workspace CRUD + invites
+- `backend/src/routes/{collection,environment,entity-sync}-routes.ts` — Entity routes
+- `backend/src/middleware/workspace-rbac.ts` — Role enforcement
+- `backend/src/services/{workspace,invite}-service.ts` — Business logic
+- `backend/src/scripts/migrate-user-files.ts` — Migration script
+
+### Success Criteria Met
+✅ Backend database normalized and workspace-aware
+✅ RBAC middleware enforces role-based access
+✅ Invite system with 24h link tokens
+✅ Entity routes fully workspace-scoped
+✅ Delta sync with change_log tracking
+✅ Migration script for legacy data
+✅ All endpoints secured
+
+### Not Yet Implemented (Phase 14)
+- Frontend UI for workspace operations
+- Team member management UI
+- Entity CRUD UIs adapted for workspaces
 
 ## Phase 13 Details: Cloud Sync Phase 2 — Backend & Better Auth
 
@@ -161,20 +217,20 @@ Localman phases 00–11, with completion status and key milestones.
 
 ## Upcoming Phases (Future)
 
-### Phase 14: Advanced Features (Planned)
-- GraphQL support
+### Phase 14: Team Workspace UI (Planned)
+- Workspace creation, switching, settings UI
+- Team member invitation and role management UI
+- Workspace entity browser (collections/requests by workspace)
+- Bulk operations across workspace entities
+- GraphQL support (optional advanced feature)
 - WebSocket client
 - Mock server mode
-- Performance profiling
-- Custom variables (computed, dynamic)
-- Team collections sharing (API ready in Phase 13, UI in Phase 14)
 
-### Phase 15: Team & Analytics (Planned)
-- Team workspaces
-- Audit logs
-- Usage analytics
+### Phase 15: Advanced Analytics & Versioning (Planned)
+- Audit logs (who changed what, when)
+- Usage analytics dashboard
 - Custom themes/branding
-- Collection versioning and branching
+- Collection versioning and branching (Git-like)
 
 ### Phase 16: Offline Queue & Real-Time (Planned)
 - Full offline queue with `pending_sync` store
