@@ -6,6 +6,8 @@
 import { db } from "../../db/database";
 import { wsManager } from "./websocket-manager";
 import { pullChanges } from "./entity-sync-service";
+import { replayOfflineQueue } from "./offline-queue-replay";
+import { addConflictFromServer } from "./conflict-queue";
 import type { CloudSyncConfig } from "../../types/cloud-sync";
 
 /** Cleanup functions from event subscriptions */
@@ -79,22 +81,41 @@ export function initWsEventHandlers(
     }),
 
     wsManager.on("conflict", (msg) => {
-      // Store conflict for Phase 4 resolution UI
-      console.warn("[WS] Conflict received:", msg.entity_type, msg.entity_id);
+      addConflictFromServer(
+        msg.entity_type as string,
+        msg.entity_id as string,
+        (msg.entity_name as string) ?? msg.entity_type as string,
+        msg.server_version as number,
+        msg.conflicting_fields as string[],
+        (msg.server_values ?? {}) as Record<string, unknown>,
+        (msg.client_values ?? {}) as Record<string, unknown>,
+        (msg.auto_merged_fields ?? []) as string[],
+      );
     }),
 
-    // State reconciliation on reconnect — fetch missed changes via HTTP
+    wsManager.on("auto_merged", () => {
+      // Auto-merged successfully — just update local version
+      lastEventTime = new Date().toISOString();
+      onStoreRefresh?.();
+    }),
+
+    // State reconciliation on reconnect — replay offline queue, then pull
     wsManager.on("reconnected", async () => {
-      if (!lastEventTime || !config.token) return;
+      if (!config.token) return;
 
       try {
-        const reconConfig = { ...config, lastSyncAt: lastEventTime };
-        // Pull changes for each subscribed workspace
-        for (const channel of wsManager.getSubscribedChannels()) {
-          const wsId = channel.startsWith("workspace:")
-            ? channel.slice("workspace:".length)
-            : null;
-          await pullChanges(reconConfig, wsId);
+        // Replay offline queue first (handles merge/conflicts)
+        await replayOfflineQueue(config);
+
+        // Then pull any remaining remote changes
+        if (lastEventTime) {
+          const reconConfig = { ...config, lastSyncAt: lastEventTime };
+          for (const channel of wsManager.getSubscribedChannels()) {
+            const wsId = channel.startsWith("workspace:")
+              ? channel.slice("workspace:".length)
+              : null;
+            await pullChanges(reconConfig, wsId);
+          }
         }
         onStoreRefresh?.();
       } catch (err) {

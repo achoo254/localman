@@ -12,6 +12,7 @@ import {
 import { requireAuth } from "../middleware/auth-guard.js";
 import { requireWorkspaceRole } from "../middleware/workspace-rbac.js";
 import type { AppVariables } from "../types/context.js";
+import { mergeEntityUpdate } from "../services/merge-engine.js";
 
 const changesQuerySchema = z.object({
   since: z.string().datetime(),
@@ -157,7 +158,20 @@ entitySyncRouter.get(
   }
 );
 
-// POST /sync/push — batch upsert entity changes with version checking
+// Per-entity result shape for push responses
+interface SyncPushResult {
+  entity_id: string;
+  status: "ok" | "conflict" | "error";
+  new_version?: number;
+  message?: string;
+  // Merge details
+  auto_merged_fields?: string[];
+  conflicting_fields?: string[];
+  server_values?: Record<string, unknown>;
+  client_values?: Record<string, unknown>;
+}
+
+// POST /sync/push — batch upsert entity changes via field-level merge engine
 entitySyncRouter.post(
   "/sync/push",
   requireWorkspaceRole("editor"),
@@ -165,78 +179,124 @@ entitySyncRouter.post(
     const user = c.get("user")!;
     const body = pushBodySchema.parse(await c.req.json());
 
-    const results = { synced: 0, conflicts: 0, errors: [] as string[] };
+    // Extract workspace_id from query or first change (best-effort scoping)
+    const workspaceId = (c.req.query("workspace_id") as string | undefined) ?? null;
 
-    await db.transaction(async (tx) => {
-      for (const change of body.changes) {
-        const table = entityTables[change.entityType];
-        if (!table) {
-          results.errors.push(`Unknown entity type: ${change.entityType}`);
-          continue;
-        }
+    const entityResults: SyncPushResult[] = [];
 
+    for (const change of body.changes) {
+      const table = entityTables[change.entityType];
+      if (!table) {
+        entityResults.push({
+          entity_id: change.id,
+          status: "error",
+          message: `Unknown entity type: ${change.entityType}`,
+        });
+        continue;
+      }
+
+      try {
         if (change.deleted) {
-          // Soft delete
-          await tx
-            .update(table)
-            .set({
-              deletedAt: new Date(),
-              version: sql`${table.version} + 1`,
-              updatedAt: new Date(),
-            } as any)
-            .where(eq(table.id, change.id));
-          results.synced++;
+          // Soft delete — keep simple, no merge needed
+          await db.transaction(async (tx) => {
+            await tx
+              .update(table)
+              .set({
+                deletedAt: new Date(),
+                version: sql`${table.version} + 1`,
+                updatedAt: new Date(),
+              } as any)
+              .where(eq(table.id, change.id));
+          });
+          entityResults.push({ entity_id: change.id, status: "ok" });
           continue;
         }
 
-        // Check current version for optimistic locking
-        const [current] = await tx
+        // Check if entity exists
+        const [existing] = await db
           .select({ version: table.version })
           .from(table)
           .where(eq(table.id, change.id))
           .limit(1);
 
-        if (current && (current.version ?? 0) > change.version) {
-          results.conflicts++;
+        if (!existing) {
+          // Insert new entity — no merge needed
+          const safeData = sanitizeData(change.entityType, change.data);
+          await db.transaction(async (tx) => {
+            await tx.insert(table).values({
+              id: change.id,
+              ...safeData,
+              userId: user.id,
+              version: change.version,
+            } as any);
+            // Log creation
+            await tx.insert(changeLog).values({
+              entityType: change.entityType,
+              entityId: change.id,
+              userId: user.id,
+              fieldChanges: safeData,
+              fromVersion: 0,
+              toVersion: change.version,
+              workspaceId: workspaceId ?? null,
+            });
+          });
+          entityResults.push({
+            entity_id: change.id,
+            status: "ok",
+            new_version: change.version,
+          });
           continue;
         }
 
-        const safeData = sanitizeData(change.entityType, change.data);
+        // Update existing — use merge engine
+        const mergeResult = await mergeEntityUpdate(
+          change.entityType,
+          change.id,
+          change.version,
+          change.data,
+          user.id,
+          workspaceId,
+        );
 
-        if (current) {
-          // Update existing
-          await tx
-            .update(table)
-            .set({
-              ...safeData,
-              version: sql`${table.version} + 1`,
-              updatedAt: new Date(),
-            } as any)
-            .where(eq(table.id, change.id));
+        if (mergeResult.status === "conflict") {
+          entityResults.push({
+            entity_id: change.id,
+            status: "conflict",
+            new_version: mergeResult.version,
+            auto_merged_fields: mergeResult.autoMergedFields,
+            conflicting_fields: mergeResult.conflictingFields,
+            server_values: mergeResult.serverValues,
+            client_values: mergeResult.clientValues,
+          });
         } else {
-          // Insert new — must include userId for ownership
-          await tx.insert(table).values({
-            id: change.id,
-            ...safeData,
-            userId: user.id,
-            version: change.version,
-          } as any);
+          entityResults.push({
+            entity_id: change.id,
+            status: "ok",
+            new_version: mergeResult.version,
+            auto_merged_fields: mergeResult.autoMergedFields,
+          });
         }
-
-        // Log the change
-        await tx.insert(changeLog).values({
-          entityType: change.entityType,
-          entityId: change.id,
-          userId: user.id,
-          fieldChanges: safeData,
-          fromVersion: current?.version ?? 0,
-          toVersion: (current?.version ?? 0) + 1,
+      } catch (err) {
+        entityResults.push({
+          entity_id: change.id,
+          status: "error",
+          message: err instanceof Error ? err.message : "Unknown error",
         });
-
-        results.synced++;
       }
-    });
+    }
 
-    return c.json({ ...results, serverTime: new Date().toISOString() });
+    const synced = entityResults.filter((r) => r.status === "ok").length;
+    const conflicts = entityResults.filter((r) => r.status === "conflict").length;
+    const errors = entityResults
+      .filter((r) => r.status === "error")
+      .map((r) => r.message ?? "error");
+
+    return c.json({
+      synced,
+      conflicts,
+      errors,
+      results: entityResults,
+      serverTime: new Date().toISOString(),
+    });
   }
 );

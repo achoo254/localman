@@ -22,6 +22,8 @@ Localman phases 00–11, with completion status and key milestones.
 | 13 | Cloud Sync Phase 2 | ✅ Complete | P1 | Backend API (Hono + PostgreSQL), Better Auth, pull/push sync | 2026-03-09 |
 | Phase 1 | Cloud Sync → Team Workspace | ✅ Complete | P1 | Normalized entities, workspaces, RBAC, invites, delta sync | 2026-03-11 |
 | Phase 3 | WebSocket Real-Time | ✅ Complete | P1 | Real-time entity sync, presence tracking, auto-reconnect | 2026-03-12 |
+| Phase 4 | Field-Level Merge & Conflict Resolution | ✅ Complete | P1 | 3-way merge, change log, offline conflict queue, per-field picker | 2026-03-12 |
+| Phase 5 | UI Overhaul — Workspace & Sync UX | ✅ Complete | P1 | Workspace switcher, settings panel, member mgmt, presence avatars | 2026-03-12 |
 
 ## Phase 11 Details: Code Snippet, Preview & API Docs
 
@@ -334,17 +336,25 @@ Localman phases 00–11, with completion status and key milestones.
 ✅ Phase 11: API docs viewer rendering collections with markdown support
 ✅ All type checks and unit tests passing
 
+## Phase 4 & 5 Summary
+
+### Phase 4: Field-Level Merge
+3-way merge engine (`local` vs. `remote` vs. `base`) with per-field conflict detection. Change log tracks all mutations. Client-side conflict queue with offline replay support. Dialog allows user to pick per-field resolution or bulk accept.
+
+### Phase 5: UI Overhaul
+Workspace switcher in sidebar (Radix DropdownMenu), Account & Workspaces settings panel (replaces Cloud Sync), member management with email invites, presence avatars (initials + max 3 + overflow), sync status badge (connection state + conflict count), collection filtering by workspace, cloud sync toggle in context menu.
+
 ## Known Limitations
 
-- Team collections not yet accessible via UI (Phase 14)
-- No pending sync queue for offline changes (Phase 16)
-- No WebSocket real-time collaboration (Phase 16)
-- Docs export doesn't include example request/response bodies yet
-- No docs versioning (single live docs per collection)
+- RBAC enforcement on WS entity mutations still incomplete (Phase 3 known issue)
+- Message size/rate limiting on WS not yet implemented
+- GraphQL support not yet planned
+- No workspace branching/versioning (Git-like)
+- Audit logging for all workspace operations planned for Phase 15
 
 ## Next Steps
 
-1. Implement team collections sharing UI (Phase 14)
-2. Add pending sync queue for offline changes (Phase 16)
-3. Plan GraphQL support based on user demand (Phase 14)
-4. Consider WebSocket real-time collaboration (Phase 16)
+1. Complete Phase 3 fixes: RBAC on WS, message validation, rate limiting
+2. Implement Phase 6: Bulk operations UI + workspace-scoped imports
+3. Plan Phase 7: E2E tests for collaborative workflows
+4. Phase 15: Audit logging for compliance

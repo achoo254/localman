@@ -1,5 +1,6 @@
 /**
  * Recursive collection tree: collections -> folders -> requests.
+ * Passes workspace filtering and is_synced icon state to collection items.
  */
 
 import type { TreeNode } from '../../utils/tree-builder';
@@ -19,6 +20,7 @@ export interface ContextMenuCallbacks {
   onExportCollection?: (collectionId: string, collectionName: string) => void;
   onCopyAsCurl?: (requestId: string) => void;
   onRenameRequest?: (id: string, name: string) => void;
+  onToggleSync?: (collectionId: string) => void;
 }
 
 interface CollectionTreeProps {

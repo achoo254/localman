@@ -1,5 +1,6 @@
 /**
  * Right-click context menu for collection, folder, and request nodes.
+ * Includes "Toggle Cloud Sync" for collection nodes.
  */
 
 import * as ContextMenu from '@radix-ui/react-context-menu';
@@ -20,6 +21,8 @@ interface CollectionContextMenuProps {
   onExportCollection?: (collectionId: string, collectionName: string) => void;
   onCopyAsCurl?: (requestId: string) => void;
   onRenameRequest?: (id: string, name: string) => void;
+  /** Called when user toggles cloud sync for a collection */
+  onToggleSync?: (collectionId: string) => void;
 }
 
 export function CollectionContextMenu({
@@ -37,6 +40,7 @@ export function CollectionContextMenu({
   onExportCollection,
   onCopyAsCurl,
   onRenameRequest,
+  onToggleSync,
 }: CollectionContextMenuProps) {
   return (
     <ContextMenu.Root>
@@ -73,6 +77,14 @@ export function CollectionContextMenu({
                   onSelect={() => onExportCollection(node.id, node.name)}
                 >
                   Export
+                </ContextMenu.Item>
+              )}
+              {onToggleSync && (
+                <ContextMenu.Item
+                  className="px-3 py-1.5 text-sm outline-none hover:bg-[var(--color-bg-tertiary)] cursor-pointer"
+                  onSelect={() => onToggleSync(node.id)}
+                >
+                  Toggle Cloud Sync
                 </ContextMenu.Item>
               )}
               <ContextMenu.Item

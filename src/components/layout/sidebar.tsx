@@ -1,11 +1,17 @@
 /**
  * Sidebar with Collections / History / Environments tabs. Collapsible for more space.
+ * Header shows workspace switcher + presence avatars when authenticated.
  */
 
 import { useEffect } from 'react';
 import { PanelRightClose, PanelRightOpen } from 'lucide-react';
 import { SidebarTabs } from '../collections/sidebar-tabs';
 import { useCollectionsStore } from '../../stores/collections-store';
+import { WorkspaceSwitcher } from './workspace-switcher';
+import { PresenceAvatars } from '../common/presence-avatars';
+import { SyncStatusBadge } from '../common/sync-status-badge';
+import { useWorkspaceStore } from '../../stores/workspace-store';
+import { useSyncStore } from '../../stores/sync-store';
 
 const SIDEBAR_WIDTH = 260;
 
@@ -24,6 +30,8 @@ export function Sidebar({
   onOpenEnvironmentManager,
 }: SidebarProps) {
   const hydrateExpanded = useCollectionsStore(s => s.hydrateExpanded);
+  const activeWorkspaceId = useWorkspaceStore(s => s.activeWorkspaceId);
+  const isAuthenticated = useSyncStore(s => s.isAuthenticated());
 
   useEffect(() => {
     void hydrateExpanded();
@@ -54,11 +62,23 @@ export function Sidebar({
       className="flex shrink-0 flex-col overflow-hidden bg-slate-900/50 border-r border-[var(--color-bg-tertiary)]"
       style={{ width: effectiveWidth }}
     >
-      <div className="flex items-center justify-end border-b border-[var(--color-bg-tertiary)] px-1 py-1">
+      {/* Header: workspace switcher + presence + collapse button */}
+      <div className="flex items-center gap-1 border-b border-[var(--color-bg-tertiary)] px-1 py-1 min-w-0">
+        <div className="flex-1 min-w-0">
+          <WorkspaceSwitcher />
+        </div>
+        {isAuthenticated && activeWorkspaceId && (
+          <PresenceAvatars
+            workspaceId={activeWorkspaceId}
+            maxVisible={2}
+            avatarSize={20}
+          />
+        )}
+        <SyncStatusBadge />
         <button
           type="button"
           onClick={onToggleCollapsed}
-          className="rounded p-1.5 text-slate-400 hover:bg-[var(--color-bg-tertiary)] hover:text-[var(--foreground)]"
+          className="rounded p-1.5 text-slate-400 hover:bg-[var(--color-bg-tertiary)] hover:text-[var(--foreground)] shrink-0"
           title="Collapse sidebar"
           aria-label="Collapse sidebar"
         >

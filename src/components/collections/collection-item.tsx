@@ -1,13 +1,16 @@
 /**
  * Collection node: icon, name, request count, expand toggle.
+ * Shows cloud icon (☁) next to synced collections.
  */
 
-import { ChevronRight, Folder } from 'lucide-react';
+import { ChevronRight, Folder, Cloud } from 'lucide-react';
 import type { TreeNode } from '../../utils/tree-builder';
 import type { ContextMenuCallbacks } from './collection-tree';
 import { CollectionContextMenu } from './collection-context-menu';
 import { FolderItem } from './folder-item';
 import { RequestItem } from './request-item';
+import { useLiveQuery } from '../../hooks/use-live-query';
+import { db } from '../../db/database';
 
 interface CollectionItemProps {
   node: TreeNode;
@@ -28,6 +31,15 @@ export function CollectionItem({
   activeRequestId,
   contextMenuCallbacks,
 }: CollectionItemProps) {
+  // Live query to get is_synced flag for collection nodes only
+  const collectionRecord = useLiveQuery<{ is_synced?: boolean } | undefined>(
+    () => node.type === 'collection'
+      ? db.collections.get(node.id).then(c => c ? { is_synced: c.is_synced } : undefined)
+      : Promise.resolve(undefined),
+    [node.id, node.type]
+  );
+  const isSynced = collectionRecord?.is_synced === true;
+
   const row = (
     <div
       className="flex items-center gap-1 py-1 px-2 rounded cursor-pointer hover:bg-[var(--color-bg-tertiary)] min-h-8"
@@ -46,6 +58,9 @@ export function CollectionItem({
       </button>
       <Folder className="h-4 w-4 shrink-0 text-[var(--color-accent)]" />
       <span className="truncate text-sm flex-1 min-w-0" title={node.name}>{node.name}</span>
+      {isSynced && (
+        <Cloud className="h-3 w-3 shrink-0 text-[var(--color-accent)] opacity-70" aria-label="Cloud sync enabled" />
+      )}
       {node.requestCount != null && node.requestCount > 0 && (
         <span className="text-xs text-gray-500 shrink-0" title={`${node.requestCount} request${node.requestCount !== 1 ? 's' : ''}`}>{node.requestCount}</span>
       )}

@@ -15,6 +15,7 @@ import {
   getClient,
 } from "./channel-manager.js";
 import { updatePresence } from "./presence-tracker.js";
+import { mergeEntityUpdate } from "../services/merge-engine.js";
 
 // Rate limiting: max 60 messages per 10 seconds per connection
 const RATE_WINDOW_MS = 10_000;
@@ -121,8 +122,10 @@ function handleUnsubscribe(
 
 /**
  * Handle entity mutation — broadcast to relevant workspace channel.
- * The actual DB mutation is done via HTTP API (entity-sync-routes).
- * WS only broadcasts the change notification to other clients.
+ * For entity:update, runs the merge engine first:
+ *   - applied/auto_merged → broadcast entity:updated with new version
+ *   - conflict            → send entity:conflict back to sender only
+ * For entity:create and entity:delete, pass through as before.
  * Requires editor+ role — viewers cannot broadcast mutations.
  */
 async function handleEntityMutation(
@@ -162,9 +165,69 @@ async function handleEntityMutation(
     return;
   }
 
-  // Map client action to past-tense server event (matches client listeners)
+  // --- Merge-aware update path ---
+  if (type === "entity:update") {
+    const entityType = msg.entity_type as string;
+    const entityId = (msg.entity_id ?? msg.id) as string;
+    const baseVersion = msg.base_version as number | undefined;
+    const changes = msg.changes as Record<string, unknown> | undefined;
+
+    if (!entityType || !entityId || baseVersion === undefined || !changes) {
+      sendError(client.ws, "INVALID_PAYLOAD", "entity:update requires entity_type, entity_id, base_version, changes");
+      return;
+    }
+
+    try {
+      const mergeResult = await mergeEntityUpdate(
+        entityType,
+        entityId,
+        baseVersion,
+        changes,
+        client.user.id,
+        workspaceId,
+      );
+
+      if (mergeResult.status === "conflict") {
+        // Send conflict details back to sender only — do not broadcast
+        send(client.ws, {
+          type: "entity:conflict",
+          entity_type: entityType,
+          entity_id: entityId,
+          version: mergeResult.version,
+          conflicting_fields: mergeResult.conflictingFields,
+          auto_merged_fields: mergeResult.autoMergedFields,
+          server_values: mergeResult.serverValues,
+          client_values: mergeResult.clientValues,
+        });
+        return;
+      }
+
+      // applied or auto_merged — broadcast the resolved update
+      const broadcastMsg: Record<string, unknown> = {
+        type: "entity:updated",
+        entity_type: entityType,
+        entity_id: entityId,
+        user_id: client.user.id,
+        user_name: client.user.name,
+        version: mergeResult.version,
+        changes,
+      };
+      if (mergeResult.autoMergedFields) {
+        broadcastMsg.auto_merged_fields = mergeResult.autoMergedFields;
+      }
+      broadcast(channel, broadcastMsg, client.ws);
+    } catch (err) {
+      sendError(
+        client.ws,
+        "MERGE_ERROR",
+        err instanceof Error ? err.message : "Merge failed",
+      );
+    }
+    return;
+  }
+
+  // --- Pass-through for create / delete ---
   const typeMap: Record<string, string> = {
-    "entity:update": "entity:updated",
     "entity:create": "entity:created",
     "entity:delete": "entity:deleted",
   };
@@ -177,10 +240,7 @@ async function handleEntityMutation(
     user_name: client.user.name,
   };
 
-  if (type === "entity:update") {
-    serverMsg.changes = msg.changes;
-    serverMsg.base_version = msg.base_version;
-  } else if (type === "entity:create") {
+  if (type === "entity:create") {
     serverMsg.data = msg.data;
     serverMsg.parent_id = msg.parent_id;
     serverMsg.collection_id = msg.collection_id;
