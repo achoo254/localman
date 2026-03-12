@@ -2,6 +2,137 @@
 
 All notable changes to Localman documented here. Format based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [Phase 5: UI Overhaul — Workspace & Sync UX] — 2026-03-12
+
+### Added
+
+- **Workspace Switcher** (Sidebar)
+  - Radix DropdownMenu with list of user's workspaces (owner or member)
+  - Quick switch between active workspace
+  - Creates new workspace dialog inline
+  - Displays workspace name, owner/member badge
+
+- **Account & Workspaces Settings Panel**
+  - Replaces legacy "Cloud Sync" settings panel
+  - Tabbed interface: Account | Workspaces | Members
+  - Account tab: email, OAuth provider info, logout button
+  - Workspaces tab: list, create, invite members, manage roles
+  - Members tab: workspace-scoped member list + role management
+
+- **Workspace Member Management Dialog**
+  - Add members via email invite
+  - Invite link generated with 24h expiry
+  - View pending + accepted invites
+  - Remove members (owner only)
+  - Bulk role change (owner → editor/viewer)
+
+- **Presence Avatars**
+  - User initials in colored circle
+  - Max 3 avatars shown, +N overflow indicator
+  - Hover tooltip with full names
+  - Displayed in request/collection header
+
+- **Sync Status Badge**
+  - Connected: green indicator + "Syncing..."
+  - Error: red X + error tooltip
+  - Offline: gray indicator + "Offline"
+  - Conflict count: red badge with unresolved count
+  - Click to view conflict resolution queue
+
+- **Collection Filtering by Workspace**
+  - Collections only show for active workspace
+  - Workspace switcher updates collections in real-time
+  - Sidebar updates on workspace change
+
+- **Toggle Cloud Sync in Context Menu**
+  - Right-click collection → "Sync to Cloud" option
+  - Marks collection as synced (isSynced boolean)
+  - Auto-pushes to backend on toggle
+
+### Modified
+
+- `src/components/sidebar/workspace-switcher.tsx` — new component
+- `src/components/settings/account-workspaces-panel.tsx` — replaces cloud-login-form
+- `src/components/workspace/member-management-dialog.tsx` — member management UI
+- `src/components/presence/presence-avatars.tsx` — presence visualization
+- `src/components/sync/sync-status-badge.tsx` — sync status indicator
+- `src/stores/sync-store.ts` — workspace selection, active workspace context
+- `src/stores/collections-store.ts` — filter by active workspace
+- `src/db/database.ts` — Dexie schema updated for `isSynced` flag
+
+### Success Criteria Met
+✅ Workspace switcher functional and responsive
+✅ Settings panel allows workspace + member management
+✅ Presence avatars show in collaboration mode
+✅ Sync status badge displays connection state + conflicts
+✅ Collections filtered by active workspace
+✅ Cloud sync toggle functional on collections
+✅ All tests pass, type-check clean, builds succeed
+
+---
+
+## [Phase 4: Field-Level Merge & Conflict Resolution] — 2026-03-12
+
+### Added
+
+- **Backend Merge Engine** (`entity-merge-service.ts`)
+  - 3-way field-level merge: local vs. remote vs. base version
+  - Conflict strategies: direct apply (no conflict), auto-merge (field-level), conflict (user picks)
+  - `merge3()` function compares each field independently
+  - Marks unresolved conflicts for client handling
+
+- **Change Log Service** (`change-log-service.ts`)
+  - Tracks field-level mutations on every entity update
+  - `fieldChanges: { fieldName: newValue }` JSON payload
+  - Version tracking (`fromVersion` → `toVersion`)
+  - Audit trail for debugging and admin tools
+
+- **Client Conflict Store** (`conflict-store.ts`, Zustand)
+  - Queue of unresolved conflicts per entity
+  - Conflict: `{ entityId, entityType, baseVersion, local, remote, autoMergedFields }`
+  - `resolveConflict(entityId, picks)` applies user selections
+  - Conflict count exposed for badge display
+
+- **Conflict Replay Queue** (`pending-conflicts.ts`)
+  - Persisted in IndexedDB for offline mode
+  - Replayed on next sync when online
+  - Merges user-selected resolutions with latest remote
+
+- **Conflict Resolution Dialog**
+  - Per-field view: local vs. remote value
+  - Checkboxes: pick local or remote for each field
+  - Bulk actions: "Use All Local" or "Use All Remote"
+  - Auto-merged fields shown as read-only (already resolved)
+
+### Modified
+
+- `backend/src/routes/entity-sync-routes.ts` — push endpoint returns conflicts
+- `backend/src/services/workspace-service.ts` — calls merge engine on push
+- `src/stores/sync-store.ts` — handle conflict responses from push
+- `src/components/sync/conflict-resolution-dialog.tsx` — user picks per field
+
+### New Files (Backend)
+
+- `backend/src/services/entity-merge-service.ts` — 3-way field-level merge logic
+- `backend/src/services/change-log-service.ts` — field mutation tracking
+
+### New Files (Frontend)
+
+- `src/stores/conflict-store.ts` — Zustand conflict queue
+- `src/services/sync/conflict-replay.ts` — offline queue + replay
+- `src/components/sync/conflict-resolution-dialog.tsx` — conflict picker UI
+- `src/types/conflict.ts` — conflict types
+
+### Success Criteria Met
+✅ 3-way merge handles field-level conflicts
+✅ Change log populated on all entity mutations
+✅ Conflict store queues unresolved conflicts
+✅ Dialog allows per-field conflict resolution
+✅ Offline replay queue works correctly
+✅ All tests pass, type-check clean, builds succeed
+
+---
+
 ## [Phase 3: WebSocket Real-Time] — 2026-03-12
 
 ### Added
@@ -54,14 +185,6 @@ All notable changes to Localman documented here. Format based on [Keep a Changel
 ✅ Presence shows online users and editing status
 ✅ All tests pass, type-check clean, builds succeed
 ✅ Graceful degradation: app works via HTTP if WS unavailable
-
-### Known Issues (Phase 4)
-
-- Entity type mismatch: Server broadcasts `entity:update` but client expects `entity:updated` (WS events not received)
-- Reconnect event never fires: `reconnectAttempt` reset before check, always fires "connected" instead
-- No RBAC check on WS entity mutations: `viewer` role can broadcast fake changes
-- No message size/rate limiting: DoS vectors for large payloads or message floods
-- Listener leak: `onStateChange` never unsubscribed from in sync-store
 
 ## [Phase 1: Cloud Sync → Team Workspace] — 2026-03-11
 

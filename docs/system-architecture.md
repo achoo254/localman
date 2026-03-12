@@ -79,19 +79,23 @@ High-level architecture of Localman: a distributed offline-first API client with
 ```
 App
 ├── MainLayout
-│   ├── Titlebar (logo, sync status, window controls)
+│   ├── Titlebar (logo, sync status badge, presence avatars, window controls)
 │   ├── Sidebar
+│   │   ├── WorkspaceSwitcher (Radix DropdownMenu, quick switch)
 │   │   ├── SidebarTabs (Collections, Environments, History, Docs)
-│   │   ├── CollectionTree (if Collections tab active)
+│   │   ├── CollectionTree (filtered by active workspace)
 │   │   │   └── RequestItem / FolderItem (recursive)
-│   │   └── EnvironmentSelector (if Environments tab active)
+│   │   └── EnvironmentSelector (workspace-scoped)
 │   ├── RequestPanel
 │   │   ├── UrlBar (method, URL, Send button, Snippet toggle)
 │   │   ├── RequestTabs (Params, Headers, Body, Auth, Description)
 │   │   ├── CodeSnippetPanel (lazy-loaded, language selector)
 │   │   └── ResponsePane (status, headers, body with syntax highlight)
 │   ├── SaveRequestDialog (draft save UI, modal)
-│   └── CloudLoginForm (settings, login/logout)
+│   ├── ConflictResolutionDialog (per-field picker, bulk actions)
+│   ├── AccountWorkspacesPanel (replaces CloudLoginForm)
+│   │   └── MemberManagementDialog (email invites, role management)
+│   └── SyncStatusBadge (connection state, conflict count)
 └── Toast Notifications
 ```
 
@@ -99,12 +103,14 @@ App
 
 | Store | Responsibility |
 |-------|-----------------|
-| `collections-store` | CRUD collections/folders/requests |
+| `collections-store` | CRUD collections/folders/requests, filtered by workspace |
 | `request-store` | Active tab, draft management, form state |
 | `response-store` | HTTP response, history |
 | `settings-store` | Theme, language, sync preferences |
-| `sync-store` | Sync mode, cloud session, pull/push status |
-| `env-store` | Selected environment, variable overrides |
+| `sync-store` | Sync mode, cloud session, workspace context, pull/push status |
+| `env-store` | Selected environment, workspace-scoped variables |
+| `conflict-store` | Queue of unresolved conflicts, user resolutions |
+| `presence-store` | Online users, editing status per workspace |
 
 ### Data Flow Examples
 
@@ -272,7 +278,7 @@ DELETE /api/workspaces/:workspaceId/requests/:requestId
 [Similar routes for environments and folders]
 ```
 
-#### Entity-Level Sync (Delta Sync)
+#### Entity-Level Sync (Delta Sync with Field-Level Merge)
 ```
 POST /api/workspaces/:workspaceId/sync/pull
 Body: { entityType?, entityId?, since? }
@@ -281,12 +287,23 @@ Body: { entityType?, entityId?, since? }
 
 POST /api/workspaces/:workspaceId/sync/push
 Body: {
-  collections: [{id, name, updatedAt, ...}],
-  requests: [{id, collectionId, url, ...}],
+  collections: [{id, name, updatedAt, version, ...}],
+  requests: [{id, collectionId, url, version, ...}],
   deletions: {collectionIds: [], requestIds: []}
 }
-→ Push entity changes (LWW conflict resolution by updatedAt)
-→ Response: { syncedAt, conflicts? }
+→ 3-way merge on server: local vs. remote vs. base version
+→ Field-level conflict detection (direct apply / auto-merge / conflict)
+→ Response: {
+    syncedAt,
+    conflicts: [{
+      entityId,
+      entityType,
+      baseVersion,
+      local: {...},
+      remote: {...},
+      autoMergedFields: [...]
+    }]
+  }
 ```
 
 ### Middleware Stack
@@ -347,6 +364,7 @@ CREATE TABLE collections (
   sortOrder INTEGER DEFAULT 0,
   isSynced BOOLEAN DEFAULT false,
   version INTEGER DEFAULT 1,
+  baseVersion INTEGER,  -- for 3-way merge tracking
   createdAt TIMESTAMP,
   updatedAt TIMESTAMP,
   deletedAt TIMESTAMP  -- soft delete
@@ -603,18 +621,18 @@ If WebSocket is unavailable or connection drops, app falls back to HTTP polling 
 
 ## Known Limitations & Trade-offs
 
-1. **No entity mutation validation on WS** (Phase 4) — HTTP API validates RBAC, WS broadcasts assumed valid (TODO)
-2. **No message size limit on WS** (Phase 4) — DoS vector on large payloads (TODO: add 64KB limit)
-3. **No rate limiting per WS connection** (Phase 4) — Flooding risk (TODO: sliding window counter)
-4. **Last-Write-Wins conflict resolution** — Simple but doesn't preserve concurrent edits
-5. **Single PostgreSQL database** — Vertical scaling only (sharding in Phase 16+)
-6. **IndexedDB quota** — ~50MB on most browsers (sufficient for local usage)
-7. **Offline queue not yet persisted** (Phase 16) — Pending sync lost on app restart
-8. **UI not yet updated for workspaces** (Phase 14) — Backend API ready, frontend wizard TBD
-9. **No audit logging** (Phase 15) — Track who changed what, when
+1. **RBAC not enforced on WS mutations** (Phase 3) — HTTP validates, WS broadcasts trusted (Phase 6)
+2. **No message size/rate limits on WS** (Phase 3) — 64KB payload limit + sliding window rate limit planned (Phase 6)
+3. **Field-level merge limited to direct edits** — Concurrent nested edits may still conflict
+4. **Single PostgreSQL database** — Vertical scaling only (sharding in Phase 16+)
+5. **IndexedDB quota** — ~50MB on most browsers (sufficient for local usage)
+6. **Pending sync persisted but not auto-retried** — Manual retry on next sync
+7. **No audit logging** (Phase 15) — Who changed what, when
+8. **Workspace branching not supported** — Single branch per workspace (Git-like versioning Phase 15+)
 
 ## Unresolved Questions
 
-- Should entity mutations go through WS or trigger server-side broadcasts from HTTP API?
-- PostgreSQL sharding approach for multi-region deployment?
-- Should we add collection branching/versioning (Git-like)?
+- Should entity mutations allow concurrent nested field edits without conflicts?
+- PostgreSQL sharding strategy for multi-region deployment?
+- Collection branching/versioning (Git-like workflow) scope and design?
+- Audit logging retention policy and query performance impact?

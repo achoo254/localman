@@ -22,6 +22,7 @@ import { HistorySidebarTab } from '../history/history-sidebar-tab';
 import { DocsViewerPage } from '../docs/docs-viewer-page';
 import { getCurlForRequest } from '../../services/import-export-service';
 import { useEnvironmentStore } from '../../stores/environment-store';
+import { db } from '../../db/database';
 
 type TabId = 'collections' | 'history' | 'environments' | 'docs';
 
@@ -137,6 +138,13 @@ export function SidebarTabs({ onOpenEnvironmentManager }: SidebarTabsProps) {
     await navigator.clipboard.writeText(curl);
   };
 
+  const handleToggleSync = useCallback(async (collectionId: string) => {
+    const col = await db.collections.get(collectionId);
+    if (!col) return;
+    await db.collections.update(collectionId, { is_synced: !col.is_synced });
+    toast(col.is_synced ? 'Cloud sync disabled' : 'Cloud sync enabled', { variant: 'success' });
+  }, []);
+
   // Memoize to avoid passing a new object reference on every render
   const contextMenuCallbacks = useMemo(() => ({
     onNewRequest: handleNewRequest,
@@ -151,8 +159,9 @@ export function SidebarTabs({ onOpenEnvironmentManager }: SidebarTabsProps) {
     onExportCollection: handleExportCollection,
     onCopyAsCurl: handleCopyAsCurl,
     onRenameRequest: handleRenameRequest,
+    onToggleSync: handleToggleSync,
   // eslint-disable-next-line react-hooks/exhaustive-deps -- stable callback object; handlers are stable in practice
-  }), [handleDeleteCollection, handleDeleteFolder, handleDeleteRequest, handleDuplicateRequest, handleCopyAsCurl]);
+  }), [handleDeleteCollection, handleDeleteFolder, handleDeleteRequest, handleDuplicateRequest, handleCopyAsCurl, handleToggleSync]);
 
   const handleCollectionDialogOpenChange = (open: boolean) => {
     if (!open) {

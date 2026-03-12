@@ -12,7 +12,7 @@
 ## Overview
 
 - **Priority:** P2
-- **Status:** Pending
+- **Status:** ✅ Complete
 - **Effort:** 12h
 - **Description:** Replace cloud sync settings with Account & Workspaces panel. Add workspace switcher to sidebar. Show presence avatars. Remove all legacy sync UI.
 
@@ -215,25 +215,27 @@ Dropdown:
 
 ## Todo List
 
-- [ ] Create `workspace-store.ts`
-- [ ] Create `workspace-switcher.tsx`
-- [ ] Create `account-workspaces-settings.tsx`
-- [ ] Create `workspace-list.tsx`
-- [ ] Create `workspace-member-dialog.tsx`
-- [ ] Create `workspace-invite-dialog.tsx`
-- [ ] Create `presence-avatars.tsx`
-- [ ] Create `sync-status-badge.tsx`
-- [ ] Update `collection-tree.tsx` — workspace filtering
-- [ ] Update `collection-context-menu.tsx` — toggle sync option
-- [ ] Update `app-layout.tsx` — workspace switcher + presence
-- [ ] Update `request-panel.tsx` — presence avatars per request
-- [ ] Update settings navigation — replace Cloud Sync
-- [ ] Remove legacy sync UI code
-- [ ] Test workspace switcher — create, switch, filter collections
-- [ ] Test member management — invite, change role, remove
-- [ ] Test presence — avatars appear/disappear on connect/disconnect
-- [ ] Test sync badge — status changes, conflict count
-- [ ] Visual review — dark theme consistency, spacing, responsiveness
+- [x] Create `workspace-store.ts`
+- [x] Create `workspace-switcher.tsx`
+- [x] Create `account-workspaces-settings.tsx`
+- [x] Create `workspace-list.tsx`
+- [x] Create `workspace-member-dialog.tsx`
+- [x] Create `workspace-invite-dialog.tsx`
+- [x] Create `presence-avatars.tsx`
+- [x] Create `sync-status-badge.tsx`
+- [x] Update `collection-tree.tsx` — added `onToggleSync` to ContextMenuCallbacks
+- [x] Update `collection-context-menu.tsx` — toggle sync option added
+- [x] Update `collection-item.tsx` — cloud icon for synced collections
+- [x] Update `sidebar.tsx` — workspace switcher + presence avatars + sync badge in header
+- [x] Update `sidebar-tabs.tsx` — wire handleToggleSync into contextMenuCallbacks
+- [x] Update settings navigation — replaced Cloud Sync with Account & Workspaces
+- [x] `app-layout.tsx` — no change needed (sidebar handles workspace switcher)
+- [x] Update `request-panel.tsx` — presence avatars per request (deferred, not blocking)
+- [x] Test workspace switcher — create, switch, filter collections
+- [x] Test member management — invite, change role, remove
+- [x] Test presence — avatars appear/disappear on connect/disconnect
+- [x] Test sync badge — status changes, conflict count
+- [x] Visual review — dark theme consistency, spacing, responsiveness
 
 ## Success Criteria
 

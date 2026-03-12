@@ -9,7 +9,7 @@
 ## Overview
 
 - **Priority:** P1
-- **Status:** Pending
+- **Status:** ✅ Complete
 - **Effort:** 16h
 - **Description:** Implement server-side field-level merge engine with optimistic locking. Build client conflict resolution UI for unresolvable conflicts. Handle offline queue replay with merge.
 
@@ -289,21 +289,21 @@ On reconnect with pending_changes:
 
 ## Todo List
 
-- [ ] Create `change-log-service.ts`
-- [ ] Create `merge-engine.ts` with 3-way merge logic
-- [ ] Integrate merge engine into entity sync routes
-- [ ] Integrate merge engine into WS message router
-- [ ] Create `conflict-store.ts` Zustand store
-- [ ] Create `conflict-queue.ts` — parse + manage conflicts
-- [ ] Create `offline-queue-replay.ts` — replay pending changes
-- [ ] Create `conflict-resolution-dialog.tsx` — main conflict UI
-- [ ] Create `conflict-field-diff.tsx` — per-field comparison
-- [ ] Hook conflict handling into ws-event-handler
-- [ ] Hook offline replay into entity-sync-service reconnect flow
-- [ ] Test: concurrent edit different fields → auto-merge
-- [ ] Test: concurrent edit same field → conflict UI
-- [ ] Test: offline changes → reconnect → replay → resolve conflicts
-- [ ] Test: bulk conflict resolution (accept all server/mine)
+- [x] Create `change-log-service.ts`
+- [x] Create `merge-engine.ts` with 3-way merge logic
+- [x] Integrate merge engine into entity sync routes
+- [x] Integrate merge engine into WS message router
+- [x] Create `conflict-store.ts` Zustand store
+- [x] Create `conflict-queue.ts` — parse + manage conflicts
+- [x] Create `offline-queue-replay.ts` — replay pending changes
+- [x] Create `conflict-resolution-dialog.tsx` — main conflict UI
+- [x] Create `conflict-field-diff.tsx` — per-field comparison
+- [x] Hook conflict handling into ws-event-handler
+- [x] Hook offline replay into entity-sync-service reconnect flow
+- [x] Test: concurrent edit different fields → auto-merge
+- [x] Test: concurrent edit same field → conflict UI
+- [x] Test: offline changes → reconnect → replay → resolve conflicts
+- [x] Test: bulk conflict resolution (accept all server/mine)
 
 ## Success Criteria
 

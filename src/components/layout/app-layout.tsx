@@ -9,6 +9,7 @@ import { ImportDialog } from '../import-export/import-dialog';
 import { SettingsPage } from '../settings/settings-page';
 import { KeyboardShortcutsModal } from '../common/keyboard-shortcuts-modal';
 import { useRequestStore } from '../../stores/request-store';
+import { ConflictResolutionDialog } from '../sync/conflict-resolution-dialog';
 
 const SIDEBAR_WIDTH_MIN = 200;
 const SIDEBAR_WIDTH_MAX = 480;
@@ -146,6 +147,7 @@ export function AppLayout({ children }: AppLayoutProps) {
       <EnvironmentManager open={managerOpen} onOpenChange={setManagerOpen} />
       <ImportDialog open={importOpen} onOpenChange={setImportOpen} />
       <KeyboardShortcutsModal open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
+      <ConflictResolutionDialog />
     </div>
   );
 }
