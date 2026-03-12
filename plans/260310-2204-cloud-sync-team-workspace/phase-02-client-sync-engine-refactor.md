@@ -11,7 +11,7 @@
 ## Overview
 
 - **Priority:** P1
-- **Status:** Pending
+- **Status:** Complete
 - **Effort:** 16h
 - **Description:** Replace blob-based cloud sync with entity-level sync. Add workspace awareness to Dexie schema. Remove legacy sync code. Add `is_synced` toggle and offline change queue.
 
@@ -238,20 +238,20 @@ interface PendingChange {
 
 ## Todo List
 
-- [ ] Update `models.ts` with workspace_id, user_id, is_synced, version fields
-- [ ] Create `entity-sync.ts` types
-- [ ] Bump Dexie schema to v3 with pending_changes + upgrade handler
-- [ ] Implement `offline-change-queue.ts`
-- [ ] Instrument `collections-store.ts` to write pending_changes
-- [ ] Implement `entity-sync-service.ts` (pull + push)
-- [ ] Implement `sync-reconciliation.ts`
-- [ ] Refactor `sync-store.ts` — remove legacy, add workspace awareness
-- [ ] Update `cloud-auth-client.ts` with workspace API calls
-- [ ] Delete legacy sync files
-- [ ] Remove legacy sync imports across codebase
-- [ ] Test Dexie v3 migration with existing data
-- [ ] Test entity sync pull/push flow
-- [ ] Test offline queue → reconnect → push flow
+- [x] Update `models.ts` with workspace_id, user_id, is_synced, version fields
+- [x] Create `entity-sync.ts` types
+- [x] Bump Dexie schema to v3 with pending_changes + upgrade handler
+- [x] Implement `offline-change-queue.ts`
+- [x] Instrument `collections-store.ts` to write pending_changes
+- [x] Implement `entity-sync-service.ts` (pull + push)
+- [x] Implement `sync-reconciliation.ts`
+- [x] Refactor `sync-store.ts` — remove legacy, add workspace awareness
+- [x] Update `cloud-auth-client.ts` with workspace API calls
+- [x] Delete legacy sync files
+- [x] Remove legacy sync imports across codebase
+- [x] Test Dexie v3 migration with existing data
+- [x] Test entity sync pull/push flow
+- [x] Test offline queue → reconnect → push flow
 
 ## Success Criteria
 

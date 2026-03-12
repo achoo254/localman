@@ -9,6 +9,7 @@ import * as folderService from '../db/services/folder-service';
 import * as requestService from '../db/services/request-service';
 import * as settingsService from '../db/services/settings-service';
 import type { Collection, Folder, ApiRequest } from '../types/models';
+import { addPendingChange } from '../services/sync/offline-change-queue';
 
 const EXPANDED_KEY = 'sidebar_expanded';
 
@@ -41,6 +42,22 @@ interface CollectionsStore {
   renameRequest: (id: string, name: string) => Promise<void>;
   moveRequestToFolder: (requestId: string, folderId: string | null) => Promise<void>;
   moveRequestToCollection: (requestId: string, collectionId: string, folderId: string | null) => Promise<void>;
+}
+
+/** Queue a sync change if the entity belongs to a synced collection or workspace */
+async function queueSyncChange(
+  entityType: 'collection' | 'folder' | 'request',
+  entityId: string,
+  action: 'create' | 'update' | 'delete',
+  changes: Record<string, unknown>,
+  version: number = 1,
+  workspaceId: string | null = null,
+): Promise<void> {
+  try {
+    await addPendingChange(entityType, entityId, action, changes, version, workspaceId);
+  } catch {
+    // Non-blocking — sync queue failure shouldn't break the UI
+  }
 }
 
 export const useCollectionsStore = create<CollectionsStore>((set, get) => ({
@@ -79,48 +96,64 @@ export const useCollectionsStore = create<CollectionsStore>((set, get) => ({
   async createCollection(name: string) {
     const list = await collectionService.getAll();
     const sortOrder = list.length > 0 ? list.reduce((max, c) => c.sort_order > max ? c.sort_order : max, 0) + 1 : 0;
-    return collectionService.create({ name, description: '', sort_order: sortOrder });
+    const result = await collectionService.create({ name, description: '', sort_order: sortOrder });
+    void queueSyncChange('collection', result.id, 'create', { name }, result.version ?? 1, result.workspace_id ?? null);
+    return result;
   },
 
   async createFolder(collectionId: string, parentId: string | null, name: string) {
     const siblings = await folderService.getChildren(parentId, collectionId);
     const sortOrder = siblings.length > 0 ? siblings.reduce((max, f) => f.sort_order > max ? f.sort_order : max, 0) + 1 : 0;
-    return folderService.create({ collection_id: collectionId, parent_id: parentId, name, sort_order: sortOrder });
+    const result = await folderService.create({ collection_id: collectionId, parent_id: parentId, name, sort_order: sortOrder });
+    void queueSyncChange('folder', result.id, 'create', { collection_id: collectionId, parent_id: parentId, name }, result.version ?? 1);
+    return result;
   },
 
   async renameCollection(id: string, name: string) {
     await collectionService.update(id, { name });
+    void queueSyncChange('collection', id, 'update', { name });
   },
 
   async renameFolder(id: string, name: string) {
     await folderService.update(id, { name });
+    void queueSyncChange('folder', id, 'update', { name });
   },
 
   async deleteCollection(id: string) {
     await collectionService.remove(id);
+    void queueSyncChange('collection', id, 'delete', {});
   },
 
   async deleteFolder(id: string) {
     await folderService.remove(id);
+    void queueSyncChange('folder', id, 'delete', {});
   },
 
   async deleteRequest(id: string) {
     await requestService.remove(id);
+    void queueSyncChange('request', id, 'delete', {});
   },
 
   async duplicateRequest(id: string) {
-    return requestService.duplicate(id);
+    const result = await requestService.duplicate(id);
+    if (result) {
+      void queueSyncChange('request', result.id, 'create', { name: result.name, collection_id: result.collection_id }, result.version ?? 1);
+    }
+    return result;
   },
 
   async renameRequest(id: string, name: string) {
     await requestService.update(id, { name });
+    void queueSyncChange('request', id, 'update', { name });
   },
 
   async moveRequestToFolder(requestId: string, folderId: string | null) {
     await requestService.moveToFolder(requestId, folderId);
+    void queueSyncChange('request', requestId, 'update', { folder_id: folderId });
   },
 
   async moveRequestToCollection(requestId: string, collectionId: string, folderId: string | null) {
     await requestService.moveToCollection(requestId, collectionId, folderId);
+    void queueSyncChange('request', requestId, 'update', { collection_id: collectionId, folder_id: folderId });
   },
 }));

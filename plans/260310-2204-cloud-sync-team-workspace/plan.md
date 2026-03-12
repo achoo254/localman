@@ -1,7 +1,7 @@
 ---
 title: "Cloud Sync → Team Workspace Architecture"
 description: "Replace blob-based cloud sync with entity-level storage, team workspaces, WebSocket real-time, and field-level merge"
-status: pending
+status: in-progress
 priority: P1
 effort: 80h
 branch: feat/team-workspace
@@ -25,7 +25,7 @@ Full rearchitecture of Localman's cloud sync from "dumb blob store" per-user to 
 | # | Phase | Status | Effort | Link |
 |---|-------|--------|--------|------|
 | 1 | Backend: Normalized schema + Workspace RBAC | Complete | 20h | [phase-01](./phase-01-backend-entity-storage-workspace.md) |
-| 2 | Client: Sync engine refactor + entity-level sync | Pending | 16h | [phase-02](./phase-02-client-sync-engine-refactor.md) |
+| 2 | Client: Sync engine refactor + entity-level sync | ✅ Complete | 16h | [phase-02](./phase-02-client-sync-engine-refactor.md) |
 | 3 | WebSocket real-time server + client | Pending | 16h | [phase-03](./phase-03-websocket-real-time.md) |
 | 4 | Field-level merge + conflict resolution UI | Pending | 16h | [phase-04](./phase-04-field-level-merge-conflict-ui.md) |
 | 5 | UI overhaul: workspace panel + presence | Pending | 12h | [phase-05](./phase-05-ui-overhaul-workspace.md) |

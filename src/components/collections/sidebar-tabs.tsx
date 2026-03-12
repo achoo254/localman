@@ -22,7 +22,6 @@ import { HistorySidebarTab } from '../history/history-sidebar-tab';
 import { DocsViewerPage } from '../docs/docs-viewer-page';
 import { getCurlForRequest } from '../../services/import-export-service';
 import { useEnvironmentStore } from '../../stores/environment-store';
-import { useSyncStore } from '../../stores/sync-store';
 
 type TabId = 'collections' | 'history' | 'environments' | 'docs';
 
@@ -88,16 +87,10 @@ export function SidebarTabs({ onOpenEnvironmentManager }: SidebarTabsProps) {
     setFolderDialog('rename');
   };
 
-  const syncConfig = useSyncStore(s => s.config);
-  const deleteOnServer = useSyncStore(s => s.deleteOnServer);
-
   const handleDeleteCollection = useCallback(async (id: string) => {
     if (!await confirm('Delete this collection and all its folders and requests?')) return;
-    if (syncConfig?.enabled && await confirm('Also delete from cloud sync server?')) {
-      await deleteOnServer(id);
-    }
     await deleteCollection(id);
-  }, [syncConfig, deleteOnServer, deleteCollection]);
+  }, [deleteCollection]);
 
   const handleDeleteFolder = useCallback(async (id: string) => {
     if (await confirm('Delete this folder and its contents?')) {
