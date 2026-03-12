@@ -12,6 +12,10 @@ export interface Collection {
   sort_order: number;
   created_at: string;
   updated_at: string;
+  workspace_id?: string | null;
+  user_id?: string | null;
+  is_synced?: boolean;
+  version?: number;
 }
 
 export interface Folder {
@@ -22,6 +26,7 @@ export interface Folder {
   sort_order: number;
   created_at: string;
   updated_at: string;
+  version?: number;
 }
 
 export interface ApiRequest {
@@ -41,6 +46,7 @@ export interface ApiRequest {
   sort_order: number;
   created_at: string;
   updated_at: string;
+  version?: number;
 }
 
 export interface EnvVariable {
@@ -57,6 +63,10 @@ export interface Environment {
   is_active: boolean;
   created_at: string;
   updated_at: string;
+  workspace_id?: string | null;
+  user_id?: string | null;
+  is_synced?: boolean;
+  version?: number;
 }
 
 /**

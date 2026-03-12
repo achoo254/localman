@@ -11,7 +11,7 @@ type Tab = 'login' | 'register';
 
 export function CloudLoginForm() {
   const {
-    cloudConfig,
+    config: cloudConfig,
     status,
     lastSyncAt,
     error,

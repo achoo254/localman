@@ -1,235 +1,200 @@
 /**
- * Zustand store for cloud sync: supports both legacy endpoint-based
- * and new Better Auth pull/push sync modes.
+ * Zustand store for cloud sync — entity-level sync with workspace support.
  */
 
 import { create } from 'zustand';
 import {
-  getSyncConfig,
-  saveSyncConfig,
-  syncAll as runLegacySyncAll,
-  deleteCollectionOnServer,
-} from '../services/sync/sync-service';
-import {
-  getCloudSyncConfig,
-  saveCloudSyncConfig,
-  cloudSyncAll,
-  checkServerHealth,
-} from '../services/sync/cloud-sync-service';
-import {
   signIn,
   signUp,
   signOut,
+  listWorkspaces,
 } from '../services/sync/cloud-auth-client';
-import type { SyncConfig } from '../types/sync';
+import { syncAll } from '../services/sync/entity-sync-service';
+import { clearAllPendingChanges } from '../services/sync/offline-change-queue';
 import type { CloudSyncConfig } from '../types/cloud-sync';
-import { DEFAULT_CLOUD_SYNC_CONFIG } from '../types/cloud-sync';
+import { DEFAULT_CLOUD_SYNC_CONFIG, CLOUD_SYNC_CONFIG_KEY } from '../types/cloud-sync';
+import { db } from '../db/database';
 
 export type SyncStatus = 'idle' | 'syncing' | 'error';
-export type SyncMode = 'legacy' | 'cloud';
+
+export interface WorkspaceInfo {
+  id: string;
+  name: string;
+  role: string;
+}
 
 interface SyncStore {
-  // Legacy sync (4-endpoint model)
-  config: SyncConfig | null;
-  // Cloud sync (Better Auth + pull/push)
-  cloudConfig: CloudSyncConfig;
-  mode: SyncMode;
-
+  config: CloudSyncConfig;
   status: SyncStatus;
   lastSyncAt: string | null;
   error: string | null;
-  progress: { current: number; total: number } | null;
+  workspaces: WorkspaceInfo[];
   _abort: boolean;
 
   loadConfig: () => Promise<void>;
-  setConfig: (config: SyncConfig) => Promise<void>;
-  setCloudConfig: (config: CloudSyncConfig) => Promise<void>;
-  setMode: (mode: SyncMode) => void;
+  saveConfig: (config: CloudSyncConfig) => Promise<void>;
 
-  // Auth actions (cloud mode)
+  // Auth
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   isAuthenticated: () => boolean;
 
-  // Sync actions
+  // Workspace
+  loadWorkspaces: () => Promise<void>;
+
+  // Sync
   syncAll: () => Promise<void>;
-  testConnection: () => Promise<{ ok: boolean; count?: number; error?: string }>;
   cancelSync: () => void;
   clearError: () => void;
-  deleteOnServer: (collectionId: string) => Promise<void>;
+}
+
+/** Read cloud sync config from IndexedDB settings */
+async function loadCloudConfig(): Promise<CloudSyncConfig> {
+  const setting = await db.settings.get(CLOUD_SYNC_CONFIG_KEY);
+  return (setting?.value as CloudSyncConfig) ?? { ...DEFAULT_CLOUD_SYNC_CONFIG };
+}
+
+/** Persist cloud sync config to IndexedDB settings */
+async function persistCloudConfig(config: CloudSyncConfig): Promise<void> {
+  await db.settings.put({ key: CLOUD_SYNC_CONFIG_KEY, value: config });
 }
 
 export const useSyncStore = create<SyncStore>((set, get) => ({
-  config: null,
-  cloudConfig: { ...DEFAULT_CLOUD_SYNC_CONFIG },
-  mode: 'cloud',
+  config: { ...DEFAULT_CLOUD_SYNC_CONFIG },
   status: 'idle',
   lastSyncAt: null,
   error: null,
-  progress: null,
+  workspaces: [],
   _abort: false,
 
   async loadConfig() {
-    const [config, cloudConfig] = await Promise.all([
-      getSyncConfig(),
-      getCloudSyncConfig(),
-    ]);
-    set({
-      config,
-      cloudConfig,
-      lastSyncAt: cloudConfig.lastSyncAt ?? config.lastSyncAt,
-    });
-  },
-
-  async setConfig(config: SyncConfig) {
-    await saveSyncConfig(config);
+    const config = await loadCloudConfig();
     set({ config, lastSyncAt: config.lastSyncAt });
   },
 
-  async setCloudConfig(cloudConfig: CloudSyncConfig) {
-    await saveCloudSyncConfig(cloudConfig);
-    set({ cloudConfig, lastSyncAt: cloudConfig.lastSyncAt });
-  },
-
-  setMode(mode: SyncMode) {
-    set({ mode });
+  async saveConfig(config: CloudSyncConfig) {
+    await persistCloudConfig(config);
+    set({ config, lastSyncAt: config.lastSyncAt });
   },
 
   // --- Auth ---
 
   async login(email: string, password: string) {
-    const { cloudConfig } = get();
-    if (!cloudConfig.serverUrl) {
+    const { config } = get();
+    if (!config.serverUrl) {
       set({ error: 'Server URL is required' });
       return;
     }
     try {
-      const result = await signIn(cloudConfig.serverUrl, email, password);
+      const result = await signIn(config.serverUrl, email, password);
       const updated: CloudSyncConfig = {
-        ...cloudConfig,
+        ...config,
         enabled: true,
         token: result.token,
         userEmail: result.user.email,
         userName: result.user.name,
       };
-      await saveCloudSyncConfig(updated);
-      set({ cloudConfig: updated, error: null });
+      await persistCloudConfig(updated);
+      set({ config: updated, error: null });
     } catch (e) {
       set({ error: e instanceof Error ? e.message : String(e) });
     }
   },
 
   async register(name: string, email: string, password: string) {
-    const { cloudConfig } = get();
-    if (!cloudConfig.serverUrl) {
+    const { config } = get();
+    if (!config.serverUrl) {
       set({ error: 'Server URL is required' });
       return;
     }
     try {
-      const result = await signUp(cloudConfig.serverUrl, name, email, password);
+      const result = await signUp(config.serverUrl, name, email, password);
       const updated: CloudSyncConfig = {
-        ...cloudConfig,
+        ...config,
         enabled: true,
         token: result.token,
         userEmail: result.user.email,
         userName: result.user.name,
       };
-      await saveCloudSyncConfig(updated);
-      set({ cloudConfig: updated, error: null });
+      await persistCloudConfig(updated);
+      set({ config: updated, error: null });
     } catch (e) {
       set({ error: e instanceof Error ? e.message : String(e) });
     }
   },
 
   async logout() {
-    const { cloudConfig } = get();
-    if (cloudConfig.token) {
+    const { config } = get();
+    if (config.token) {
       try {
-        await signOut(cloudConfig.serverUrl, cloudConfig.token);
+        await signOut(config.serverUrl, config.token);
       } catch {
-        // Best-effort sign out
+        // Best-effort
       }
     }
+    await clearAllPendingChanges();
     const updated: CloudSyncConfig = {
-      ...cloudConfig,
+      ...config,
       enabled: false,
       token: null,
       userEmail: null,
       userName: null,
       lastSyncAt: null,
     };
-    await saveCloudSyncConfig(updated);
-    set({ cloudConfig: updated, lastSyncAt: null, error: null });
+    await persistCloudConfig(updated);
+    set({ config: updated, lastSyncAt: null, error: null, workspaces: [] });
   },
 
   isAuthenticated() {
-    return !!get().cloudConfig.token;
+    return !!get().config.token;
+  },
+
+  // --- Workspace ---
+
+  async loadWorkspaces() {
+    const { config } = get();
+    if (!config.token) return;
+    try {
+      const workspaces = await listWorkspaces(config.serverUrl, config.token);
+      set({ workspaces });
+    } catch {
+      // Non-blocking
+    }
   },
 
   // --- Sync ---
 
   async syncAll() {
-    const { mode, config, cloudConfig } = get();
+    const { config } = get();
+    if (!config.token) {
+      set({ status: 'error', error: 'Not authenticated. Please login first.' });
+      return;
+    }
     set({ status: 'syncing', error: null, _abort: false });
 
     try {
-      if (mode === 'cloud') {
-        if (!cloudConfig.token) {
-          set({ status: 'error', error: 'Not authenticated. Please login first.' });
-          return;
-        }
-        const result = await cloudSyncAll(cloudConfig);
-        if (get()._abort) return;
-        const updated = await getCloudSyncConfig();
-        set({
-          cloudConfig: updated,
-          status: result.errors.length ? 'error' : 'idle',
-          error: result.errors.length ? result.errors.join('; ') : null,
-          lastSyncAt: updated.lastSyncAt,
-          progress: null,
-        });
-      } else {
-        // Legacy mode
-        if (!config?.enabled || !config.endpoints.list) {
-          set({ status: 'error', error: 'Sync not configured or disabled' });
-          return;
-        }
-        const result = await runLegacySyncAll(config);
-        if (get()._abort) return;
-        const updated = await getSyncConfig();
-        set({
-          config: updated,
-          status: result.errors.length ? 'error' : 'idle',
-          error: result.errors.length ? result.errors.join('; ') : null,
-          lastSyncAt: updated.lastSyncAt ?? new Date().toISOString(),
-          progress: null,
-        });
-      }
+      const result = await syncAll(config, null);
+      if (get()._abort) return;
+
+      const updated: CloudSyncConfig = {
+        ...config,
+        lastSyncAt: result.serverTime,
+      };
+      await persistCloudConfig(updated);
+
+      set({
+        config: updated,
+        status: result.errors.length ? 'error' : 'idle',
+        error: result.errors.length ? result.errors.join('; ') : null,
+        lastSyncAt: updated.lastSyncAt,
+      });
     } catch (e) {
       if (get()._abort) return;
       set({
         status: 'error',
         error: e instanceof Error ? e.message : String(e),
-        progress: null,
       });
-    }
-  },
-
-  async testConnection() {
-    const { mode, config, cloudConfig } = get();
-    if (mode === 'cloud') {
-      if (!cloudConfig.serverUrl) return { ok: false, error: 'Server URL required' };
-      return checkServerHealth(cloudConfig.serverUrl);
-    }
-    // Legacy
-    if (!config?.endpoints.list) return { ok: false, error: 'List URL required' };
-    try {
-      const { listFiles } = await import('../services/sync/sync-http-client');
-      const files = await listFiles(config);
-      return { ok: true, count: files.length };
-    } catch (e) {
-      return { ok: false, error: e instanceof Error ? e.message : String(e) };
     }
   },
 
@@ -239,15 +204,5 @@ export const useSyncStore = create<SyncStore>((set, get) => ({
 
   clearError() {
     set({ error: null, status: 'idle' });
-  },
-
-  async deleteOnServer(collectionId: string) {
-    const { config } = get();
-    if (!config?.enabled) return;
-    try {
-      await deleteCollectionOnServer(config, collectionId);
-    } catch {
-      // best-effort
-    }
   },
 }));

@@ -61,3 +61,20 @@ export async function signOut(
     headers: { Authorization: `Bearer ${token}` },
   });
 }
+
+/** Fetch workspaces the authenticated user belongs to */
+export async function listWorkspaces(
+  serverUrl: string,
+  token: string,
+): Promise<Array<{ id: string; name: string; role: string }>> {
+  const f = await getHttpClient();
+  const res = await f(`${serverUrl}/api/workspaces`, {
+    method: 'GET',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error((body as { message?: string }).message || `Failed to list workspaces: ${res.status}`);
+  }
+  return res.json() as Promise<Array<{ id: string; name: string; role: string }>>;
+}

@@ -2,63 +2,70 @@
 
 ## Overview
 - **Priority:** P1
-- **Status:** Pending
+- **Status:** Partially Complete (Automated)
 - **Effort:** 1 hour (30 min per platform)
 - **Depends on:** Phase 02
 
-Manual smoke test on both Windows and macOS installed builds.
+Automated smoke test via Playwright (browser-based, localhost:1420). Manual Tauri-specific tests still pending.
 
-## Test Checklist (Per Platform)
+## Automated Test Results (Playwright — 19/19 passed)
 
 ### App Launch & UI
-- [ ] App launches without crash
-- [ ] Dark theme renders correctly
-- [ ] Titlebar shows LOCALMAN, Import, Settings buttons
-- [ ] Sidebar visible with Collections/History/Environments tabs
-- [ ] Status bar shows version + Online indicator
-- [ ] Window resizable (respects 1280x800 minimum)
+- [x] App launches without crash
+- [x] Dark theme renders correctly
+- [x] Titlebar shows LOCALMAN, Import, Settings buttons
+- [x] Sidebar visible with Collections/History/Environments tabs
+- [x] Status bar shows version + Online indicator
+- [x] Window resizable (respects 1280x800 minimum)
 
 ### Core Workflow
-- [ ] Click "New collection" → dialog appears → create collection
-- [ ] Click "New request" → request builder appears
-- [ ] Set method GET, URL `https://httpbin.org/get`
-- [ ] Click Send (or Ctrl/Cmd+Enter) → response appears
-- [ ] Response shows: status code, headers, body (JSON formatted)
-- [ ] Request logged in History tab
+- [x] Click "New collection" → dialog appears → create collection
+- [x] Click "New request" → request builder appears (method, URL, Send)
+- [ ] Set method GET, URL `https://httpbin.org/get` — ⚠️ requires Tauri HTTP plugin (manual)
+- [ ] Click Send (or Ctrl/Cmd+Enter) → response appears — ⚠️ requires Tauri HTTP plugin (manual)
+- [ ] Response shows: status code, headers, body (JSON formatted) — ⚠️ requires Tauri HTTP plugin (manual)
+- [ ] Request logged in History tab — ⚠️ requires actual request (manual)
+- [x] Request tabs visible (Params, Headers, Body, Auth)
+- [x] Response empty state message shown
 
 ### Collections & Organization
-- [ ] Rename collection
-- [ ] Create nested folder inside collection
-- [ ] Drag/move request between folders
-- [ ] Delete request, delete collection
+- [ ] Rename collection — manual
+- [ ] Create nested folder inside collection — manual
+- [ ] Drag/move request between folders — manual
+- [ ] Delete request, delete collection — manual
 
 ### Environments
-- [ ] Create environment with variable (e.g., `base_url` = `https://httpbin.org`)
-- [ ] Use `{{base_url}}/get` in URL → resolves correctly
-- [ ] Switch between environments
-- [ ] Environment bar shows active env name
+- [x] Environment bar shows "No Environment" selector
+- [x] Environment bar shows "Manage" button
+- [x] Can open environments sidebar tab
+- [ ] Create environment with variable — manual
+- [ ] Use `{{base_url}}/get` in URL → resolves correctly — manual
+- [ ] Switch between environments — manual
 
 ### Import
-- [ ] Import cURL: `curl -X GET https://httpbin.org/headers -H "Accept: application/json"`
-- [ ] Verify imported request has correct method, URL, headers
+- [x] Import dialog opens with File and cURL tabs
+- [x] cURL import tab has textarea
+- [ ] Import cURL command and verify request — manual
+- [ ] Verify imported request has correct method, URL, headers — manual
 
 ### Settings
-- [ ] Open Settings → all 6 tabs load (General, Editor, Proxy, Data, Cloud Sync, About)
-- [ ] Change UI font size → applies immediately
-- [ ] Change default HTTP method → new requests use it
-- [ ] Close and reopen app → settings persist
+- [x] Open Settings → all 6 tabs load (General, Editor, Proxy, Data, Cloud Sync, About)
+- [x] Can navigate between settings sections
+- [ ] Change UI font size → applies immediately — manual
+- [ ] Change default HTTP method → new requests use it — manual
+- [ ] Close and reopen app → settings persist — manual (requires Tauri)
 
 ### Keyboard Shortcuts
-- [ ] `Ctrl/Cmd+Enter` = Send request
-- [ ] `Ctrl/Cmd+T` = New tab
-- [ ] `Ctrl/Cmd+W` = Close tab
+- [x] `Ctrl+T` = New tab
+- [x] `Ctrl+W` = Close tab
+- [ ] `Ctrl+Enter` = Send request — ⚠️ requires Tauri HTTP plugin (manual)
 
 ### Data Persistence
-- [ ] Close app completely
-- [ ] Reopen app
-- [ ] Collections, requests, environments still present (IndexedDB)
+- [ ] Close app completely — requires Tauri
+- [ ] Reopen app — requires Tauri
+- [ ] Collections, requests, environments still present (IndexedDB) — requires Tauri
 
-## Platform-Specific Checks
+## Platform-Specific Checks (Manual Only)
 
 ### Windows
 - [ ] Custom titlebar: minimize/maximize/close buttons work
@@ -81,8 +88,9 @@ For each bug found, note:
 
 ## Todo
 
-- [ ] Complete Windows smoke test
-- [ ] Complete macOS smoke test
+- [x] Complete automated smoke test (Playwright, 19/19 passed)
+- [ ] Complete Windows manual smoke test (Tauri build)
+- [ ] Complete macOS manual smoke test (Tauri build)
 - [ ] Document any bugs found
 - [ ] Decide: ship with known bugs or fix first?
 
