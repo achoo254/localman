@@ -11,6 +11,8 @@ import {
 } from '../services/sync/cloud-auth-client';
 import { syncAll } from '../services/sync/entity-sync-service';
 import { clearAllPendingChanges } from '../services/sync/offline-change-queue';
+import { wsManager, type WsConnectionState } from '../services/sync/websocket-manager';
+import { initWsEventHandlers, disposeWsEventHandlers } from '../services/sync/ws-event-handler';
 import type { CloudSyncConfig } from '../types/cloud-sync';
 import { DEFAULT_CLOUD_SYNC_CONFIG, CLOUD_SYNC_CONFIG_KEY } from '../types/cloud-sync';
 import { db } from '../db/database';
@@ -29,6 +31,7 @@ interface SyncStore {
   lastSyncAt: string | null;
   error: string | null;
   workspaces: WorkspaceInfo[];
+  wsState: WsConnectionState;
   _abort: boolean;
 
   loadConfig: () => Promise<void>;
@@ -42,6 +45,8 @@ interface SyncStore {
 
   // Workspace
   loadWorkspaces: () => Promise<void>;
+  subscribeWorkspace: (workspaceId: string) => void;
+  unsubscribeWorkspace: (workspaceId: string) => void;
 
   // Sync
   syncAll: () => Promise<void>;
@@ -60,17 +65,38 @@ async function persistCloudConfig(config: CloudSyncConfig): Promise<void> {
   await db.settings.put({ key: CLOUD_SYNC_CONFIG_KEY, value: config });
 }
 
+/** Cleanup fn for WS state listener — prevents leaks across login/logout */
+let wsStateCleanup: (() => void) | null = null;
+
+/** Connect WebSocket and initialize event handlers */
+function connectWs(config: CloudSyncConfig): void {
+  if (!config.token || !config.serverUrl) return;
+  // Clean up previous listener if any
+  wsStateCleanup?.();
+  wsManager.connect(config.serverUrl, config.token);
+  initWsEventHandlers(config);
+  // Track WS state in store
+  wsStateCleanup = wsManager.onStateChange((wsState) => {
+    useSyncStore.setState({ wsState });
+  });
+}
+
 export const useSyncStore = create<SyncStore>((set, get) => ({
   config: { ...DEFAULT_CLOUD_SYNC_CONFIG },
   status: 'idle',
   lastSyncAt: null,
   error: null,
   workspaces: [],
+  wsState: 'disconnected' as WsConnectionState,
   _abort: false,
 
   async loadConfig() {
     const config = await loadCloudConfig();
     set({ config, lastSyncAt: config.lastSyncAt });
+    // Auto-connect WebSocket if already authenticated
+    if (config.token && config.serverUrl) {
+      connectWs(config);
+    }
   },
 
   async saveConfig(config: CloudSyncConfig) {
@@ -97,6 +123,8 @@ export const useSyncStore = create<SyncStore>((set, get) => ({
       };
       await persistCloudConfig(updated);
       set({ config: updated, error: null });
+      // Connect WebSocket after successful login
+      connectWs(updated);
     } catch (e) {
       set({ error: e instanceof Error ? e.message : String(e) });
     }
@@ -119,6 +147,8 @@ export const useSyncStore = create<SyncStore>((set, get) => ({
       };
       await persistCloudConfig(updated);
       set({ config: updated, error: null });
+      // Connect WebSocket after successful registration
+      connectWs(updated);
     } catch (e) {
       set({ error: e instanceof Error ? e.message : String(e) });
     }
@@ -133,6 +163,11 @@ export const useSyncStore = create<SyncStore>((set, get) => ({
         // Best-effort
       }
     }
+    // Disconnect WebSocket before clearing state
+    wsStateCleanup?.();
+    wsStateCleanup = null;
+    disposeWsEventHandlers();
+    wsManager.disconnect();
     await clearAllPendingChanges();
     const updated: CloudSyncConfig = {
       ...config,
@@ -161,6 +196,14 @@ export const useSyncStore = create<SyncStore>((set, get) => ({
     } catch {
       // Non-blocking
     }
+  },
+
+  subscribeWorkspace(workspaceId: string) {
+    wsManager.subscribe(`workspace:${workspaceId}`);
+  },
+
+  unsubscribeWorkspace(workspaceId: string) {
+    wsManager.unsubscribe(`workspace:${workspaceId}`);
   },
 
   // --- Sync ---

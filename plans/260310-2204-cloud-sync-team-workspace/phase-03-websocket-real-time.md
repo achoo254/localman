@@ -10,7 +10,7 @@
 ## Overview
 
 - **Priority:** P1
-- **Status:** Pending
+- **Status:** ✅ Complete
 - **Effort:** 16h
 - **Description:** Add WebSocket server to backend for real-time entity change broadcast per workspace. Build client WebSocket manager with auto-reconnection. Add presence tracking.
 
@@ -240,22 +240,22 @@ type ServerMessage =
 
 ## Todo List
 
-- [ ] Install `ws` + `@types/ws` in backend
-- [ ] Implement `ws-auth.ts` — token validation on upgrade
-- [ ] Implement `channel-manager.ts` — subscribe/unsubscribe/broadcast
-- [ ] Implement `presence-tracker.ts` — online/editing tracking
-- [ ] Implement `message-router.ts` — message type routing
-- [ ] Implement `websocket-server.ts` — server setup + heartbeat
-- [ ] Update `backend/src/index.ts` — wire WS to HTTP server
-- [ ] Implement `websocket-manager.ts` — client connection + reconnection
-- [ ] Implement `ws-event-handler.ts` — apply incoming events to Dexie/Zustand
-- [ ] Create `presence-store.ts` — Zustand presence tracking
-- [ ] Integrate WS into `sync-store.ts` — connect on login, disconnect on logout
-- [ ] Hook entity sync service to use WS for mutations when connected
-- [ ] Test: connect, subscribe workspace, broadcast entity change
-- [ ] Test: disconnect, reconnect, state reconciliation
-- [ ] Test: presence — editing indicator, online status
-- [ ] Test: heartbeat keeps connection alive
+- [x] Install `ws` + `@types/ws` in backend
+- [x] Implement `ws-auth.ts` — token validation on upgrade
+- [x] Implement `channel-manager.ts` — subscribe/unsubscribe/broadcast
+- [x] Implement `presence-tracker.ts` — online/editing tracking
+- [x] Implement `message-router.ts` — message type routing
+- [x] Implement `websocket-server.ts` — server setup + heartbeat
+- [x] Update `backend/src/index.ts` — wire WS to HTTP server
+- [x] Implement `websocket-manager.ts` — client connection + reconnection
+- [x] Implement `ws-event-handler.ts` — apply incoming events to Dexie/Zustand
+- [x] Create `presence-store.ts` — Zustand presence tracking
+- [x] Integrate WS into `sync-store.ts` — connect on login, disconnect on logout
+- [x] Hook entity sync service to use WS for mutations when connected
+- [x] Test: connect, subscribe workspace, broadcast entity change
+- [x] Test: disconnect, reconnect, state reconciliation
+- [x] Test: presence — editing indicator, online status
+- [x] Test: heartbeat keeps connection alive
 
 ## Success Criteria
 

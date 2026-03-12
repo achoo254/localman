@@ -515,18 +515,106 @@ CREATE TABLE change_log (
 3. Export hook: `useFeatureStore()`
 4. Use in components via hook
 
+## WebSocket Architecture (Phase 3)
+
+### Real-Time Server
+
+```
+HTTP/WS Server (Hono + @hono/node-server)
+  │
+  ├── HTTP routes (existing)
+  │
+  └── WebSocket Server (ws library, noServer mode)
+        │
+        ├── Upgrade Handler
+        │   ├── Auth: validate JWT token from query param
+        │   ├── Accept/reject based on Better Auth session
+        │   └── Attach user metadata to connection
+        │
+        ├── Channel Manager
+        │   ├── workspace:{wsId} → Set<WebSocket>
+        │   ├── user:{userId} → Set<WebSocket> (personal sync)
+        │   └── Cleanup on disconnect
+        │
+        ├── Message Router
+        │   ├── subscribe/unsubscribe channels (RBAC check)
+        │   ├── entity:update/create/delete → validate + broadcast
+        │   ├── presence → online/editing status
+        │   └── Error handling for auth failures, invalid channels
+        │
+        └── Heartbeat (ping/pong every 30s, max 1MB payload)
+```
+
+### Real-Time Client
+
+```
+WebSocketManager (singleton)
+  │
+  ├── Connection Lifecycle
+  │   ├── connect(serverUrl, token) → open WebSocket with token in query
+  │   ├── disconnect() → clean close with intentional flag
+  │   └── auto-reconnect (exponential backoff: 1s → 2s → 4s → 8s → max 30s)
+  │
+  ├── Channel Management
+  │   ├── subscribe(channel) → store locally, send subscribe message
+  │   ├── unsubscribe(channel)
+  │   └── re-subscribe on reconnect
+  │
+  ├── Event Handler
+  │   ├── entity:updated → update in Dexie + refresh Zustand
+  │   ├── entity:created → insert into Dexie
+  │   ├── entity:deleted → soft delete in Dexie
+  │   ├── presence → update presence-store (online users, editing status)
+  │   └── reconnected → trigger state reconciliation via HTTP delta sync
+  │
+  └── Heartbeat Response
+      └── Respond to ping with pong to keep connection alive
+```
+
+### WebSocket Protocol
+
+| Direction | Message Type | Purpose | Payload |
+|-----------|--------------|---------|---------|
+| C→S | `subscribe` | Join workspace channel | `{ type, channel }` |
+| C→S | `unsubscribe` | Leave channel | `{ type, channel }` |
+| C→S | `entity:update` | Mutate entity (editor+ role) | `{ entity_type, entity_id, base_version, changes }` |
+| C→S | `entity:create` | Create new entity | `{ entity_type, data, parent_id?, collection_id? }` |
+| C→S | `entity:delete` | Delete entity | `{ entity_type, entity_id }` |
+| C→S | `presence` | Set editing/active/idle status | `{ status, entity_id?, workspace_id }` |
+| C→S | `pong` | Respond to heartbeat | `{ type: "pong" }` |
+| S→C | `entity:updated` | Broadcast change to members | `{ entity_type, entity_id, version, changes, user_id }` |
+| S→C | `entity:created` | Broadcast creation | `{ entity_type, entity, user_id }` |
+| S→C | `entity:deleted` | Broadcast deletion | `{ entity_type, entity_id, user_id }` |
+| S→C | `presence` | Broadcast user status | `{ user_id, user_name, status, entity_id?, workspace_id }` |
+| S→C | `subscribed` | Confirm subscription | `{ channel }` |
+| S→C | `ping` | Keep-alive probe | `{ type: "ping" }` |
+| S→C | `error` | Error response | `{ code, message }` |
+
+### Integration Points
+
+- **sync-store.ts**: On login, connect WebSocket. On logout, disconnect and clear state.
+- **ws-event-handler.ts**: Listen to WebSocket events, apply to Dexie and Zustand stores.
+- **entity-sync-service.ts**: On reconnect, fetch missed changes via HTTP delta sync (POST /api/workspaces/:wsId/sync/pull).
+- **presence-store.ts**: Zustand store tracking online users per workspace.
+
+### Graceful Degradation
+
+If WebSocket is unavailable or connection drops, app falls back to HTTP polling for sync. User can still edit and execute requests offline; changes flush via HTTP when connection restores.
+
 ## Known Limitations & Trade-offs
 
-1. **No real-time collaboration** (Phase 16) — Sync is pull/push, not live WebSocket
-2. **Last-Write-Wins conflict resolution** — Simple but doesn't preserve concurrent edits
-3. **Single PostgreSQL database** — Vertical scaling only (sharding in Phase 16+)
-4. **IndexedDB quota** — ~50MB on most browsers (sufficient for local usage)
-5. **Offline queue not yet persisted** (Phase 16) — Pending sync lost on app restart
-6. **UI not yet updated for workspaces** (Phase 14) — Backend API ready, frontend wizard TBD
-7. **No audit logging** (Phase 15) — Track who changed what, when
+1. **No entity mutation validation on WS** (Phase 4) — HTTP API validates RBAC, WS broadcasts assumed valid (TODO)
+2. **No message size limit on WS** (Phase 4) — DoS vector on large payloads (TODO: add 64KB limit)
+3. **No rate limiting per WS connection** (Phase 4) — Flooding risk (TODO: sliding window counter)
+4. **Last-Write-Wins conflict resolution** — Simple but doesn't preserve concurrent edits
+5. **Single PostgreSQL database** — Vertical scaling only (sharding in Phase 16+)
+6. **IndexedDB quota** — ~50MB on most browsers (sufficient for local usage)
+7. **Offline queue not yet persisted** (Phase 16) — Pending sync lost on app restart
+8. **UI not yet updated for workspaces** (Phase 14) — Backend API ready, frontend wizard TBD
+9. **No audit logging** (Phase 15) — Track who changed what, when
 
 ## Unresolved Questions
 
-- WebSocket implementation strategy for real-time collaboration?
+- Should entity mutations go through WS or trigger server-side broadcasts from HTTP API?
 - PostgreSQL sharding approach for multi-region deployment?
 - Should we add collection branching/versioning (Git-like)?
