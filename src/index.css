@@ -1,8 +1,9 @@
 @import "tailwindcss";
 @import "@fontsource/jetbrains-mono/400.css";
 @import "@fontsource/jetbrains-mono/500.css";
-@import "@fontsource/syne/400.css";
-@import "@fontsource/syne/600.css";
+@import "@fontsource/inter/400.css";
+@import "@fontsource/inter/500.css";
+@import "@fontsource/inter/600.css";
 
 @theme {
   /* Design system — UI/UX Pro Max (Deep Space / Enterprise Gateway) */
@@ -26,7 +27,7 @@
   --radius-lg: 12px;
   
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
-  --font-sans: "Syne", system-ui, sans-serif;
+  --font-sans: "Inter", system-ui, sans-serif;
 }
 
 :root {
