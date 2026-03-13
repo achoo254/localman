@@ -11,6 +11,7 @@ variables:
 
 lint-and-test:
   stage: verify
+  image: node:22-alpine
   cache:
     key:
       files:
