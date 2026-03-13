@@ -1,6 +1,6 @@
 /**
  * Execute HTTP requests via Tauri plugin (bypasses CORS). Wraps fetch with timing and response parsing.
- * In Tauri: always use plugin-http; do not fallback to browser fetch (would hit CORS).
+ * In Tauri: calls IPC directly to avoid browser Headers API dropping forbidden headers (Cookie, Host).
  * In browser (e.g. pnpm dev): use globalThis.fetch.
  */
 
@@ -19,20 +19,73 @@ function isTauri(): boolean {
   return !!(window.__TAURI__ ?? window.__TAURI_INTERNALS__);
 }
 
-async function getFetch(): Promise<typeof fetch> {
-  if (isTauri()) {
-    try {
-      const { fetch: tauriFetch } = await import('@tauri-apps/plugin-http');
-      return tauriFetch;
-    } catch (err) {
-      const e = new Error(
-        'HTTP plugin unavailable. Request cannot bypass CORS in Tauri. Restart the app or check plugin-http registration.'
-      );
-      (e as Error & { cause?: unknown }).cause = err;
-      throw e;
-    }
+/** Tauri IPC response shape from plugin:http|fetch_send */
+interface TauriFetchSendResult {
+  status: number;
+  statusText: string;
+  url: string;
+  headers: [string, string][];
+  rid: number;
+}
+
+/**
+ * Execute fetch via Tauri IPC directly, bypassing plugin's JS wrapper.
+ * The plugin wrapper uses `new Headers()` which silently drops forbidden headers
+ * like Cookie, Host per the browser Fetch spec. By calling invoke() directly,
+ * we serialize headers as string[][] and send them straight to the Rust HTTP client.
+ */
+async function tauriFetchDirect(
+  url: string,
+  init: { method: string; headers: Record<string, string>; body?: string; signal?: AbortSignal }
+): Promise<Response> {
+  const { invoke } = await import('@tauri-apps/api/core');
+
+  if (init.signal?.aborted) throw new DOMException('The operation was aborted.', 'AbortError');
+
+  // Serialize headers as [key, value][] — no browser Headers filtering
+  const headersArray = Object.entries(init.headers);
+
+  // Encode body as byte array for IPC
+  let data: number[] | null = null;
+  if (init.body) {
+    data = Array.from(new TextEncoder().encode(init.body));
   }
-  return globalThis.fetch.bind(globalThis);
+
+  const rid = await invoke<number>('plugin:http|fetch', {
+    clientConfig: { method: init.method, url, headers: headersArray, data },
+  });
+
+  const abort = () => invoke('plugin:http|fetch_cancel', { rid });
+  if (init.signal?.aborted) { void abort(); throw new DOMException('The operation was aborted.', 'AbortError'); }
+  init.signal?.addEventListener('abort', () => void abort());
+
+  const { status, statusText, url: responseUrl, headers: responseHeaders, rid: responseRid } =
+    await invoke<TauriFetchSendResult>('plugin:http|fetch_send', { rid });
+
+  const dropBody = () => invoke('plugin:http|fetch_cancel_body', { rid: responseRid });
+
+  // Read body chunks until the plugin signals end (last byte === 1)
+  const chunks: Uint8Array[] = [];
+  for (;;) {
+    if (init.signal?.aborted) { void dropBody(); throw new DOMException('The operation was aborted.', 'AbortError'); }
+    const chunk = await invoke<number[]>('plugin:http|fetch_read_body', { rid: responseRid });
+    const arr = new Uint8Array(chunk);
+    const lastByte = arr[arr.byteLength - 1];
+    const actual = arr.slice(0, arr.byteLength - 1);
+    if (actual.byteLength > 0) chunks.push(actual);
+    if (lastByte === 1) break;
+  }
+
+  // Combine chunks into a single Uint8Array
+  const totalLen = chunks.reduce((sum, c) => sum + c.byteLength, 0);
+  const bodyBytes = new Uint8Array(totalLen);
+  let offset = 0;
+  for (const c of chunks) { bodyBytes.set(c, offset); offset += c.byteLength; }
+
+  const res = new Response(bodyBytes, { status, statusText });
+  Object.defineProperty(res, 'url', { value: responseUrl });
+  Object.defineProperty(res, 'headers', { value: new Headers(responseHeaders) });
+  return res;
 }
 
 const MAX_BODY_DISPLAY = 10 * 1024 * 1024;
@@ -83,14 +136,25 @@ export async function executeHttp(
   options: ExecuteOptions = {}
 ): Promise<ResponseData> {
   const start = performance.now();
-  const init: RequestInit & { signal?: AbortSignal } = {
-    method: prepared.method,
-    headers: prepared.headers,
-    body: prepared.body,
-    signal: options.signal,
-  };
-  const fetchFn = await getFetch();
-  const response = await fetchFn(prepared.url, init);
+
+  let response: Response;
+  if (isTauri()) {
+    // Use direct IPC to preserve all headers (Cookie, Host, etc.)
+    response = await tauriFetchDirect(prepared.url, {
+      method: prepared.method,
+      headers: prepared.headers,
+      body: prepared.body,
+      signal: options.signal,
+    });
+  } else {
+    // Browser mode: use standard fetch
+    response = await globalThis.fetch(prepared.url, {
+      method: prepared.method,
+      headers: prepared.headers,
+      body: prepared.body,
+      signal: options.signal,
+    });
+  }
   const elapsed = Math.round(performance.now() - start);
 
   const contentType = response.headers.get('content-type') ?? '';

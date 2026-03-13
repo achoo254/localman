@@ -101,7 +101,7 @@ src-tauri/        # Rust/Tauri backend (Tauri commands, native HTTP)
 - **Theme:** Dark-first (`#0d0f14` bg / `#12151c` surface / `#181c25` elevated)
 - **Accent:** `#4f8ef7` (blue)
 - **HTTP method colors:** GET=green, POST=orange, PUT=yellow, DELETE=red, PATCH=purple
-- **Fonts:** JetBrains Mono (code areas) + Syne (UI headlines)
+- **Fonts:** JetBrains Mono (code areas) + Inter (UI text)
 - **Spacing:** 4px base unit, border-radius 6–8px
 
 ## Layout
