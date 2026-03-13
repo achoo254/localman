@@ -11,6 +11,7 @@ import { runPreScript, runPostScript } from '../services/script-sandbox/script-r
 import * as historyService from '../db/services/history-service';
 import { useEnvironmentStore } from './environment-store';
 import { useHistoryStore } from './history-store';
+import { useSettingsStore } from './settings-store';
 import type { TestResult } from '../services/script-sandbox/script-runner';
 
 export type { TestResult };
@@ -33,6 +34,9 @@ interface ResponseStore {
   clearResponse: () => void;
 }
 
+// Module-level so cancelRequest() can clear the timeout
+let activeTimeoutId: ReturnType<typeof setTimeout> | null = null;
+
 export const useResponseStore = create<ResponseStore>((set, get) => ({
   response: null,
   isLoading: false,
@@ -43,7 +47,11 @@ export const useResponseStore = create<ResponseStore>((set, get) => ({
   async executeRequest(request: ApiRequest) {
     const prev = get().abortController;
     if (prev) prev.abort();
+    if (activeTimeoutId) { clearTimeout(activeTimeoutId); activeTimeoutId = null; }
     const controller = new AbortController();
+    // Wire timeout from settings — clamp to minimum 1s
+    const timeoutMs = Math.max(1000, useSettingsStore.getState().general.requestTimeoutMs);
+    activeTimeoutId = setTimeout(() => controller.abort('timeout'), timeoutMs);
     set({
       isLoading: true,
       error: null,
@@ -108,6 +116,7 @@ export const useResponseStore = create<ResponseStore>((set, get) => ({
         };
       }
 
+      if (activeTimeoutId) { clearTimeout(activeTimeoutId); activeTimeoutId = null; }
       set({
         response: data,
         isLoading: false,
@@ -138,8 +147,16 @@ export const useResponseStore = create<ResponseStore>((set, get) => ({
         });
       }
     } catch (err) {
+      if (activeTimeoutId) { clearTimeout(activeTimeoutId); activeTimeoutId = null; }
       if (err instanceof Error && err.name === 'AbortError') {
-        set({ isLoading: false, abortController: null });
+        const isTimeout = controller.signal.reason === 'timeout';
+        set({
+          isLoading: false,
+          abortController: null,
+          error: isTimeout
+            ? `Request timed out after ${Math.round(timeoutMs / 1000)}s`
+            : null,
+        });
         return;
       }
       set({
@@ -151,6 +168,7 @@ export const useResponseStore = create<ResponseStore>((set, get) => ({
   },
 
   cancelRequest() {
+    if (activeTimeoutId) { clearTimeout(activeTimeoutId); activeTimeoutId = null; }
     const { abortController } = get();
     if (abortController) abortController.abort();
   },

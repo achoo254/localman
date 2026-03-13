@@ -9,6 +9,7 @@ import { useSyncStore } from '../../stores/sync-store';
 import { useWorkspaceStore } from '../../stores/workspace-store';
 import { WorkspaceList } from './workspace-list';
 import { NameInputDialog } from '../common/name-input-dialog';
+import { FEATURES } from '../../utils/feature-flags';
 
 function AccountSection() {
   const {
@@ -26,7 +27,7 @@ function AccountSection() {
   } = useSyncStore();
   const [busy, setBusy] = useState(false);
 
-  useEffect(() => { void loadConfig(); }, [loadConfig]);
+  useEffect(() => { if (FEATURES.CLOUD_SYNC) void loadConfig(); }, [loadConfig]);
 
   const handleGoogleLogin = async () => {
     setBusy(true);
@@ -153,11 +154,13 @@ function WorkspacesSection() {
     if (isAuthenticated) void loadWorkspaces();
   }, [isAuthenticated, loadWorkspaces]);
 
-  if (!isAuthenticated) {
+  if (!FEATURES.CLOUD_SYNC || !isAuthenticated) {
     return (
       <section className="flex flex-col gap-3">
         <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">Workspaces</h3>
-        <p className="text-xs text-slate-500">Login to access team workspaces.</p>
+        <p className="text-xs text-slate-500">
+          {!FEATURES.CLOUD_SYNC ? 'Team workspaces — Coming Soon' : 'Login to access team workspaces.'}
+        </p>
       </section>
     );
   }

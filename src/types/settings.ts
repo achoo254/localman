@@ -10,6 +10,7 @@ export const SETTINGS_KEYS = {
   GENERAL_FOLLOW_REDIRECTS: 'settings.general.followRedirects',
   GENERAL_MAX_REDIRECTS: 'settings.general.maxRedirects',
   GENERAL_UI_FONT_SIZE: 'settings.general.uiFontSize',
+  GENERAL_HISTORY_RETENTION_DAYS: 'settings.general.historyRetentionDays',
   EDITOR_FONT_SIZE: 'settings.editor.fontSize',
   EDITOR_TAB_SIZE: 'settings.editor.tabSize',
   EDITOR_WORD_WRAP: 'settings.editor.wordWrap',
@@ -31,6 +32,7 @@ export const DEFAULTS = {
   sslVerify: true,
   followRedirects: true,
   maxRedirects: 5,
+  historyRetentionDays: 0,
   uiFontSize: 'medium' as UiFontSize,
   fontSize: 14,
   tabSize: 2,
@@ -52,6 +54,8 @@ export interface GeneralSettings {
   followRedirects: boolean;
   maxRedirects: number;
   uiFontSize: UiFontSize;
+  /** 0 = keep forever, 7/30/90 = auto-delete older entries */
+  historyRetentionDays: number;
 }
 
 export interface EditorSettings {

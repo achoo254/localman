@@ -10,6 +10,12 @@ import { SettingsPage } from '../settings/settings-page';
 import { KeyboardShortcutsModal } from '../common/keyboard-shortcuts-modal';
 import { useRequestStore } from '../../stores/request-store';
 import { ConflictResolutionDialog } from '../sync/conflict-resolution-dialog';
+import { ErrorBoundary } from '../common/error-boundary';
+import { FEATURES } from '../../utils/feature-flags';
+import { checkDbHealth } from '../../db/database';
+import { useSettingsStore } from '../../stores/settings-store';
+import { useHistoryStore } from '../../stores/history-store';
+import { toast } from '../common/toast-provider';
 
 const SIDEBAR_WIDTH_MIN = 200;
 const SIDEBAR_WIDTH_MAX = 480;
@@ -39,6 +45,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   const [resizing, setResizing] = useState(false);
   const resizeStartRef = useRef<{ x: number; width: number } | null>(null);
   const lastWidthRef = useRef<number>(SIDEBAR_WIDTH_DEFAULT);
+  const activeTabId = useRequestStore(s => s.activeTabId);
 
   const onResizeStart = useCallback((startX: number, startWidth: number) => {
     resizeStartRef.current = { x: startX, width: startWidth };
@@ -89,16 +96,31 @@ export function AppLayout({ children }: AppLayoutProps) {
     return () => window.removeEventListener('keydown', onKeyDown);
   }, []);
 
+  const restoreDrafts = useRequestStore(s => s.restoreDrafts);
   const loadSyncConfig = useSyncStore(s => s.loadConfig);
   const syncAll = useSyncStore(s => s.syncAll);
   useEffect(() => {
-    void loadSyncConfig().then(() => {
-      const { config } = useSyncStore.getState();
-      if (config.enabled && config.userEmail) {
-        void syncAll().catch(() => {});
-      }
+    // Restore persisted drafts on app startup
+    void restoreDrafts();
+    // DB health check
+    void checkDbHealth().then(ok => {
+      if (!ok) toast('Database may be corrupted', { description: 'Export your data and reset if issues persist.', variant: 'error' });
     });
-  }, [loadSyncConfig, syncAll]);
+    // History auto-cleanup based on retention setting
+    void useSettingsStore.getState().load().then(() => {
+      const days = useSettingsStore.getState().general.historyRetentionDays;
+      if (days > 0) void useHistoryStore.getState().cleanupOldHistory(days);
+    });
+    // Skip cloud sync init when feature is disabled (Phase 1 release)
+    if (FEATURES.CLOUD_SYNC) {
+      void loadSyncConfig().then(() => {
+        const { config } = useSyncStore.getState();
+        if (config.enabled && config.userEmail) {
+          void syncAll().catch(() => {});
+        }
+      });
+    }
+  }, [restoreDrafts, loadSyncConfig, syncAll]);
 
   return (
     <div
@@ -118,12 +140,14 @@ export function AppLayout({ children }: AppLayoutProps) {
         <>
           <EnvironmentBar onOpenManager={() => setManagerOpen(true)} />
           <div className="flex min-h-0 flex-1">
-            <Sidebar
-              collapsed={sidebarCollapsed}
-              width={sidebarCollapsed ? undefined : sidebarWidth}
-              onToggleCollapsed={() => setSidebarCollapsed((c) => !c)}
-              onOpenEnvironmentManager={() => setManagerOpen(true)}
-            />
+            <ErrorBoundary fallbackSize="panel" resetKey={sidebarCollapsed}>
+              <Sidebar
+                collapsed={sidebarCollapsed}
+                width={sidebarCollapsed ? undefined : sidebarWidth}
+                onToggleCollapsed={() => setSidebarCollapsed((c) => !c)}
+                onOpenEnvironmentManager={() => setManagerOpen(true)}
+              />
+            </ErrorBoundary>
             {!sidebarCollapsed && (
               <div
                 role="separator"
@@ -137,9 +161,11 @@ export function AppLayout({ children }: AppLayoutProps) {
                 }}
               />
             )}
-            <main className="min-w-0 flex-1 overflow-auto" style={{ background: 'var(--color-bg-primary)' }}>
-              {children}
-            </main>
+            <ErrorBoundary fallbackSize="panel" resetKey={activeTabId}>
+              <main className="min-w-0 flex-1 overflow-auto" style={{ background: 'var(--color-bg-primary)' }}>
+                {children}
+              </main>
+            </ErrorBoundary>
           </div>
         </>
       )}

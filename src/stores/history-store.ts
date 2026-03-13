@@ -32,6 +32,7 @@ interface HistoryStore {
   clearHistory: () => Promise<void>;
   setSelectedEntry: (entry: HistoryEntry | null) => void;
   rerunEntry: (entry: HistoryEntry) => void;
+  cleanupOldHistory: (retentionDays: number) => Promise<number>;
 }
 
 function toServiceFilter(f: HistoryFilters, offset: number, limit: number): historyService.HistoryFilter {
@@ -94,6 +95,20 @@ export const useHistoryStore = create<HistoryStore>((set, get) => ({
 
   setSelectedEntry(entry: HistoryEntry | null) {
     set({ selectedEntry: entry });
+  },
+
+  async cleanupOldHistory(retentionDays: number) {
+    const days = Math.max(0, retentionDays);
+    if (days <= 0) return 0;
+    try {
+      const cutoff = new Date();
+      cutoff.setDate(cutoff.getDate() - days);
+      const removed = await historyService.clearOlderThan(cutoff.toISOString());
+      if (removed > 0) void get().loadEntries(false);
+      return removed;
+    } catch {
+      return 0;
+    }
   },
 
   async rerunEntry(entry: HistoryEntry) {

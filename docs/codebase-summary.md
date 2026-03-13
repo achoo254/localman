@@ -236,8 +236,12 @@ localman/
 | `environments` | Env variable sets (Dev/Staging/Prod) |
 | `history` | Auto-logged request executions |
 | `settings` | User preferences, encrypted refresh token |
+| `drafts` | Unsaved draft requests (added Phase 1 fixes) |
 
-**Schema Versioning**: Bumped to v2 for Phase 11 (description field addition)
+**Schema Versioning**: Bumped to v4 for Phase 1 fixes (drafts table + quota error handler)
+
+**DB Services** (`src/db/services/`)
+- `draft-service.ts` — CRUD operations for draft persistence
 
 ### Utilities (`src/utils/`)
 
@@ -245,6 +249,8 @@ localman/
 - `api-base-url.ts` — Determine API base URL (relative for web, env var for Tauri)
 - `clipboard.ts` — copy-to-clipboard with fallback
 - `format.ts` — syntax highlighting, code formatting
+- `db-error-handler.ts` — centralized DB error handling with quota detection + toast
+- `feature-flags.ts` — feature gate controls (e.g., CLOUD_SYNC)
 - Other helpers (validation, date formatting, etc.)
 
 ### Firebase Configuration (`src/firebase-config.ts`)
@@ -465,6 +471,23 @@ GET /api/auth/signin/github  (or other OAuth providers)
 4. **Lazy Loading**: Heavy components (docs viewer, snippet panel) lazy-loaded to reduce initial bundle.
 5. **Reuse**: `PreparedRequest` used by HTTP client, snippet generators, and script executor.
 6. **Extensible**: Plugin pattern for snippet generators makes adding new languages frictionless.
+
+## Phase 1 Offline-First Release Fixes (2026-03-13)
+
+### New Files
+- `src/utils/db-error-handler.ts` — DB error handling with quota-exceeded detection
+- `src/utils/feature-flags.ts` — Feature gate flags (CLOUD_SYNC)
+- `src/db/services/draft-service.ts` — Draft CRUD operations
+
+### Modified Files
+- `src/components/common/error-boundary.tsx` — panel variant + onError callback
+- `src/components/layout/app-layout.tsx` — wrap panels in error boundaries
+- `src/stores/response-store.ts` — timeout + cancel support
+- `src/stores/request-store.ts` — draft restore + persist
+- `src/stores/history-store.ts` — cleanup with retention setting
+- `src/stores/settings-store.ts` — history retention setting
+- `src/components/settings/general-settings.tsx` — timeout, retention UI
+- `src/db/database.ts` — v4 schema with drafts table, quota handler
 
 ## Phase 13 Additions (Workspaces & Real-Time Sync)
 
