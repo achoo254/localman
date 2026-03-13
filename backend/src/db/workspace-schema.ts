@@ -1,13 +1,12 @@
 import {
   pgTable,
-  text,
   varchar,
   uuid,
   timestamp,
   uniqueIndex,
   index,
 } from "drizzle-orm/pg-core";
-import { user } from "./auth-schema.js";
+import { users } from "./user-schema.js";
 
 // Workspaces — team containers for shared collections/environments
 export const workspaces = pgTable(
@@ -16,9 +15,9 @@ export const workspaces = pgTable(
     id: uuid("id").defaultRandom().primaryKey(),
     name: varchar("name", { length: 100 }).notNull(),
     slug: varchar("slug", { length: 100 }).notNull(),
-    ownerId: text("owner_id")
+    ownerId: uuid("owner_id")
       .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
+      .references(() => users.id, { onDelete: "cascade" }),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -37,9 +36,9 @@ export const workspaceMembers = pgTable(
     workspaceId: uuid("workspace_id")
       .notNull()
       .references(() => workspaces.id, { onDelete: "cascade" }),
-    userId: text("user_id")
+    userId: uuid("user_id")
       .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
+      .references(() => users.id, { onDelete: "cascade" }),
     role: varchar("role", { length: 20 }).notNull().default("editor"),
     joinedAt: timestamp("joined_at", { withTimezone: true })
       .notNull()
@@ -65,9 +64,9 @@ export const workspaceInvites = pgTable(
     email: varchar("email", { length: 255 }).notNull(),
     role: varchar("role", { length: 20 }).notNull().default("editor"),
     token: varchar("token", { length: 64 }).notNull(),
-    invitedBy: text("invited_by")
+    invitedBy: uuid("invited_by")
       .notNull()
-      .references(() => user.id),
+      .references(() => users.id),
     expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
     acceptedAt: timestamp("accepted_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true })

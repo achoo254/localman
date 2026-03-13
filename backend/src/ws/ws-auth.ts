@@ -1,10 +1,13 @@
 /**
- * WebSocket connection authentication — validate JWT token on upgrade request.
- * Extracts token from ?token= query param and validates via Better Auth.
+ * WebSocket connection authentication — validate Firebase ID token on upgrade request.
+ * Extracts token from ?token= query param and validates via Firebase Admin SDK.
  */
 
 import type { IncomingMessage } from "node:http";
-import { auth } from "../auth.js";
+import { firebaseAuth } from "../firebase.js";
+import { db } from "../db/client.js";
+import { users } from "../db/user-schema.js";
+import { eq } from "drizzle-orm";
 
 export interface WsUser {
   id: string;
@@ -14,7 +17,7 @@ export interface WsUser {
 
 /**
  * Authenticate WebSocket upgrade request by extracting token from query param
- * and validating it through Better Auth session API.
+ * and validating it through Firebase Admin SDK.
  * Returns user info on success, null on failure.
  */
 export async function authenticateWsConnection(
@@ -25,18 +28,18 @@ export async function authenticateWsConnection(
     const token = url.searchParams.get("token");
     if (!token) return null;
 
-    // Validate token via Better Auth — build a fake request with Authorization header
-    const session = await auth.api.getSession({
-      headers: new Headers({ Authorization: `Bearer ${token}` }),
-    });
+    const decoded = await firebaseAuth.verifyIdToken(token);
 
-    if (!session?.user) return null;
+    // Look up our internal user record by firebase UID
+    const [user] = await db
+      .select({ id: users.id, name: users.name, email: users.email })
+      .from(users)
+      .where(eq(users.firebaseUid, decoded.uid))
+      .limit(1);
 
-    return {
-      id: session.user.id,
-      name: session.user.name,
-      email: session.user.email,
-    };
+    if (!user) return null;
+
+    return { id: user.id, name: user.name, email: user.email };
   } catch {
     return null;
   }

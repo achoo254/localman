@@ -1,6 +1,5 @@
 import {
   pgTable,
-  text,
   varchar,
   uuid,
   timestamp,
@@ -8,8 +7,9 @@ import {
   boolean,
   jsonb,
   index,
+  text,
 } from "drizzle-orm/pg-core";
-import { user } from "./auth-schema.js";
+import { users } from "./user-schema.js";
 import { workspaces } from "./workspace-schema.js";
 
 // Collections — normalized (replaces blob in userFiles)
@@ -20,9 +20,9 @@ export const collections = pgTable(
     workspaceId: uuid("workspace_id").references(() => workspaces.id, {
       onDelete: "cascade",
     }),
-    userId: text("user_id")
+    userId: uuid("user_id")
       .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
+      .references(() => users.id, { onDelete: "cascade" }),
     name: varchar("name", { length: 255 }).notNull(),
     description: text("description"),
     sortOrder: integer("sort_order").default(0),
@@ -120,9 +120,9 @@ export const environments = pgTable(
     workspaceId: uuid("workspace_id").references(() => workspaces.id, {
       onDelete: "cascade",
     }),
-    userId: text("user_id")
+    userId: uuid("user_id")
       .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
+      .references(() => users.id, { onDelete: "cascade" }),
     name: varchar("name", { length: 255 }).notNull(),
     variables: jsonb("variables").default([]),
     isActive: boolean("is_active").default(false),
@@ -150,9 +150,9 @@ export const changeLog = pgTable(
     entityType: varchar("entity_type", { length: 20 }).notNull(),
     entityId: uuid("entity_id").notNull(),
     workspaceId: uuid("workspace_id"),
-    userId: text("user_id")
+    userId: uuid("user_id")
       .notNull()
-      .references(() => user.id),
+      .references(() => users.id),
     fieldChanges: jsonb("field_changes").notNull(),
     fromVersion: integer("from_version").notNull(),
     toVersion: integer("to_version").notNull(),

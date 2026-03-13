@@ -31,7 +31,7 @@ interface CollectionsStore {
   setExpanded: (ids: Set<string>) => void;
   hydrateExpanded: () => Promise<void>;
 
-  createCollection: (name: string) => Promise<Collection>;
+  createCollection: (name: string, workspaceId?: string | null) => Promise<Collection>;
   createFolder: (collectionId: string, parentId: string | null, name: string) => Promise<Folder>;
   renameCollection: (id: string, name: string) => Promise<void>;
   renameFolder: (id: string, name: string) => Promise<void>;
@@ -42,6 +42,7 @@ interface CollectionsStore {
   renameRequest: (id: string, name: string) => Promise<void>;
   moveRequestToFolder: (requestId: string, folderId: string | null) => Promise<void>;
   moveRequestToCollection: (requestId: string, collectionId: string, folderId: string | null) => Promise<void>;
+  moveCollectionToWorkspace: (collectionId: string, workspaceId: string | null) => Promise<void>;
 }
 
 /** Queue a sync change if the entity belongs to a synced collection or workspace */
@@ -93,10 +94,10 @@ export const useCollectionsStore = create<CollectionsStore>((set, get) => ({
     }
   },
 
-  async createCollection(name: string) {
+  async createCollection(name: string, workspaceId?: string | null) {
     const list = await collectionService.getAll();
     const sortOrder = list.length > 0 ? list.reduce((max, c) => c.sort_order > max ? c.sort_order : max, 0) + 1 : 0;
-    const result = await collectionService.create({ name, description: '', sort_order: sortOrder });
+    const result = await collectionService.create({ name, description: '', sort_order: sortOrder, workspace_id: workspaceId ?? null });
     void queueSyncChange('collection', result.id, 'create', { name }, result.version ?? 1, result.workspace_id ?? null);
     return result;
   },
@@ -155,5 +156,10 @@ export const useCollectionsStore = create<CollectionsStore>((set, get) => ({
   async moveRequestToCollection(requestId: string, collectionId: string, folderId: string | null) {
     await requestService.moveToCollection(requestId, collectionId, folderId);
     void queueSyncChange('request', requestId, 'update', { collection_id: collectionId, folder_id: folderId });
+  },
+
+  async moveCollectionToWorkspace(collectionId: string, workspaceId: string | null) {
+    await collectionService.update(collectionId, { workspace_id: workspaceId });
+    void queueSyncChange('collection', collectionId, 'update', { workspace_id: workspaceId });
   },
 }));

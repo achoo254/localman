@@ -8,15 +8,15 @@ import {
   uniqueIndex,
   index,
 } from "drizzle-orm/pg-core";
-import { user } from "./auth-schema.js";
+import { users } from "./user-schema.js";
 
 export const userFiles = pgTable(
   "user_files",
   {
     id: uuid("id").defaultRandom().primaryKey(),
-    userId: text("user_id")
+    userId: uuid("user_id")
       .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
+      .references(() => users.id, { onDelete: "cascade" }),
     filename: varchar("filename", { length: 255 }).notNull(),
     entityType: varchar("entity_type", { length: 20 }).notNull(),
     content: jsonb("content").notNull(),
@@ -34,5 +34,5 @@ export const userFiles = pgTable(
   ]
 );
 
-// Re-export auth schema for drizzle-kit
-export { user, session, account, verification } from "./auth-schema.js";
+// Re-export user schema for drizzle-kit
+export { users } from "./user-schema.js";

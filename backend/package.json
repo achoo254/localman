@@ -13,16 +13,18 @@
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
-    "auth:generate": "npx @better-auth/cli generate",
-    "db:migrate-data": "tsx --env-file=.env src/scripts/migrate-user-files.ts"
+    "db:migrate-data": "tsx --env-file=.env src/scripts/migrate-user-files.ts",
+    "pm2:start": "pm2 start ecosystem.config.cjs",
+    "pm2:stop": "pm2 stop localman-api",
+    "pm2:restart": "pm2 restart localman-api"
   },
   "engines": {
     "node": ">=20.0.0"
   },
   "dependencies": {
     "@hono/node-server": "^1.19.11",
-    "better-auth": "^1.5.4",
     "drizzle-orm": "^0.45.1",
+    "firebase-admin": "^13.7.0",
     "hono": "^4.12.5",
     "postgres": "^3.4.8",
     "ws": "^8.19.0",

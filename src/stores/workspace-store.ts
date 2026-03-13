@@ -3,57 +3,59 @@
  * Wraps workspaces from sync-store and persists active selection.
  */
 
-import { create } from 'zustand';
-import { db } from '../db/database';
-import { useSyncStore, type WorkspaceInfo } from './sync-store';
-import { getHttpClient } from '../utils/tauri-http-client';
+import { create } from 'zustand'
+import { db } from '../db/database'
+import { useSyncStore, type WorkspaceInfo } from './sync-store'
+import { getHttpClient } from '../utils/tauri-http-client'
+import { getIdToken } from '../services/sync/firebase-auth-client'
+import { getApiBaseUrl } from '../utils/api-base-url'
 
-const ACTIVE_WORKSPACE_KEY = 'workspace.active_id';
+const ACTIVE_WORKSPACE_KEY = 'workspace.active_id'
 
 export interface WorkspaceMember {
-  id: string;
-  userId: string;
-  name: string;
-  email: string;
-  role: string;
+  id: string
+  userId: string
+  name: string
+  email: string
+  role: string
 }
 
 interface WorkspaceStore {
-  activeWorkspaceId: string | null;
-  workspaces: WorkspaceInfo[];
+  activeWorkspaceId: string | null
+  workspaces: WorkspaceInfo[]
 
-  setActiveWorkspace: (id: string | null) => Promise<void>;
-  loadWorkspaces: () => Promise<void>;
-  createWorkspace: (name: string) => Promise<void>;
-  deleteWorkspace: (id: string) => Promise<void>;
-  leaveWorkspace: (id: string) => Promise<void>;
-  listMembers: (workspaceId: string) => Promise<WorkspaceMember[]>;
-  inviteMember: (workspaceId: string, email: string, role: string) => Promise<void>;
-  updateMemberRole: (workspaceId: string, memberId: string, role: string) => Promise<void>;
-  removeMember: (workspaceId: string, memberId: string) => Promise<void>;
-  loadActiveWorkspaceId: () => Promise<void>;
+  setActiveWorkspace: (id: string | null) => Promise<void>
+  loadWorkspaces: () => Promise<void>
+  createWorkspace: (name: string) => Promise<void>
+  deleteWorkspace: (id: string) => Promise<void>
+  leaveWorkspace: (id: string) => Promise<void>
+  listMembers: (workspaceId: string) => Promise<WorkspaceMember[]>
+  inviteMember: (workspaceId: string, email: string, role: string) => Promise<void>
+  updateMemberRole: (workspaceId: string, memberId: string, role: string) => Promise<void>
+  removeMember: (workspaceId: string, memberId: string) => Promise<void>
+  loadActiveWorkspaceId: () => Promise<void>
 }
 
 async function apiRequest<T>(
-  serverUrl: string,
-  token: string,
   path: string,
   options: { method?: string; body?: unknown } = {}
 ): Promise<T> {
-  const f = await getHttpClient();
-  const res = await f(`${serverUrl}${path}`, {
+  const token = await getIdToken()
+  if (!token) throw new Error('Not authenticated')
+  const f = await getHttpClient()
+  const res = await f(`${getApiBaseUrl()}${path}`, {
     method: options.method ?? 'GET',
     headers: {
       Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
     },
     body: options.body ? JSON.stringify(options.body) : undefined,
-  });
+  })
   if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
-    throw new Error((body as { message?: string }).message ?? `Request failed: ${res.status}`);
+    const body = await res.json().catch(() => ({}))
+    throw new Error((body as { message?: string }).message ?? `Request failed: ${res.status}`)
   }
-  return res.json() as Promise<T>;
+  return res.json() as Promise<T>
 }
 
 export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
@@ -62,103 +64,77 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
 
   async loadActiveWorkspaceId() {
     try {
-      const setting = await db.settings.get(ACTIVE_WORKSPACE_KEY);
-      const id = (setting?.value as string | null) ?? null;
-      set({ activeWorkspaceId: id });
+      const setting = await db.settings.get(ACTIVE_WORKSPACE_KEY)
+      const id = (setting?.value as string | null) ?? null
+      set({ activeWorkspaceId: id })
     } catch {
-      set({ activeWorkspaceId: null });
+      set({ activeWorkspaceId: null })
     }
   },
 
   async setActiveWorkspace(id) {
-    set({ activeWorkspaceId: id });
+    set({ activeWorkspaceId: id })
     try {
-      await db.settings.put({ key: ACTIVE_WORKSPACE_KEY, value: id });
+      await db.settings.put({ key: ACTIVE_WORKSPACE_KEY, value: id })
     } catch {
       // Non-blocking
     }
     // Subscribe to workspace WS channel if not personal
-    const syncStore = useSyncStore.getState();
-    if (id) syncStore.subscribeWorkspace(id);
+    const syncStore = useSyncStore.getState()
+    if (id) syncStore.subscribeWorkspace(id)
   },
 
   async loadWorkspaces() {
-    const syncStore = useSyncStore.getState();
-    await syncStore.loadWorkspaces();
-    const workspaces = useSyncStore.getState().workspaces;
-    set({ workspaces });
+    const syncStore = useSyncStore.getState()
+    await syncStore.loadWorkspaces()
+    const workspaces = useSyncStore.getState().workspaces
+    set({ workspaces })
   },
 
   async createWorkspace(name) {
-    const { config } = useSyncStore.getState();
-    if (!config.token) throw new Error('Not authenticated');
     await apiRequest<{ id: string; name: string }>(
-      config.serverUrl,
-      config.token,
       '/api/workspaces',
       { method: 'POST', body: { name } }
-    );
-    await get().loadWorkspaces();
+    )
+    await get().loadWorkspaces()
   },
 
   async deleteWorkspace(id) {
-    const { config } = useSyncStore.getState();
-    if (!config.token) throw new Error('Not authenticated');
-    await apiRequest<void>(config.serverUrl, config.token, `/api/workspaces/${id}`, { method: 'DELETE' });
-    const { activeWorkspaceId } = get();
-    if (activeWorkspaceId === id) await get().setActiveWorkspace(null);
-    await get().loadWorkspaces();
+    await apiRequest<void>(`/api/workspaces/${id}`, { method: 'DELETE' })
+    const { activeWorkspaceId } = get()
+    if (activeWorkspaceId === id) await get().setActiveWorkspace(null)
+    await get().loadWorkspaces()
   },
 
   async leaveWorkspace(id) {
-    const { config } = useSyncStore.getState();
-    if (!config.token) throw new Error('Not authenticated');
-    await apiRequest<void>(config.serverUrl, config.token, `/api/workspaces/${id}/leave`, { method: 'POST' });
-    const { activeWorkspaceId } = get();
-    if (activeWorkspaceId === id) await get().setActiveWorkspace(null);
-    await get().loadWorkspaces();
+    await apiRequest<void>(`/api/workspaces/${id}/leave`, { method: 'POST' })
+    const { activeWorkspaceId } = get()
+    if (activeWorkspaceId === id) await get().setActiveWorkspace(null)
+    await get().loadWorkspaces()
   },
 
   async listMembers(workspaceId) {
-    const { config } = useSyncStore.getState();
-    if (!config.token) throw new Error('Not authenticated');
-    return apiRequest<WorkspaceMember[]>(
-      config.serverUrl,
-      config.token,
-      `/api/workspaces/${workspaceId}/members`
-    );
+    return apiRequest<WorkspaceMember[]>(`/api/workspaces/${workspaceId}/members`)
   },
 
   async inviteMember(workspaceId, email, role) {
-    const { config } = useSyncStore.getState();
-    if (!config.token) throw new Error('Not authenticated');
     await apiRequest<void>(
-      config.serverUrl,
-      config.token,
       `/api/workspaces/${workspaceId}/invite`,
       { method: 'POST', body: { email, role } }
-    );
+    )
   },
 
   async updateMemberRole(workspaceId, memberId, role) {
-    const { config } = useSyncStore.getState();
-    if (!config.token) throw new Error('Not authenticated');
     await apiRequest<void>(
-      config.serverUrl,
-      config.token,
       `/api/workspaces/${workspaceId}/members/${memberId}`,
       { method: 'PATCH', body: { role } }
-    );
+    )
   },
 
   async removeMember(workspaceId, memberId) {
-    const { config } = useSyncStore.getState();
-    if (!config.token) throw new Error('Not authenticated');
     await apiRequest<void>(
-      config.serverUrl,
-      config.token,
       `/api/workspaces/${workspaceId}/members/${memberId}`,
       { method: 'DELETE' }
-    );
+    )
   },
-}));
+}))

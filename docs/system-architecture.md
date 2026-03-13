@@ -81,10 +81,17 @@ App
 ├── MainLayout
 │   ├── Titlebar (logo, sync status badge, presence avatars, window controls)
 │   ├── Sidebar
-│   │   ├── WorkspaceSwitcher (Radix DropdownMenu, quick switch)
 │   │   ├── SidebarTabs (Collections, Environments, History, Docs)
-│   │   ├── CollectionTree (filtered by active workspace)
-│   │   │   └── RequestItem / FolderItem (recursive)
+│   │   ├── Collections Tab (conditional sections)
+│   │   │   ├── PersonalSection
+│   │   │   │   ├── CollectionSectionHeader (Personal + Add button)
+│   │   │   │   └── CollectionTree (personal collections)
+│   │   │   │       └── RequestItem / FolderItem (recursive)
+│   │   │   └── TeamSection (if user in workspaces)
+│   │   │       ├── WorkspaceGroup (one per workspace)
+│   │   │       │   ├── CollectionSectionHeader (Workspace name + Add)
+│   │   │       │   └── CollectionTree (workspace collections)
+│   │   │       └── MemberManagementDialog (email invites, role mgmt)
 │   │   └── EnvironmentSelector (workspace-scoped)
 │   ├── RequestPanel
 │   │   ├── UrlBar (method, URL, Send button, Snippet toggle)
@@ -93,8 +100,7 @@ App
 │   │   └── ResponsePane (status, headers, body with syntax highlight)
 │   ├── SaveRequestDialog (draft save UI, modal)
 │   ├── ConflictResolutionDialog (per-field picker, bulk actions)
-│   ├── AccountWorkspacesPanel (replaces CloudLoginForm)
-│   │   └── MemberManagementDialog (email invites, role management)
+│   ├── CloudLoginForm (Firebase Google login)
 │   └── SyncStatusBadge (connection state, conflict count)
 └── Toast Notifications
 ```
@@ -164,28 +170,31 @@ UI displays response (syntax highlighted)
 Auto-save (if not draft)
 ```
 
-#### Cloud Sync (Pull)
+#### Cloud Sync (Pull — 3-Way Merge)
 ```
-User enables cloud sync + logs in
+User enables cloud sync + logs in via Firebase
   ↓
-CloudAuthClient.login() → Better Auth session
+FirebaseAuthClient.login() → Firebase Auth session (Google)
   ↓
-User clicks "Sync" or auto-sync triggers
+User selects workspace + clicks "Sync" or auto-sync triggers
   ↓
-CloudSyncService.pull()
+EntitySyncService.pull()
   ↓
-POST /api/sync/pull { since: localUpdateTime }
+POST /api/workspaces/:wsId/sync/pull { entityType?, since? }
   ↓
-Backend returns { collections, requests }
+Backend returns { collections, requests, conflicts, changeLog }
   ↓
-Frontend merges:
-  - For each remote collection:
-    - Local exists? Compare updatedAt
-    - Remote newer? Update local
-    - Conflict? Keep local (LWW rule)
-  - Add new remote items
+Frontend 3-way merge:
+  - Compare local vs. remote vs. baseVersion
+  - Field-level conflict detection
+  - Auto-merge non-conflicting fields
+  - Queue unresolved conflicts for user resolution
   ↓
-collections-store updated
+collections-store + conflict-store updated
+  ↓
+If conflicts exist: ConflictResolutionDialog opens
+  ↓
+User resolves or ignores conflicts
   ↓
 Sync UI shows "Last synced: 2 min ago"
 ```
@@ -200,14 +209,17 @@ GET /api/health
 → { status: "ok" }
 ```
 
-#### Authentication (Better Auth)
+#### Authentication (Firebase)
 ```
-POST /api/auth/signup
-POST /api/auth/login
-POST /api/auth/logout
-POST /api/auth/session
-GET  /api/auth/signin/github
-(OAuth providers configurable)
+Client-side:
+- Firebase Auth SDK (client initialization)
+- Google OAuth sign-in
+- ID token obtained from Firebase
+
+Server-side:
+- Verify ID token via Firebase Admin SDK
+- Create user record (if new)
+- Return JWT for API requests (using Firebase token)
 ```
 
 #### Workspace Routes (Authenticated)
@@ -278,30 +290,39 @@ DELETE /api/workspaces/:workspaceId/requests/:requestId
 [Similar routes for environments and folders]
 ```
 
-#### Entity-Level Sync (Delta Sync with Field-Level Merge)
+#### Entity-Level Sync (3-Way Merge with Field-Level Conflict Detection)
 ```
 POST /api/workspaces/:workspaceId/sync/pull
 Body: { entityType?, entityId?, since? }
-→ Pull entity changes since lastSeenVersion
-→ Response: { collections, folders, requests, environments, changeLog }
+→ Fetch entities modified since last sync timestamp
+→ Response: {
+    collections: [{id, name, description, version, baseVersion, updatedAt, ...}],
+    requests: [{id, collectionId, method, url, headers, body, auth, version, ...}],
+    changeLog: [{entityId, entityType, fieldChanges, fromVersion, toVersion, ...}],
+    updatedAt: timestamp
+  }
 
 POST /api/workspaces/:workspaceId/sync/push
 Body: {
-  collections: [{id, name, updatedAt, version, ...}],
-  requests: [{id, collectionId, url, version, ...}],
+  collections: [{id, name, version, baseVersion, updatedAt, ...}],
+  requests: [{id, collectionId, url, version, baseVersion, updatedAt, ...}],
   deletions: {collectionIds: [], requestIds: []}
 }
-→ 3-way merge on server: local vs. remote vs. base version
-→ Field-level conflict detection (direct apply / auto-merge / conflict)
+→ Server 3-way merge: local vs. remote vs. baseVersion
+→ Field-level conflict detection
+  - If field unmodified locally → accept remote
+  - If field unmodified remotely → accept local
+  - If both modified → conflict (queue for user)
+→ Auto-merge non-conflicting fields
 → Response: {
     syncedAt,
     conflicts: [{
       entityId,
       entityType,
       baseVersion,
+      conflictingFields: ['url', 'headers'],
       local: {...},
-      remote: {...},
-      autoMergedFields: [...]
+      remote: {...}
     }]
   }
 ```
@@ -439,20 +460,53 @@ CREATE TABLE change_log (
 
 ```
 ┌─ Local Development
-│  npm run dev → Hono dev server on :3000
-│  PostgreSQL local or Docker
+│  Frontend: pnpm tauri dev or pnpm dev
+│  Backend: cd backend && npm run dev → Hono on :3000
+│  Database: PostgreSQL local or Docker
 │
-├─ Staging
-│  Build: npm run build
-│  PM2: pm2 start dist/index.js
-│  PostgreSQL: Cloud-hosted (e.g., AWS RDS)
-│  Nginx reverse proxy + TLS
+├─ Staging / Production
+│  Build Backend: npm run build (outputs dist/)
+│  Build Frontend: pnpm build (outputs dist/)
+│  PM2 Config: ecosystem.config.cjs
+│    - Start: pm2 start ecosystem.config.cjs
+│    - Manages: backend (Node.js), frontend (static serving via Nginx)
+│  PostgreSQL: Cloud-hosted (e.g., AWS RDS, Railway)
+│  Nginx: Reverse proxy + TLS
+│    - / → Frontend static (vite build output)
+│    - /api/* → Backend (port 3000)
+│    - Auto-redirect HTTP → HTTPS
 │
-└─ Production
-   Same as staging
-   PM2 systemd integration for auto-restart
-   Monitoring: PM2 monitoring dashboard
-   Backups: PostgreSQL scheduled backups
+└─ Scaling
+   PostgreSQL connection pooling (Drizzle managed)
+   Nginx load balancing (future)
+   PM2 cluster mode (future)
+```
+
+### Nginx Configuration (Same-Domain Serving)
+
+```nginx
+# Serve frontend at root (/)
+location / {
+  root /app/dist/frontend;
+  try_files $uri $uri/ /index.html;
+}
+
+# Proxy API requests to backend
+location /api/ {
+  proxy_pass http://localhost:3000;
+  proxy_set_header Host $host;
+  proxy_set_header X-Real-IP $remote_addr;
+  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+  proxy_set_header X-Forwarded-Proto $scheme;
+}
+
+# WebSocket upgrade
+location /ws {
+  proxy_pass http://localhost:3000;
+  proxy_http_version 1.1;
+  proxy_set_header Upgrade $http_upgrade;
+  proxy_set_header Connection "upgrade";
+}
 ```
 
 ## Deployment Architecture

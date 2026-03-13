@@ -1,15 +1,12 @@
 /**
- * Sidebar tabs: Collections (active), History placeholder, Environments placeholder.
+ * Sidebar tabs: Collections (sectioned by workspace), History, Environments, Docs.
  */
 
 import { useState, useMemo, useCallback } from 'react';
 import { confirm } from '@tauri-apps/plugin-dialog';
 import { Folder, History, Layers, BookOpen } from 'lucide-react';
 import { CollectionSearch } from './collection-search';
-import { CollectionTree } from './collection-tree';
-import { useCollectionTree } from '../../hooks/use-collection-tree';
-import { useRequestStore } from '../../stores/request-store';
-import { useCollectionsStore } from '../../stores/collections-store';
+import { CollectionsTabSections } from './collections-tab-sections';
 import * as requestService from '../../db/services/request-service';
 import { CreateCollectionDialog } from './create-collection-dialog';
 import { CreateFolderDialog } from './create-folder-dialog';
@@ -22,6 +19,9 @@ import { HistorySidebarTab } from '../history/history-sidebar-tab';
 import { DocsViewerPage } from '../docs/docs-viewer-page';
 import { getCurlForRequest } from '../../services/import-export-service';
 import { useEnvironmentStore } from '../../stores/environment-store';
+import { useRequestStore } from '../../stores/request-store';
+import { useCollectionsStore } from '../../stores/collections-store';
+import { useWorkspaceStore } from '../../stores/workspace-store';
 import { db } from '../../db/database';
 
 type TabId = 'collections' | 'history' | 'environments' | 'docs';
@@ -32,20 +32,29 @@ interface SidebarTabsProps {
 
 export function SidebarTabs({ onOpenEnvironmentManager }: SidebarTabsProps) {
   const [activeTab, setActiveTab] = useState<TabId>('collections');
+
+  // Collection dialog state
   const [collectionDialog, setCollectionDialog] = useState<'create' | 'rename' | null>(null);
-  const [folderDialog, setFolderDialog] = useState<'create' | 'rename' | null>(null);
   const [renameCollectionId, setRenameCollectionId] = useState<string | null>(null);
   const [renameCollectionName, setRenameCollectionName] = useState('');
+  // workspaceId context for "create collection" triggered from a section header
+  const [pendingCollectionWorkspaceId, setPendingCollectionWorkspaceId] = useState<string | null>(null);
+
+  // Folder dialog state
+  const [folderDialog, setFolderDialog] = useState<'create' | 'rename' | null>(null);
   const [renameFolderId, setRenameFolderId] = useState<string | null>(null);
   const [renameFolderName, setRenameFolderName] = useState('');
   const [newFolderContext, setNewFolderContext] = useState<{ collectionId: string; parentId: string | null } | null>(null);
+
+  // Request dialog/action state
   const [moveRequestId, setMoveRequestId] = useState<string | null>(null);
   const [renameRequestId, setRenameRequestId] = useState<string | null>(null);
   const [renameRequestName, setRenameRequestName] = useState('');
+
+  // Export state
   const [exportCollectionId, setExportCollectionId] = useState<string | null>(null);
   const [exportCollectionName, setExportCollectionName] = useState('');
 
-  const { tree, isLoading } = useCollectionTree();
   const getInterpolationContext = useEnvironmentStore(s => s.getInterpolationContext);
   const activeRequestId = useRequestStore(s => s.activeRequest?.id ?? null);
   const openRequest = useRequestStore(s => s.openRequest);
@@ -61,6 +70,8 @@ export function SidebarTabs({ onOpenEnvironmentManager }: SidebarTabsProps) {
   const duplicateRequest = useCollectionsStore(s => s.duplicateRequest);
   const deleteRequest = useCollectionsStore(s => s.deleteRequest);
   const moveRequestToCollection = useCollectionsStore(s => s.moveRequestToCollection);
+  const moveCollectionToWorkspace = useCollectionsStore(s => s.moveCollectionToWorkspace);
+  const workspaces = useWorkspaceStore(s => s.workspaces);
 
   const handleOpenRequest = async (requestId: string) => {
     const req = await requestService.getById(requestId);
@@ -110,9 +121,7 @@ export function SidebarTabs({ onOpenEnvironmentManager }: SidebarTabsProps) {
     if (copy) openRequest(copy);
   };
 
-  const handleMoveRequest = (id: string) => {
-    setMoveRequestId(id);
-  };
+  const handleMoveRequest = (id: string) => setMoveRequestId(id);
 
   const handleRenameRequest = (id: string, name: string) => {
     setRenameRequestId(id);
@@ -145,6 +154,25 @@ export function SidebarTabs({ onOpenEnvironmentManager }: SidebarTabsProps) {
     toast(col.is_synced ? 'Cloud sync disabled' : 'Cloud sync enabled', { variant: 'success' });
   }, []);
 
+  const handleMoveCollection = useCallback(async (collectionId: string, workspaceId: string | null) => {
+    await moveCollectionToWorkspace(collectionId, workspaceId);
+    toast(workspaceId ? 'Moved to workspace' : 'Moved to Personal', { variant: 'success' });
+  }, [moveCollectionToWorkspace]);
+
+  // Open "create collection" dialog, remembering which workspace section triggered it
+  const handleCreateCollection = useCallback((workspaceId?: string | null) => {
+    setPendingCollectionWorkspaceId(workspaceId ?? null);
+    setCollectionDialog('create');
+  }, []);
+
+  const handleCollectionDialogOpenChange = (open: boolean) => {
+    if (!open) {
+      setCollectionDialog(null);
+      setRenameCollectionId(null);
+      setPendingCollectionWorkspaceId(null);
+    }
+  };
+
   // Memoize to avoid passing a new object reference on every render
   const contextMenuCallbacks = useMemo(() => ({
     onNewRequest: handleNewRequest,
@@ -160,19 +188,15 @@ export function SidebarTabs({ onOpenEnvironmentManager }: SidebarTabsProps) {
     onCopyAsCurl: handleCopyAsCurl,
     onRenameRequest: handleRenameRequest,
     onToggleSync: handleToggleSync,
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- stable callback object; handlers are stable in practice
-  }), [handleDeleteCollection, handleDeleteFolder, handleDeleteRequest, handleDuplicateRequest, handleCopyAsCurl, handleToggleSync]);
-
-  const handleCollectionDialogOpenChange = (open: boolean) => {
-    if (!open) {
-      setCollectionDialog(null);
-      setRenameCollectionId(null);
-    }
-  };
+    onMoveCollection: handleMoveCollection,
+    workspaces,
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }), [handleDeleteCollection, handleDeleteFolder, handleDeleteRequest, handleDuplicateRequest, handleCopyAsCurl, handleToggleSync, handleMoveCollection, workspaces]);
 
   return (
     <>
       <div className="flex flex-1 min-h-0">
+        {/* Tab icon strip */}
         <div className="flex flex-col border-r border-[var(--color-bg-tertiary)] w-12 shrink-0 py-3 gap-2 items-center bg-[#0B1120]">
           <button
             type="button"
@@ -211,49 +235,19 @@ export function SidebarTabs({ onOpenEnvironmentManager }: SidebarTabsProps) {
             <BookOpen className="h-5 w-5" />
           </button>
         </div>
+
+        {/* Tab content pane */}
         <div className="flex-1 flex flex-col min-w-0">
           {activeTab === 'collections' && (
             <>
               <CollectionSearch />
-              <div className="flex-1 overflow-auto min-h-0 custom-scrollbar pb-2">
-                {isLoading ? (
-                  <p className="p-4 text-sm text-gray-500">Loading…</p>
-                ) : tree.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center p-6 gap-4 text-center mt-10">
-                    <div className="p-3 bg-slate-800/50 rounded-full">
-                      <Folder className="h-6 w-6 text-slate-500" />
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-semibold text-slate-300">No collections yet</h3>
-                      <p className="text-xs text-slate-500 mt-1">Create a collection to organize requests</p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setCollectionDialog('create')}
-                      className="rounded-lg bg-[var(--color-accent)] px-5 py-2 text-[13px] font-semibold text-white transition-all hover:bg-[var(--color-accent-hover)] hover:shadow-md active:scale-95"
-                    >
-                      New collection
-                    </button>
-                  </div>
-                ) : (
-                  <div className="flex flex-col">
-                    <CollectionTree
-                      tree={tree}
-                      onOpenRequest={handleOpenRequest}
-                      activeRequestId={activeRequestId}
-                      contextMenuCallbacks={contextMenuCallbacks}
-                    />
-                    <div className="px-3 mt-4">
-                      <button
-                        type="button"
-                        onClick={() => setCollectionDialog('create')}
-                        className="w-full rounded-lg border border-dashed border-slate-700/60 py-2.5 text-[13px] font-medium text-slate-400 transition-colors hover:text-slate-200 hover:border-slate-500 hover:bg-white/[0.02]"
-                      >
-                        + New collection
-                      </button>
-                    </div>
-                  </div>
-                )}
+              <div className="flex-1 overflow-auto min-h-0 custom-scrollbar">
+                <CollectionsTabSections
+                  activeRequestId={activeRequestId}
+                  onOpenRequest={handleOpenRequest}
+                  contextMenuCallbacks={contextMenuCallbacks}
+                  onCreateCollection={handleCreateCollection}
+                />
               </div>
             </>
           )}
@@ -278,7 +272,7 @@ export function SidebarTabs({ onOpenEnvironmentManager }: SidebarTabsProps) {
             await renameCollection(renameCollectionId, name);
             setRenameCollectionId(null);
           } else {
-            await createCollection(name);
+            await createCollection(name, pendingCollectionWorkspaceId);
           }
         }}
       />
