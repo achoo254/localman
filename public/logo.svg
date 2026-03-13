@@ -1,0 +1,134 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <!-- Neon green glow filter -->
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+    <filter id="glow-strong" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="12" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+    <filter id="glow-soft" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="18" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <!-- Radial gradient for background -->
+    <radialGradient id="bgGrad" cx="50%" cy="45%" r="55%">
+      <stop offset="0%" stop-color="#1a2a1a"/>
+      <stop offset="100%" stop-color="#0a0f0a"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Background rounded rectangle -->
+  <rect x="16" y="16" width="480" height="480" rx="80" ry="80" fill="url(#bgGrad)" stroke="#1a3a1a" stroke-width="3"/>
+
+  <!-- Subtle inner border glow -->
+  <rect x="20" y="20" width="472" height="472" rx="76" ry="76" fill="none" stroke="#00cc44" stroke-opacity="0.08" stroke-width="2"/>
+
+  <!-- Map grid lines at bottom -->
+  <g opacity="0.25" stroke="#00cc44" stroke-width="1.5" fill="none">
+    <line x1="80" y1="370" x2="432" y2="370"/>
+    <line x1="100" y1="395" x2="412" y2="395"/>
+    <line x1="120" y1="420" x2="392" y2="420"/>
+    <line x1="160" y1="355" x2="100" y2="435"/>
+    <line x1="220" y1="355" x2="180" y2="435"/>
+    <line x1="280" y1="355" x2="270" y2="435"/>
+    <line x1="340" y1="355" x2="360" y2="435"/>
+    <line x1="400" y1="355" x2="420" y2="435"/>
+  </g>
+
+  <!-- Location pins on grid -->
+  <g fill="#00cc44" opacity="0.4">
+    <path d="M150,385 c0,-8 6,-14 12,-14 s12,6 12,14 c0,10 -12,18 -12,18 s-12,-8 -12,-18z"/>
+    <circle cx="162" cy="384" r="4" fill="#0a0f0a"/>
+    <path d="M340,400 c0,-7 5,-12 10,-12 s10,5 10,12 c0,8 -10,15 -10,15 s-10,-7 -10,-15z"/>
+    <circle cx="350" cy="399" r="3.5" fill="#0a0f0a"/>
+  </g>
+
+  <!-- Head glow rays -->
+  <g stroke="#00dd44" stroke-width="2.5" opacity="0.5" filter="url(#glow)">
+    <line x1="248" y1="100" x2="248" y2="78"/>
+    <line x1="270" y1="105" x2="282" y2="86"/>
+    <line x1="226" y1="105" x2="214" y2="86"/>
+    <line x1="285" y1="118" x2="302" y2="104"/>
+    <line x1="211" y1="118" x2="194" y2="104"/>
+    <line x1="294" y1="136" x2="314" y2="126"/>
+    <line x1="202" y1="136" x2="182" y2="126"/>
+  </g>
+
+  <!-- Running person figure - THICKER/CHUBBIER build -->
+  <g filter="url(#glow-soft)">
+    <!-- Head (slightly bigger) -->
+    <circle cx="248" cy="128" r="26" fill="#00dd44"/>
+
+    <!-- Torso - extra thick, wide body with belly curve -->
+    <path d="M244,154 C240,168 232,185 225,200 C218,215 212,230 210,240 C208,248 212,252 220,252"
+          stroke="#00dd44" stroke-width="38" stroke-linecap="round" fill="none"/>
+
+    <!-- Belly area fill for rounder/chubbier look -->
+    <ellipse cx="228" cy="198" rx="30" ry="38" fill="#00dd44" opacity="0.7"/>
+
+    <!-- Back arm (holding package) - extra thick -->
+    <path d="M235,178 C255,188 282,182 308,168 L322,160"
+          stroke="#00dd44" stroke-width="26" stroke-linecap="round" fill="none"/>
+
+    <!-- Front arm - extra thick -->
+    <path d="M228,185 C212,205 188,215 172,200"
+          stroke="#00dd44" stroke-width="26" stroke-linecap="round" fill="none"/>
+
+    <!-- Back leg (extended behind) - extra thick -->
+    <path d="M218,248 C202,275 172,305 148,332 C140,342 132,358 144,362"
+          stroke="#00dd44" stroke-width="30" stroke-linecap="round" fill="none"/>
+
+    <!-- Front leg (bent forward) - extra thick -->
+    <path d="M222,245 C234,272 262,295 292,314 C308,324 322,342 332,352"
+          stroke="#00dd44" stroke-width="30" stroke-linecap="round" fill="none"/>
+
+    <!-- Backpack shape on back (bigger) -->
+    <path d="M218,165 C208,162 202,170 204,186 C206,202 212,215 222,218 C232,214 238,198 237,182 C236,172 226,163 218,165z"
+          fill="#00aa33" stroke="#00dd44" stroke-width="2.5"/>
+
+    <!-- API data packet in hand — rounded rect with { } braces -->
+    <g transform="translate(308, 125)" filter="url(#glow)">
+      <!-- Packet body -->
+      <rect x="0" y="0" width="56" height="50" rx="8" fill="#00aa33" stroke="#00dd44" stroke-width="2.5"/>
+      <!-- Curly braces { } representing JSON/API -->
+      <text x="10" y="36" font-family="monospace" font-size="32" font-weight="bold" fill="#00dd44">{ }</text>
+    </g>
+  </g>
+
+  <!-- API request/response arrows flying from person -->
+  <g stroke="#00dd44" stroke-width="2.5" fill="#00dd44" opacity="0.55" filter="url(#glow)">
+    <!-- Outgoing request arrow (top-right) -->
+    <line x1="370" y1="108" x2="420" y2="88"/>
+    <polygon points="420,88 410,86 414,95"/>
+    <!-- Incoming response arrow (mid-right) -->
+    <line x1="425" y1="115" x2="380" y2="128"/>
+    <polygon points="380,128 390,125 387,135"/>
+  </g>
+
+  <!-- Data stream particles trailing behind runner -->
+  <g fill="#00dd44" opacity="0.35">
+    <!-- Small dots/circles representing data bits -->
+    <circle cx="108" cy="195" r="4"/>
+    <circle cx="92" cy="215" r="3"/>
+    <circle cx="118" cy="230" r="5"/>
+    <circle cx="85" cy="250" r="3.5"/>
+    <circle cx="105" cy="268" r="4"/>
+    <circle cx="75" cy="235" r="2.5"/>
+    <!-- Dashes representing data stream -->
+    <rect x="60" y="208" width="16" height="3" rx="1.5"/>
+    <rect x="70" y="240" width="12" height="3" rx="1.5"/>
+    <rect x="55" y="258" width="18" height="3" rx="1.5"/>
+  </g>
+
+  <!-- Small "API" label badge at top-right corner -->
+  <g transform="translate(390, 60)" opacity="0.6" filter="url(#glow)">
+    <rect x="0" y="0" width="52" height="22" rx="6" fill="#0a0f0a" stroke="#00dd44" stroke-width="1.5"/>
+    <text x="26" y="16" font-family="monospace" font-size="13" font-weight="bold" fill="#00dd44" text-anchor="middle">API</text>
+  </g>
+</svg>
