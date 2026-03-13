@@ -6,8 +6,10 @@
 import { getPendingChanges, clearPendingChanges } from "./offline-change-queue";
 import { addConflictFromServer } from "./conflict-queue";
 import { getHttpClient } from "../../utils/tauri-http-client";
+import { getIdToken } from "./firebase-auth-client";
 import { db } from "../../db/database";
 import type { CloudSyncConfig } from "../../types/cloud-sync";
+import { getApiBaseUrl } from "../../utils/api-base-url";
 
 interface ReplayResult {
   pushed: number;
@@ -18,7 +20,7 @@ interface ReplayResult {
 
 /** Replay all pending offline changes via HTTP push with merge support */
 export async function replayOfflineQueue(
-  config: CloudSyncConfig,
+  _config: CloudSyncConfig,
   workspaceId?: string | null,
 ): Promise<ReplayResult> {
   const pending = await getPendingChanges(workspaceId);
@@ -34,11 +36,16 @@ export async function replayOfflineQueue(
   );
 
   // Send as batch via push endpoint
-  const res = await f(`${config.serverUrl}/api/sync/push`, {
+  const token = await getIdToken();
+  if (!token) {
+    result.errors.push("Not authenticated");
+    return result;
+  }
+  const res = await f(`${getApiBaseUrl()}/api/sync/push`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${config.token}`,
+      Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({
       changes: sorted.map((c) => ({

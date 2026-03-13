@@ -8,6 +8,7 @@ import { wsManager } from "./websocket-manager";
 import { pullChanges } from "./entity-sync-service";
 import { replayOfflineQueue } from "./offline-queue-replay";
 import { addConflictFromServer } from "./conflict-queue";
+import { getCurrentUser } from "./firebase-auth-client";
 import type { CloudSyncConfig } from "../../types/cloud-sync";
 
 /** Cleanup functions from event subscriptions */
@@ -101,7 +102,7 @@ export function initWsEventHandlers(
 
     // State reconciliation on reconnect — replay offline queue, then pull
     wsManager.on("reconnected", async () => {
-      if (!config.token) return;
+      if (!getCurrentUser()) return;
 
       try {
         // Replay offline queue first (handles merge/conflicts)

@@ -94,7 +94,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   useEffect(() => {
     void loadSyncConfig().then(() => {
       const { config } = useSyncStore.getState();
-      if (config.enabled && config.token) {
+      if (config.enabled && config.userEmail) {
         void syncAll().catch(() => {});
       }
     });

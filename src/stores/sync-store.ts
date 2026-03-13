@@ -1,84 +1,87 @@
 /**
  * Zustand store for cloud sync — entity-level sync with workspace support.
+ * Uses Firebase Auth for authentication (Google Login).
  */
 
-import { create } from 'zustand';
+import { create } from 'zustand'
 import {
-  signIn,
-  signUp,
-  signOut,
+  signInWithGoogle,
+  firebaseSignOut,
+  getIdToken,
+  onAuthChanged,
   listWorkspaces,
-} from '../services/sync/cloud-auth-client';
-import { syncAll } from '../services/sync/entity-sync-service';
-import { clearAllPendingChanges } from '../services/sync/offline-change-queue';
-import { wsManager, type WsConnectionState } from '../services/sync/websocket-manager';
-import { initWsEventHandlers, disposeWsEventHandlers } from '../services/sync/ws-event-handler';
-import type { CloudSyncConfig } from '../types/cloud-sync';
-import { DEFAULT_CLOUD_SYNC_CONFIG, CLOUD_SYNC_CONFIG_KEY } from '../types/cloud-sync';
-import { db } from '../db/database';
+  getCurrentUser,
+} from '../services/sync/firebase-auth-client'
+import { syncAll } from '../services/sync/entity-sync-service'
+import { clearAllPendingChanges } from '../services/sync/offline-change-queue'
+import { wsManager, type WsConnectionState } from '../services/sync/websocket-manager'
+import { initWsEventHandlers, disposeWsEventHandlers } from '../services/sync/ws-event-handler'
+import type { CloudSyncConfig } from '../types/cloud-sync'
+import { DEFAULT_CLOUD_SYNC_CONFIG, CLOUD_SYNC_CONFIG_KEY } from '../types/cloud-sync'
+import { db } from '../db/database'
 
-export type SyncStatus = 'idle' | 'syncing' | 'error';
+export type SyncStatus = 'idle' | 'syncing' | 'error'
 
 export interface WorkspaceInfo {
-  id: string;
-  name: string;
-  role: string;
+  id: string
+  name: string
+  role: string
 }
 
 interface SyncStore {
-  config: CloudSyncConfig;
-  status: SyncStatus;
-  lastSyncAt: string | null;
-  error: string | null;
-  workspaces: WorkspaceInfo[];
-  wsState: WsConnectionState;
-  _abort: boolean;
+  config: CloudSyncConfig
+  status: SyncStatus
+  lastSyncAt: string | null
+  error: string | null
+  workspaces: WorkspaceInfo[]
+  wsState: WsConnectionState
+  _abort: boolean
+  authLoading: boolean
 
-  loadConfig: () => Promise<void>;
-  saveConfig: (config: CloudSyncConfig) => Promise<void>;
+  loadConfig: () => Promise<void>
+  saveConfig: (config: CloudSyncConfig) => Promise<void>
 
   // Auth
-  login: (email: string, password: string) => Promise<void>;
-  register: (name: string, email: string, password: string) => Promise<void>;
-  logout: () => Promise<void>;
-  isAuthenticated: () => boolean;
+  loginWithGoogle: () => Promise<void>
+  logout: () => Promise<void>
+  isAuthenticated: () => boolean
 
   // Workspace
-  loadWorkspaces: () => Promise<void>;
-  subscribeWorkspace: (workspaceId: string) => void;
-  unsubscribeWorkspace: (workspaceId: string) => void;
+  loadWorkspaces: () => Promise<void>
+  subscribeWorkspace: (workspaceId: string) => void
+  unsubscribeWorkspace: (workspaceId: string) => void
 
   // Sync
-  syncAll: () => Promise<void>;
-  cancelSync: () => void;
-  clearError: () => void;
+  syncAll: () => Promise<void>
+  cancelSync: () => void
+  clearError: () => void
 }
 
 /** Read cloud sync config from IndexedDB settings */
 async function loadCloudConfig(): Promise<CloudSyncConfig> {
-  const setting = await db.settings.get(CLOUD_SYNC_CONFIG_KEY);
-  return (setting?.value as CloudSyncConfig) ?? { ...DEFAULT_CLOUD_SYNC_CONFIG };
+  const setting = await db.settings.get(CLOUD_SYNC_CONFIG_KEY)
+  return (setting?.value as CloudSyncConfig) ?? { ...DEFAULT_CLOUD_SYNC_CONFIG }
 }
 
 /** Persist cloud sync config to IndexedDB settings */
 async function persistCloudConfig(config: CloudSyncConfig): Promise<void> {
-  await db.settings.put({ key: CLOUD_SYNC_CONFIG_KEY, value: config });
+  await db.settings.put({ key: CLOUD_SYNC_CONFIG_KEY, value: config })
 }
 
-/** Cleanup fn for WS state listener — prevents leaks across login/logout */
-let wsStateCleanup: (() => void) | null = null;
+/** Cleanup fn for WS state listener */
+let wsStateCleanup: (() => void) | null = null
+let authUnsubscribe: (() => void) | null = null
 
-/** Connect WebSocket and initialize event handlers */
-function connectWs(config: CloudSyncConfig): void {
-  if (!config.token || !config.serverUrl) return;
-  // Clean up previous listener if any
-  wsStateCleanup?.();
-  wsManager.connect(config.serverUrl, config.token);
-  initWsEventHandlers(config);
-  // Track WS state in store
+/** Connect WebSocket using Firebase token */
+async function connectWs(config: CloudSyncConfig): Promise<void> {
+  const token = await getIdToken()
+  if (!token) return
+  wsStateCleanup?.()
+  wsManager.connect(token)
+  initWsEventHandlers(config)
   wsStateCleanup = wsManager.onStateChange((wsState) => {
-    useSyncStore.setState({ wsState });
-  });
+    useSyncStore.setState({ wsState })
+  })
 }
 
 export const useSyncStore = create<SyncStore>((set, get) => ({
@@ -89,163 +92,156 @@ export const useSyncStore = create<SyncStore>((set, get) => ({
   workspaces: [],
   wsState: 'disconnected' as WsConnectionState,
   _abort: false,
+  authLoading: true,
 
   async loadConfig() {
-    const config = await loadCloudConfig();
-    set({ config, lastSyncAt: config.lastSyncAt });
-    // Auto-connect WebSocket if already authenticated
-    if (config.token && config.serverUrl) {
-      connectWs(config);
-    }
+    const config = await loadCloudConfig()
+    set({ config, lastSyncAt: config.lastSyncAt })
+
+    // Listen for Firebase auth state changes
+    authUnsubscribe?.()
+    authUnsubscribe = onAuthChanged(async (user) => {
+      if (user) {
+        const updated: CloudSyncConfig = {
+          ...get().config,
+          enabled: true,
+          userEmail: user.email,
+          userName: user.displayName,
+          userAvatar: user.photoURL,
+        }
+        await persistCloudConfig(updated)
+        set({ config: updated, authLoading: false })
+        // Auto-connect WS
+        void connectWs(updated)
+      } else {
+        set({ authLoading: false })
+      }
+    })
   },
 
   async saveConfig(config: CloudSyncConfig) {
-    await persistCloudConfig(config);
-    set({ config, lastSyncAt: config.lastSyncAt });
+    await persistCloudConfig(config)
+    set({ config, lastSyncAt: config.lastSyncAt })
   },
 
   // --- Auth ---
 
-  async login(email: string, password: string) {
-    const { config } = get();
-    if (!config.serverUrl) {
-      set({ error: 'Server URL is required' });
-      return;
-    }
+  async loginWithGoogle() {
     try {
-      const result = await signIn(config.serverUrl, email, password);
+      set({ error: null, authLoading: true })
+      const user = await signInWithGoogle()
+      const { config } = get()
       const updated: CloudSyncConfig = {
         ...config,
         enabled: true,
-        token: result.token,
-        userEmail: result.user.email,
-        userName: result.user.name,
-      };
-      await persistCloudConfig(updated);
-      set({ config: updated, error: null });
-      // Connect WebSocket after successful login
-      connectWs(updated);
+        userEmail: user.email,
+        userName: user.displayName,
+        userAvatar: user.photoURL,
+      }
+      await persistCloudConfig(updated)
+      set({ config: updated, error: null, authLoading: false })
+      // Connect WS
+      void connectWs(updated)
     } catch (e) {
-      set({ error: e instanceof Error ? e.message : String(e) });
-    }
-  },
-
-  async register(name: string, email: string, password: string) {
-    const { config } = get();
-    if (!config.serverUrl) {
-      set({ error: 'Server URL is required' });
-      return;
-    }
-    try {
-      const result = await signUp(config.serverUrl, name, email, password);
-      const updated: CloudSyncConfig = {
-        ...config,
-        enabled: true,
-        token: result.token,
-        userEmail: result.user.email,
-        userName: result.user.name,
-      };
-      await persistCloudConfig(updated);
-      set({ config: updated, error: null });
-      // Connect WebSocket after successful registration
-      connectWs(updated);
-    } catch (e) {
-      set({ error: e instanceof Error ? e.message : String(e) });
+      set({
+        error: e instanceof Error ? e.message : String(e),
+        authLoading: false,
+      })
     }
   },
 
   async logout() {
-    const { config } = get();
-    if (config.token) {
-      try {
-        await signOut(config.serverUrl, config.token);
-      } catch {
-        // Best-effort
-      }
+    try {
+      await firebaseSignOut()
+    } catch {
+      // Best-effort
     }
-    // Disconnect WebSocket before clearing state
-    wsStateCleanup?.();
-    wsStateCleanup = null;
-    disposeWsEventHandlers();
-    wsManager.disconnect();
-    await clearAllPendingChanges();
+    // Unsubscribe auth listener
+    authUnsubscribe?.()
+    authUnsubscribe = null
+    // Disconnect WebSocket
+    wsStateCleanup?.()
+    wsStateCleanup = null
+    disposeWsEventHandlers()
+    wsManager.disconnect()
+    await clearAllPendingChanges()
+    const { config } = get()
     const updated: CloudSyncConfig = {
       ...config,
       enabled: false,
-      token: null,
       userEmail: null,
       userName: null,
+      userAvatar: null,
       lastSyncAt: null,
-    };
-    await persistCloudConfig(updated);
-    set({ config: updated, lastSyncAt: null, error: null, workspaces: [] });
+    }
+    await persistCloudConfig(updated)
+    set({ config: updated, lastSyncAt: null, error: null, workspaces: [] })
   },
 
   isAuthenticated() {
-    return !!get().config.token;
+    return !!getCurrentUser()
   },
 
   // --- Workspace ---
 
   async loadWorkspaces() {
-    const { config } = get();
-    if (!config.token) return;
+    if (!getCurrentUser()) return
     try {
-      const workspaces = await listWorkspaces(config.serverUrl, config.token);
-      set({ workspaces });
+      const workspaces = await listWorkspaces()
+      set({ workspaces })
     } catch {
       // Non-blocking
     }
   },
 
   subscribeWorkspace(workspaceId: string) {
-    wsManager.subscribe(`workspace:${workspaceId}`);
+    wsManager.subscribe(`workspace:${workspaceId}`)
   },
 
   unsubscribeWorkspace(workspaceId: string) {
-    wsManager.unsubscribe(`workspace:${workspaceId}`);
+    wsManager.unsubscribe(`workspace:${workspaceId}`)
   },
 
   // --- Sync ---
 
   async syncAll() {
-    const { config } = get();
-    if (!config.token) {
-      set({ status: 'error', error: 'Not authenticated. Please login first.' });
-      return;
+    if (!getCurrentUser()) {
+      set({ status: 'error', error: 'Not authenticated. Please login first.' })
+      return
     }
-    set({ status: 'syncing', error: null, _abort: false });
+    set({ status: 'syncing', error: null, _abort: false })
 
     try {
-      const result = await syncAll(config, null);
-      if (get()._abort) return;
+      const { config } = get()
+      const result = await syncAll(config, null)
+      if (get()._abort) return
 
       const updated: CloudSyncConfig = {
         ...config,
         lastSyncAt: result.serverTime,
-      };
-      await persistCloudConfig(updated);
+      }
+      await persistCloudConfig(updated)
 
       set({
         config: updated,
         status: result.errors.length ? 'error' : 'idle',
         error: result.errors.length ? result.errors.join('; ') : null,
         lastSyncAt: updated.lastSyncAt,
-      });
+      })
     } catch (e) {
-      if (get()._abort) return;
+      if (get()._abort) return
       set({
         status: 'error',
         error: e instanceof Error ? e.message : String(e),
-      });
+      })
     }
   },
 
   cancelSync() {
-    set({ _abort: true });
+    set({ _abort: true })
   },
 
   clearError() {
-    set({ error: null, status: 'idle' });
+    set({ error: null, status: 'idle' })
   },
-}));
+}))

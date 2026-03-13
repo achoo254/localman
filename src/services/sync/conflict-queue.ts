@@ -5,7 +5,8 @@
 
 import { useConflictStore, type FieldResolution } from "../../stores/conflict-store";
 import { getHttpClient } from "../../utils/tauri-http-client";
-import type { CloudSyncConfig } from "../../types/cloud-sync";
+import { getIdToken } from "./firebase-auth-client";
+import { getApiBaseUrl } from "../../utils/api-base-url";
 
 /** Parse a server conflict response and add to conflict store */
 export function addConflictFromServer(
@@ -37,7 +38,6 @@ export function addConflictFromServer(
  * Builds a merged payload from per-field resolutions and pushes as entity:update.
  */
 export async function resolveConflict(
-  config: CloudSyncConfig,
   conflictId: string,
   entityType: string,
   entityId: string,
@@ -53,12 +53,14 @@ export async function resolveConflict(
   }
 
   // Push resolution as entity update
+  const token = await getIdToken();
+  if (!token) throw new Error("Not authenticated");
   const f = await getHttpClient();
-  const res = await f(`${config.serverUrl}/api/sync/push`, {
+  const res = await f(`${getApiBaseUrl()}/api/sync/push`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${config.token}`,
+      Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({
       changes: [

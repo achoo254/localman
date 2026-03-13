@@ -7,12 +7,10 @@ import { useState, useCallback } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { useConflictStore, type ConflictEntry, type FieldResolution } from "../../stores/conflict-store";
 import { resolveConflict } from "../../services/sync/conflict-queue";
-import { useSyncStore } from "../../stores/sync-store";
 import { ConflictFieldDiff } from "./conflict-field-diff";
 
 export function ConflictResolutionDialog() {
   const conflicts = useConflictStore((s) => s.conflicts);
-  const config = useSyncStore((s) => s.config);
   const open = conflicts.length > 0;
 
   if (!open) return null;
@@ -32,7 +30,7 @@ export function ConflictResolutionDialog() {
 
           <div className="mt-4 flex flex-col gap-4">
             {conflicts.map((conflict) => (
-              <ConflictCard key={conflict.id} conflict={conflict} config={config} />
+              <ConflictCard key={conflict.id} conflict={conflict} />
             ))}
           </div>
         </Dialog.Content>
@@ -41,13 +39,7 @@ export function ConflictResolutionDialog() {
   );
 }
 
-function ConflictCard({
-  conflict,
-  config,
-}: {
-  conflict: ConflictEntry;
-  config: { serverUrl: string; token: string | null };
-}) {
+function ConflictCard({ conflict }: { conflict: ConflictEntry }) {
   const [resolutions, setResolutions] = useState<Record<string, FieldResolution>>({});
   const [submitting, setSubmitting] = useState(false);
 
@@ -66,11 +58,10 @@ function ConflictCard({
   }, [conflict.conflictingFields]);
 
   const handleApply = async () => {
-    if (!allResolved || !config.token) return;
+    if (!allResolved) return;
     setSubmitting(true);
     try {
       await resolveConflict(
-        { ...config, token: config.token, enabled: true, userEmail: null, userName: null, lastSyncAt: null },
         conflict.id,
         conflict.entityType,
         conflict.entityId,

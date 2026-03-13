@@ -6,6 +6,7 @@
 import type { TreeNode } from '../../utils/tree-builder';
 import { useCollectionsStore } from '../../stores/collections-store';
 import { CollectionItem } from './collection-item';
+import type { WorkspaceInfo } from '../../stores/sync-store';
 
 export interface ContextMenuCallbacks {
   onNewRequest: (collectionId: string, folderId: string | null) => void;
@@ -21,6 +22,10 @@ export interface ContextMenuCallbacks {
   onCopyAsCurl?: (requestId: string) => void;
   onRenameRequest?: (id: string, name: string) => void;
   onToggleSync?: (collectionId: string) => void;
+  /** Workspace list for "Move to…" submenu on collections */
+  workspaces?: WorkspaceInfo[];
+  /** Called when user moves a collection to a workspace (null = personal) */
+  onMoveCollection?: (collectionId: string, workspaceId: string | null) => void;
 }
 
 interface CollectionTreeProps {

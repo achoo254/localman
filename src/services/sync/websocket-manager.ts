@@ -3,6 +3,9 @@
  * auto-reconnection with exponential backoff, channel subscriptions, and heartbeat.
  */
 
+import { getWsBaseUrl } from "../../utils/api-base-url";
+import { getIdToken } from "./firebase-auth-client";
+
 type MessageHandler = (msg: Record<string, unknown>) => void;
 
 /** Connection states exposed to UI */
@@ -12,7 +15,6 @@ const RECONNECT_DELAYS = [1000, 2000, 4000, 8000, 16000, 30000]; // max 30s
 
 class WebSocketManager {
   private ws: WebSocket | null = null;
-  private serverUrl = "";
   private token = "";
   private state: WsConnectionState = "disconnected";
   private reconnectAttempt = 0;
@@ -41,15 +43,14 @@ class WebSocketManager {
   }
 
   /** Connect to WebSocket server */
-  connect(serverUrl: string, token: string): void {
+  connect(token: string): void {
     if (this.ws && this.state === "connected") {
       this.disconnect();
     }
 
-    this.serverUrl = serverUrl;
     this.token = token;
     this.intentionalClose = false;
-    this.doConnect();
+    void this.doConnect();
   }
 
   /** Disconnect and stop reconnecting */
@@ -111,13 +112,16 @@ class WebSocketManager {
 
   // --- Internal ---
 
-  private doConnect(): void {
+  private async doConnect(): Promise<void> {
     try {
-      // Convert http(s) URL to ws(s)
-      const wsUrl = this.serverUrl
-        .replace(/^http:/, "ws:")
-        .replace(/^https:/, "wss:");
-      const url = `${wsUrl}/ws?token=${encodeURIComponent(this.token)}`;
+      // On reconnect attempts, get a fresh token to avoid using an expired one
+      if (this.reconnectAttempt > 0) {
+        const freshToken = await getIdToken()
+        if (freshToken) {
+          this.token = freshToken
+        }
+      }
+      const url = `${getWsBaseUrl()}/ws?token=${encodeURIComponent(this.token)}`;
 
       this.setState(this.reconnectAttempt > 0 ? "reconnecting" : "connecting");
       this.ws = new WebSocket(url);
@@ -176,7 +180,7 @@ class WebSocketManager {
 
     this.reconnectTimer = setTimeout(() => {
       this.reconnectTimer = null;
-      this.doConnect();
+      void this.doConnect();
     }, delay);
   }
 

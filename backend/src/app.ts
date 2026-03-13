@@ -2,9 +2,8 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 import { bodyLimit } from "hono/body-limit";
-import { auth } from "./auth.js";
 import { env } from "./env.js";
-import { sessionMiddleware } from "./middleware/auth-guard.js";
+import { firebaseAuthMiddleware } from "./middleware/auth-guard.js";
 import { errorHandler } from "./middleware/error-handler.js";
 import { healthRouter } from "./routes/health.js";
 import { syncRouter } from "./routes/sync.js";
@@ -30,14 +29,11 @@ app.use(
   })
 );
 
-// Better Auth handler — MUST be before sessionMiddleware
-app.on(["POST", "GET"], "/api/auth/*", (c) => auth.handler(c.req.raw));
-
 // Body size limit for sync push (10MB)
 app.use("/api/sync/push", bodyLimit({ maxSize: 10 * 1024 * 1024 }));
 
-// Session extraction for all /api/* routes (except auth handled above)
-app.use("/api/*", sessionMiddleware);
+// Firebase auth for all /api/* routes
+app.use("/api/*", firebaseAuthMiddleware);
 
 // Routes
 app.route("/api", healthRouter);

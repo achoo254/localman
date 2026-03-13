@@ -1,9 +1,16 @@
-import type { auth } from "../auth.js";
+export type AuthUser = {
+  id: string
+  firebaseUid: string
+  email: string
+  name: string
+  avatarUrl: string | null
+  createdAt: Date | null
+  updatedAt: Date | null
+}
 
-export type AuthUser = typeof auth.$Infer.Session.user;
-export type AuthSession = typeof auth.$Infer.Session.session;
+export type AuthSession = null
 
 export type AppVariables = {
-  user: AuthUser | null;
-  session: AuthSession | null;
-};
+  user: AuthUser | null
+  session: AuthSession
+}

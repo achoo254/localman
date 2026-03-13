@@ -31,14 +31,15 @@ export function CollectionItem({
   activeRequestId,
   contextMenuCallbacks,
 }: CollectionItemProps) {
-  // Live query to get is_synced flag for collection nodes only
-  const collectionRecord = useLiveQuery<{ is_synced?: boolean } | undefined>(
+  // Live query to get is_synced and workspace_id for collection nodes only
+  const collectionRecord = useLiveQuery<{ is_synced?: boolean; workspace_id?: string | null } | undefined>(
     () => node.type === 'collection'
-      ? db.collections.get(node.id).then(c => c ? { is_synced: c.is_synced } : undefined)
+      ? db.collections.get(node.id).then(c => c ? { is_synced: c.is_synced, workspace_id: c.workspace_id } : undefined)
       : Promise.resolve(undefined),
     [node.id, node.type]
   );
   const isSynced = collectionRecord?.is_synced === true;
+  const collectionWorkspaceId = collectionRecord?.workspace_id ?? null;
 
   const row = (
     <div
@@ -69,7 +70,11 @@ export function CollectionItem({
 
   return (
     <div className="flex flex-col">
-      <CollectionContextMenu node={node} {...contextMenuCallbacks}>
+      <CollectionContextMenu
+        node={node}
+        {...contextMenuCallbacks}
+        collectionWorkspaceId={collectionWorkspaceId}
+      >
         {row}
       </CollectionContextMenu>
       {isExpanded &&

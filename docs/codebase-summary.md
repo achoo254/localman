@@ -10,20 +10,33 @@ localman/
 │   ├── src/
 │   │   ├── routes/           # API route handlers
 │   │   │   ├── health.ts     # GET /api/health
-│   │   │   └── sync.ts       # Sync endpoints (pull/push)
-│   │   ├── middleware/       # Express/Hono middleware
-│   │   │   ├── auth-guard.ts # JWT authentication
-│   │   │   └── error-handler.ts
+│   │   │   ├── workspace-routes.ts # Workspace CRUD
+│   │   │   ├── collection-routes.ts # Collection CRUD
+│   │   │   ├── environment-routes.ts # Environment CRUD
+│   │   │   ├── entity-sync-routes.ts # 3-way merge sync (pull/push)
+│   │   │   └── sync.ts       # Legacy sync endpoints (deprecated)
+│   │   ├── middleware/       # Hono middleware
+│   │   │   ├── auth-guard.ts # Firebase token verification
+│   │   │   ├── workspace-rbac.ts # Role-based access control
+│   │   │   └── error-handler.ts # Error formatting
 │   │   ├── db/               # Database layer
-│   │   │   ├── schema.ts     # Drizzle ORM schema (sync, users)
-│   │   │   ├── auth-schema.ts # Better Auth schema
-│   │   │   └── client.ts     # PostgreSQL client
+│   │   │   ├── schema.ts     # Main Drizzle schema
+│   │   │   ├── entity-schema.ts # Collections, folders, requests
+│   │   │   ├── workspace-schema.ts # Workspaces, invites, members
+│   │   │   ├── user-schema.ts # Firebase users
+│   │   │   └── client.ts     # PostgreSQL connection + pool
+│   │   ├── services/         # Business logic
+│   │   │   ├── change-log-service.ts # 3-way merge tracking
+│   │   │   └── (other services)
 │   │   ├── types/            # TypeScript types
-│   │   │   └── context.ts    # Request context, auth user
-│   │   ├── app.ts            # Hono app setup
-│   │   ├── auth.ts           # Better Auth config
+│   │   │   └── context.ts    # Request context with user & workspace
+│   │   ├── app.ts            # Hono app setup + middleware
+│   │   ├── firebase.ts       # Firebase Admin SDK init
 │   │   ├── env.ts            # Environment variable validation
 │   │   └── index.ts          # Server entry point
+│   ├── deploy/
+│   │   └── nginx.conf        # Nginx reverse proxy config (same-domain)
+│   ├── ecosystem.config.cjs  # PM2 process manager config
 │   ├── drizzle.config.ts     # Drizzle migration config
 │   ├── package.json          # Backend dependencies
 │   ├── tsconfig.json         # TypeScript config
@@ -127,12 +140,17 @@ localman/
 - Serial queue (one script at a time)
 
 #### Cloud Sync Services (`services/sync/`)
-- **Cloud Auth Client** (`cloud-auth-client.ts`) — Better Auth wrapper for login, logout, session management
-- **Cloud Sync Service** (`cloud-sync-service.ts`) — Pull/push collections to backend API
-  - POST /api/sync/pull — fetch remote collections
-  - POST /api/sync/push — upload local changes
-  - Last-Write-Wins conflict resolution by `updated_at`
-  - Supports both legacy (offline-only) and cloud sync modes
+- **Firebase Auth Client** (`firebase-auth-client.ts`) — Firebase Auth wrapper for Google login, session management
+- **Entity Sync Service** (`entity-sync-service.ts`) — Pull/push entities (collections, requests, etc.) to backend API
+  - POST /api/workspaces/:wsId/sync/pull — fetch remote entities
+  - POST /api/workspaces/:wsId/sync/push — upload local changes
+  - 3-way merge conflict resolution with field-level tracking
+  - Workspace-scoped synchronization
+- **Offline Queue Replay** (`offline-queue-replay.ts`) — Replay pending changes when connection restores
+- **Conflict Queue** (`conflict-queue.ts`) — Manage unresolved conflicts with user resolutions
+- **WebSocket Manager** (`websocket-manager.ts`) — Real-time connection to workspace channel
+- **WS Event Handler** (`ws-event-handler.ts`) — Apply real-time updates to Dexie and Zustand stores
+- **Sync Reconciliation** (`sync-reconciliation.ts`) — Reconcile local vs. remote state after reconnect
 
 ### Components (`src/components/`)
 
@@ -150,12 +168,14 @@ localman/
 - `request-tab-bar.tsx` — tab list with italic styling for drafts, close confirmation
 
 #### Collections (`collections/`)
-- `collection-tree.tsx` — nested folder/request tree
+- `collection-tree.tsx` — nested folder/request tree (workspace-filtered)
 - `collection-item.tsx` — collection node in sidebar
 - `folder-item.tsx` — folder node in tree
 - `request-item.tsx` — request node in tree
 - `collection-context-menu.tsx` — context menu (create, rename, delete)
 - `sidebar-tabs.tsx` — tab selector (Collections, Environments, History, Docs)
+- `collections-tab-sections.tsx` — Personal + Team workspace sections (NEW)
+- `collection-section-header.tsx` — Section header with create button (NEW)
 
 #### Docs (`docs/`) — NEW
 - `docs-viewer-page.tsx` — main docs page (collection selector, TOC + content)
@@ -222,9 +242,15 @@ localman/
 ### Utilities (`src/utils/`)
 
 - `variable-interpolation.ts` — `{{varName}}` replacement, dynamic vars (`$guid`, `$timestamp`, etc.)
+- `api-base-url.ts` — Determine API base URL (relative for web, env var for Tauri)
 - `clipboard.ts` — copy-to-clipboard with fallback
 - `format.ts` — syntax highlighting, code formatting
 - Other helpers (validation, date formatting, etc.)
+
+### Firebase Configuration (`src/firebase-config.ts`)
+
+- Initialize Firebase SDK with project credentials
+- Reusable config for auth-related components
 
 ## Data Flow
 
@@ -349,23 +375,32 @@ pnpm test:e2e             # Playwright E2E
 - **Runtime**: Node.js (@hono/node-server)
 - **Database**: PostgreSQL
 - **ORM**: Drizzle ORM
-- **Authentication**: Better Auth (account/session/OAuth)
-- **Deployment**: PM2 + systemd + Nginx reverse proxy
+- **Authentication**: Firebase Auth (Google login only)
+- **Deployment**: PM2 + systemd + Nginx reverse proxy (same-domain serving)
 
 ### Database Schema
 
-#### Collections & Sync
+#### Collections, Requests & Environments
 | Table | Purpose |
 |-------|---------|
-| `sync_collections` | Synced collections from desktop (id, userId, name, description, metadata, updatedAt) |
-| `sync_requests` | Synced requests (id, collectionId, method, url, headers, body, auth, etc.) |
-| `sync_history` | Execution history (optional, for later phases) |
+| `collections` | API request groups (id, workspaceId, userId, name, description, version, updatedAt) |
+| `folders` | Nested folder structure (id, collectionId, parentId, name, sortOrder) |
+| `requests` | API requests (id, collectionId, folderId, method, url, headers, body, auth, description, scripts) |
+| `environments` | Variable sets (id, workspaceId, userId, name, variables, isActive) |
+| `change_log` | Audit trail for 3-way merge (entityType, entityId, fieldChanges, fromVersion, toVersion) |
 
-#### Authentication (Better Auth)
-| Tables | Purpose |
-|--------|---------|
-| `account`, `session`, `user`, `verification` | Better Auth built-in tables |
-| `user_settings` | User preferences (sync mode, theme, etc.) |
+#### Workspaces & RBAC
+| Table | Purpose |
+|-------|---------|
+| `workspaces` | Workspace metadata (id, name, slug, ownerId, createdAt, updatedAt) |
+| `workspace_members` | RBAC membership (workspaceId, userId, role: owner/editor/viewer) |
+| `workspace_invites` | 24h invite links (workspaceId, email, role, token, expiresAt) |
+
+#### Authentication (Firebase Auth)
+| Table | Purpose |
+|-------|---------|
+| `users` | User identity (id from Firebase, email, displayName, photoUrl) |
+| `user_settings` | User preferences (theme, sync preferences, etc.) |
 
 ### API Endpoints
 
@@ -431,40 +466,62 @@ GET /api/auth/signin/github  (or other OAuth providers)
 5. **Reuse**: `PreparedRequest` used by HTTP client, snippet generators, and script executor.
 6. **Extensible**: Plugin pattern for snippet generators makes adding new languages frictionless.
 
-## Phase 13 Additions (Cloud Sync Phase 2) — NEW
+## Phase 13 Additions (Workspaces & Real-Time Sync)
 
-### New Backend (`backend/` directory)
-- **Backend App** (`src/app.ts`, `src/index.ts`) — Hono server setup + route mounting
+### New Backend Files
+- **Backend App** (`src/app.ts`, `src/index.ts`) — Hono v4 server with middleware + routes
 - **Database Layer**:
-  - `src/db/schema.ts` — Drizzle sync collections/requests schema
-  - `src/db/auth-schema.ts` — Better Auth schema
-  - `src/db/client.ts` — PostgreSQL connection
+  - `src/db/entity-schema.ts` — Collections, folders, requests, environments
+  - `src/db/workspace-schema.ts` — Workspaces, members, invites
+  - `src/db/user-schema.ts` — Firebase user mapping
+  - `src/db/schema.ts` — Combined schema export
+  - `src/db/client.ts` — PostgreSQL connection pool
 - **Routes**:
-  - `src/routes/health.ts` — GET /api/health endpoint
-  - `src/routes/sync.ts` — POST /api/sync/pull, POST /api/sync/push endpoints
-- **Authentication**:
-  - `src/auth.ts` — Better Auth configuration
-  - `src/middleware/auth-guard.ts` — JWT token validation middleware
-- **Middleware**:
-  - `src/middleware/error-handler.ts` — Error handling + JSON response formatting
+  - `src/routes/health.ts` — GET /api/health
+  - `src/routes/workspace-routes.ts` — CRUD workspaces + member management
+  - `src/routes/collection-routes.ts` — CRUD collections
+  - `src/routes/environment-routes.ts` — CRUD environments
+  - `src/routes/entity-sync-routes.ts` — POST /api/workspaces/:wsId/sync/pull|push (3-way merge)
+- **Authentication & RBAC**:
+  - `src/firebase.ts` — Firebase Admin SDK initialization
+  - `src/middleware/auth-guard.ts` — Firebase token verification
+  - `src/middleware/workspace-rbac.ts` — Role-based access control
+- **Services**:
+  - `src/services/change-log-service.ts` — 3-way merge conflict tracking
 - **Configuration**:
-  - `src/env.ts` — Environment variable schema validation
-  - `src/types/context.ts` — Request context + auth user type
-  - `drizzle.config.ts` — Drizzle migration configuration
+  - `src/env.ts` — FIREBASE_SERVICE_ACCOUNT, DATABASE_URL validation
+  - `src/types/context.ts` — Request context (user, workspace)
+  - `deploy/nginx.conf` — Nginx same-domain reverse proxy (FE at /, API at /api/*)
+  - `ecosystem.config.cjs` — PM2 process manager config
+
+### Deleted Frontend Files
+- `src/services/sync/cloud-auth-client.ts` — Replaced with firebase-auth-client.ts
+- (Other Better Auth related files removed)
 
 ### New Frontend Files
+- **Firebase Auth** (`src/firebase-config.ts`) — Firebase SDK initialization
 - **Cloud Sync Services** (`src/services/sync/`):
-  - `cloud-auth-client.ts` — Better Auth client wrapper (login, logout, getSession)
-  - `cloud-sync-service.ts` — Pull/push sync logic with conflict resolution
-- **Cloud Login UI** (`src/components/settings/cloud-login-form.tsx`) — Login/logout form
-- **Cloud Sync Types** (`src/types/cloud-sync.ts`) — CloudSyncCollection, CloudSyncRequest types
-- **HTTP Utilities** (`src/utils/tauri-http-client.ts`) — Tauri HTTP wrapper for cloud requests
+  - `firebase-auth-client.ts` — Firebase Auth (Google login only)
+  - `entity-sync-service.ts` — 3-way merge pull/push logic
+  - `offline-queue-replay.ts` — Replay pending changes
+  - `conflict-queue.ts` — Manage conflict resolutions
+  - `websocket-manager.ts` — Real-time WebSocket connection
+  - `ws-event-handler.ts` — Apply real-time updates
+  - `sync-reconciliation.ts` — Reconcile state on reconnect
+- **Sidebar Components** (`src/components/collections/`):
+  - `collections-tab-sections.tsx` — Personal + Team workspace sections
+  - `collection-section-header.tsx` — Section header with create button
+- **Utilities** (`src/utils/`):
+  - `api-base-url.ts` — Determine API URL (relative for web, env var for Tauri)
 
 ### Modified Frontend Files
-- `src/stores/sync-store.ts` — support cloud + legacy sync modes
-- `src/components/settings/sync-settings.tsx` — cloud login UI integration
-- `package.json` — new `backend` workspace in pnpm
-- `pnpm-workspace.yaml` — monorepo configuration
+- `src/stores/sync-store.ts` — Firebase + workspace support, replace Better Auth
+- `src/stores/collections-store.ts` — Workspace filtering
+- `src/types/cloud-sync.ts` — Add workspace types
+- `src/components/settings/cloud-login-form.tsx` — Firebase login UI
+- `src/components/settings/sync-settings.tsx` — Workspace UI integration
+- `src/components/collections/sidebar-tabs.tsx` — Workspace sections integration
+- `src/components/collections/collection-context-menu.tsx` — Workspace-aware CRUD
 
 ## Phase 12 Additions
 
