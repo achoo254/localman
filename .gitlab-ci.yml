@@ -1,5 +1,5 @@
 # GitLab CI for Localman — verify on every push, build Windows on tags
-# See docs/gitlab-workflow-guide.md and plans/260307-1838-cicd-and-cloud-sync/phase-01-gitlab-cicd-windows.md
+# See docs/env-configuration-guide.md for setup details
 
 stages:
   - verify
@@ -9,7 +9,10 @@ variables:
   CARGO_HOME: "$CI_PROJECT_DIR/.cargo"
   PNPM_HOME: "$CI_PROJECT_DIR/.pnpm-store"
 
-.node-cache: &node-cache
+lint-and-test:
+  stage: verify
+  tags:
+    - windows
   cache:
     key:
       files:
@@ -17,22 +20,6 @@ variables:
     paths:
       - node_modules/
       - .pnpm-store/
-
-.cargo-cache: &cargo-cache
-  cache:
-    key:
-      files:
-        - src-tauri/Cargo.lock
-    paths:
-      - .cargo/registry/
-      - src-tauri/target/
-
-lint-and-test:
-  stage: verify
-  tags:
-    - windows
-  cache:
-    - <<: *node-cache
   script:
     - corepack enable
     - pnpm install --frozen-lockfile
@@ -48,8 +35,18 @@ build-windows:
   tags:
     - windows
   cache:
-    - <<: *node-cache
-    - <<: *cargo-cache
+    - key:
+        files:
+          - pnpm-lock.yaml
+      paths:
+        - node_modules/
+        - .pnpm-store/
+    - key:
+        files:
+          - src-tauri/Cargo.lock
+      paths:
+        - .cargo/registry/
+        - src-tauri/target/
   script:
     - corepack enable
     - pnpm install --frozen-lockfile
