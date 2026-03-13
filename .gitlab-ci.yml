@@ -11,8 +11,6 @@ variables:
 
 lint-and-test:
   stage: verify
-  tags:
-    - windows
   cache:
     key:
       files:
@@ -32,8 +30,6 @@ lint-and-test:
 
 build-windows:
   stage: build
-  tags:
-    - windows
   cache:
     - key:
         files:
