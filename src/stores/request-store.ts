@@ -5,6 +5,8 @@
 import { create } from 'zustand';
 import type { ApiRequest } from '../types/models';
 import * as requestService from '../db/services/request-service';
+import * as draftService from '../db/services/draft-service';
+import { handleDbError } from '../utils/db-error-handler';
 
 export interface TabInfo {
   id: string;
@@ -36,10 +38,34 @@ interface RequestStore {
   saveDraftToCollection: (tabId: string, collectionId: string, folderId: string | null) => Promise<void>;
   saveRequest: () => Promise<void>;
   loadRequest: (id: string | null) => Promise<void>;
+  restoreDrafts: () => Promise<void>;
 }
 
 const defaultBody = { type: 'none' as const };
 const defaultAuth = { type: 'none' as const };
+
+// Per-draft debounce timers for IndexedDB persistence (3s)
+const DRAFT_SAVE_DEBOUNCE_MS = 3000;
+const draftSaveTimers = new Map<string, ReturnType<typeof setTimeout>>();
+
+function debounceDraftSave(id: string, draft: ApiRequest): void {
+  const existing = draftSaveTimers.get(id);
+  if (existing) clearTimeout(existing);
+  draftSaveTimers.set(id, setTimeout(() => {
+    draftSaveTimers.delete(id);
+    void draftService.save(draft).catch(err => handleDbError(err, 'save draft'));
+  }, DRAFT_SAVE_DEBOUNCE_MS));
+}
+
+function flushAllDraftSaves(drafts: Record<string, ApiRequest>): void {
+  for (const [id, timer] of draftSaveTimers.entries()) {
+    clearTimeout(timer);
+    draftSaveTimers.delete(id);
+    if (drafts[id]) {
+      void draftService.save(drafts[id]).catch(() => {});
+    }
+  }
+}
 
 export const useRequestStore = create<RequestStore>((set, get) => ({
   openTabs: [],
@@ -81,6 +107,10 @@ export const useRequestStore = create<RequestStore>((set, get) => ({
     if (drafts[id]) {
       const remainingDrafts = Object.fromEntries(Object.entries(drafts).filter(([k]) => k !== id));
       set({ drafts: remainingDrafts });
+      // Cancel pending debounce timer and remove from IndexedDB
+      const timer = draftSaveTimers.get(id);
+      if (timer) { clearTimeout(timer); draftSaveTimers.delete(id); }
+      void draftService.remove(id).catch(() => {});
     }
 
     // Fix #1: only update activeRequest when closing the currently active tab
@@ -124,9 +154,10 @@ export const useRequestStore = create<RequestStore>((set, get) => ({
 
     set({ activeRequest: updated, isDirty: true });
 
-    // Keep drafts map in sync
+    // Keep drafts map in sync + debounce-persist to IndexedDB
     if (isDraft) {
       set({ drafts: { ...get().drafts, [activeRequest.id]: updated } });
+      debounceDraftSave(activeRequest.id, updated);
     }
 
     const tabs = get().openTabs.map(t =>
@@ -169,6 +200,8 @@ export const useRequestStore = create<RequestStore>((set, get) => ({
       activeRequest: draft,
       isDirty: false,
     });
+    // Persist new draft to IndexedDB immediately
+    void draftService.save(draft).catch(err => handleDbError(err, 'create draft'));
   },
 
   async saveDraftToCollection(tabId: string, collectionId: string, folderId: string | null) {
@@ -192,6 +225,10 @@ export const useRequestStore = create<RequestStore>((set, get) => ({
     });
 
     const remainingDrafts = Object.fromEntries(Object.entries(get().drafts).filter(([k]) => k !== tabId));
+    // Remove draft from IndexedDB after saving as real request
+    const timer = draftSaveTimers.get(tabId);
+    if (timer) { clearTimeout(timer); draftSaveTimers.delete(tabId); }
+    void draftService.remove(tabId).catch(() => {});
     const tabs = get().openTabs.map(t =>
       t.id === tabId
         ? { ...t, id: saved.id, isDraft: false, isDirty: false, prefillCollectionId: undefined, prefillFolderId: undefined }
@@ -233,7 +270,12 @@ export const useRequestStore = create<RequestStore>((set, get) => ({
     if (tab?.isDraft) return;
     // Snapshot before async write — edits made during the DB write are NOT lost
     const snapshot = activeRequest;
-    await requestService.update(snapshot.id, snapshot);
+    try {
+      await requestService.update(snapshot.id, snapshot);
+    } catch (err) {
+      handleDbError(err, 'save request');
+      return;
+    }
     // Only clear dirty flag if no newer edit arrived during the async save
     if (get().activeRequest?.updated_at === snapshot.updated_at) {
       set({ isDirty: false });
@@ -263,4 +305,43 @@ export const useRequestStore = create<RequestStore>((set, get) => ({
     if (get()._loadingRequestId !== id) return;
     if (req) set({ activeRequest: req });
   },
+
+  async restoreDrafts() {
+    try {
+      const saved = await draftService.getAll();
+      if (!saved.length) return;
+      const draftsMap: Record<string, ApiRequest> = {};
+      const tabs: TabInfo[] = [];
+      for (const draft of saved) {
+        draftsMap[draft.id] = draft;
+        tabs.push({
+          id: draft.id,
+          name: draft.name || 'New Request',
+          method: draft.method,
+          isDirty: false,
+          isDraft: true,
+        });
+      }
+      set(state => ({
+        drafts: { ...state.drafts, ...draftsMap },
+        openTabs: [...state.openTabs, ...tabs],
+      }));
+    } catch (err) {
+      handleDbError(err, 'restore drafts');
+    }
+  },
 }));
+
+// Flush pending draft saves when app is closing or hidden
+if (typeof window !== 'undefined') {
+  // visibilitychange fires before beforeunload and allows async writes
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') {
+      flushAllDraftSaves(useRequestStore.getState().drafts);
+    }
+  });
+  // Fallback for immediate close
+  window.addEventListener('beforeunload', () => {
+    flushAllDraftSaves(useRequestStore.getState().drafts);
+  });
+}

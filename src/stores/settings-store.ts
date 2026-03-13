@@ -60,7 +60,7 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
     if (get().isLoading) return;
     set({ isLoading: true });
     try {
-      const [defaultMethod, defaultContentType, requestTimeoutMs, sslVerify, followRedirects, maxRedirects, uiFontSize, fontSize, tabSize, wordWrap, lineNumbers, proxyEnabled, httpUrl, httpsUrl, noProxy, proxyUsername, proxyPassword] = await Promise.all([
+      const [defaultMethod, defaultContentType, requestTimeoutMs, sslVerify, followRedirects, maxRedirects, uiFontSize, historyRetentionDays, fontSize, tabSize, wordWrap, lineNumbers, proxyEnabled, httpUrl, httpsUrl, noProxy, proxyUsername, proxyPassword] = await Promise.all([
         settingsService.get<string>(SETTINGS_KEYS.GENERAL_DEFAULT_METHOD),
         settingsService.get<string>(SETTINGS_KEYS.GENERAL_DEFAULT_CONTENT_TYPE),
         settingsService.get<number>(SETTINGS_KEYS.GENERAL_REQUEST_TIMEOUT_MS),
@@ -68,6 +68,7 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
         settingsService.get<boolean>(SETTINGS_KEYS.GENERAL_FOLLOW_REDIRECTS),
         settingsService.get<number>(SETTINGS_KEYS.GENERAL_MAX_REDIRECTS),
         settingsService.get<string>(SETTINGS_KEYS.GENERAL_UI_FONT_SIZE),
+        settingsService.get<number>(SETTINGS_KEYS.GENERAL_HISTORY_RETENTION_DAYS),
         settingsService.get<number>(SETTINGS_KEYS.EDITOR_FONT_SIZE),
         settingsService.get<number>(SETTINGS_KEYS.EDITOR_TAB_SIZE),
         settingsService.get<boolean>(SETTINGS_KEYS.EDITOR_WORD_WRAP),
@@ -92,6 +93,7 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
           followRedirects: followRedirects ?? defaultGeneral.followRedirects,
           maxRedirects: maxRedirects ?? defaultGeneral.maxRedirects,
           uiFontSize: resolvedUiFontSize,
+          historyRetentionDays: historyRetentionDays ?? defaultGeneral.historyRetentionDays,
         },
         editor: {
           fontSize: fontSize ?? defaultEditor.fontSize,
@@ -125,6 +127,7 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
       settingsService.set(SETTINGS_KEYS.GENERAL_FOLLOW_REDIRECTS, next.followRedirects),
       settingsService.set(SETTINGS_KEYS.GENERAL_MAX_REDIRECTS, next.maxRedirects),
       settingsService.set(SETTINGS_KEYS.GENERAL_UI_FONT_SIZE, next.uiFontSize),
+      settingsService.set(SETTINGS_KEYS.GENERAL_HISTORY_RETENTION_DAYS, next.historyRetentionDays),
     ]);
     applyUiFontSize(next.uiFontSize);
   },

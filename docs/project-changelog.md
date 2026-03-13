@@ -2,6 +2,68 @@
 
 All notable changes to Localman documented here. Format based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [Phase 1 Offline-First Release Fixes] — 2026-03-13
+
+### Added
+
+- **Granular Error Boundaries**
+  - Enhanced ErrorBoundary component with panel-variant fallback UI
+  - Sidebar, request panel, response panel wrapped independently
+  - Prevents full-app crash from isolated panel errors
+  - Retry button on error fallback UI
+
+- **Request Timeout Support**
+  - Request timeout wired from settings to AbortController
+  - Cancel button in request panel during execution
+  - Clear error differentiation: timeout vs manual cancellation
+  - Toast notifications for cancellation and timeout events
+
+- **Draft Auto-Persist**
+  - Drafts now persisted to IndexedDB (new `drafts` table in Dexie v4)
+  - Draft service (`draft-service.ts`) with CRUD operations
+  - Debounced 3s persistence on draft edits
+  - Restore drafts on app startup + beforeunload flush
+  - Automatic cleanup on close/save transitions
+
+- **Cloud UI "Coming Soon" State**
+  - Feature flag guards on all cloud components (`feature-flags.ts`)
+  - Cloud sync, login, workspace creation disabled in Phase 1
+  - "Coming Soon" labels on disabled sections
+  - Zero network requests to cloud backend on startup
+
+- **IndexedDB Quota & History Management**
+  - Global error handler for `QuotaExceededError`
+  - Rate-limited quota warning toast (max 1 per 60s)
+  - Configurable history retention (7/30/90 days or never)
+  - "Clear all history" button with confirmation dialog
+  - DB health check on app startup
+
+### Modified
+
+- `src/components/common/error-boundary.tsx` — added panel variant + onError callback
+- `src/components/layout/app-layout.tsx` — wrapped panels in error boundaries
+- `src/stores/response-store.ts` — integrated timeout + cancel support
+- `src/stores/request-store.ts` — draft restoration + persistence
+- `src/stores/history-store.ts` — auto-cleanup with retention setting
+- `src/stores/settings-store.ts` — history retention setting
+- `src/components/settings/general-settings.tsx` — timeout, retention UI
+- `src/db/database.ts` — Dexie v4 with drafts table + quota error handler
+
+### New Files
+
+- `src/utils/db-error-handler.ts` — centralized DB error handling with quota detection
+- `src/utils/feature-flags.ts` — feature flag gates
+- `src/db/services/draft-service.ts` — draft CRUD operations
+
+### Success Criteria Met
+✅ All 5 phases completed
+✅ Type-check: 0 errors
+✅ Tests: 35/35 passing
+✅ Lint: 0 errors
+✅ Offline-first app ready for Phase 1 public release
+
+---
+
 ## [Phase 5: UI Overhaul — Workspace & Sync UX] — 2026-03-12
 
 ### Added

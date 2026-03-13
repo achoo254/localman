@@ -21,6 +21,7 @@ export class LocalmanDB extends Dexie {
   history!: Table<HistoryEntry>;
   settings!: Table<Setting>;
   pending_changes!: Table<PendingChange>;
+  drafts!: Table<ApiRequest>;
 
   constructor() {
     super('localman');
@@ -63,7 +64,39 @@ export class LocalmanDB extends Dexie {
         if (r.version === undefined) r.version = 1;
       });
     });
+    // v4: Add drafts table for persisting unsaved draft requests
+    this.version(4).stores({
+      drafts: 'id',
+    });
   }
 }
 
 export const db = new LocalmanDB();
+
+// Global handler for uncaught QuotaExceededError from IndexedDB
+if (typeof window !== 'undefined') {
+  window.addEventListener('unhandledrejection', (event) => {
+    const err = event.reason;
+    if (
+      (err instanceof DOMException && err.name === 'QuotaExceededError') ||
+      (err && typeof err === 'object' && 'inner' in err &&
+        (err as { inner: { name?: string } }).inner?.name === 'QuotaExceededError')
+    ) {
+      event.preventDefault();
+      // Lazy import to avoid circular dependency
+      void import('../utils/db-error-handler').then(({ handleDbError }) => {
+        handleDbError(err, 'storage-quota');
+      });
+    }
+  });
+}
+
+/** Quick DB health check — returns false if DB is inaccessible */
+export async function checkDbHealth(): Promise<boolean> {
+  try {
+    await db.settings.count();
+    return true;
+  } catch {
+    return false;
+  }
+}
