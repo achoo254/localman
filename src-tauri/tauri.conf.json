@@ -27,7 +27,9 @@
   "plugins": {
     "updater": {
       "pubkey": "",
-      "endpoints": []
+      "endpoints": [
+        "https://github.com/achoo254/localman/releases/latest/download/latest.json"
+      ]
     }
   },
   "bundle": {

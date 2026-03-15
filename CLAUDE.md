@@ -14,11 +14,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **MANDATORY:** Before starting any implementation phase, read:
 `plans/260306-1134-localman-desktop-mvp/workflow-agent-execution-protocol.md`
 
-This protocol defines the full autonomous workflow: code → self-review → test → commit → push → GitLab milestone/issue management. Every phase follows this protocol without exception.
+This protocol defines the full autonomous workflow: code → self-review → test → commit → push → GitHub PR/issue management. Every phase follows this protocol without exception.
 
-**GitLab instance:** `gitlabs.inet.vn`
-**CLI tool:** `glab` (not `gh`) — always pass `--hostname gitlabs.inet.vn`
-**Auth:** Token in `gitlab-authen.txt` (git-ignored). See `docs/gitlab-workflow-guide.md` for curl API patterns (works without glab).
+**GitHub:** Public repository on github.com
+**CLI tool:** `gh` (GitHub CLI)
+**Auth:** No authentication needed for public repository access. See `docs/workflow-guide.md` for GitHub API patterns.
 **Concurrency:** max 1 phase at a time — strictly sequential, no parallel phase execution.
 
 ---
@@ -153,6 +153,6 @@ Status bar:  DB status | Request count | Sync time
 
 - [requirement.md](./requirement.md) — full product spec, roadmap, competitive analysis
 - [docs/cross-platform-testing.md](./docs/cross-platform-testing.md) — cross-platform testing checklist (Windows/macOS/Linux and performance)
-- **CI:** GitLab at gitlabs.inet.vn — lint + test on push; Windows build on tag `v*`. Details: [phase-01-gitlab-cicd-windows.md](./plans/260307-1838-cicd-and-cloud-sync/phase-01-gitlab-cicd-windows.md)
+- **CI:** GitHub Actions — lint + test on push; Windows build on tag `v*`. Details: [phase-01-gitlab-cicd-windows.md](./plans/260307-1838-cicd-and-cloud-sync/phase-01-gitlab-cicd-windows.md)
 - Tauri docs: https://tauri.app/docs
 - Dexie.js: https://dexie.org

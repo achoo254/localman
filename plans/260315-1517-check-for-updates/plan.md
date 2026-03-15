@@ -1,6 +1,7 @@
 ---
-status: pending
+status: completed
 created: 2026-03-15
+completed: 2026-03-15
 branch: main
 ---
 
@@ -24,10 +25,10 @@ Implement auto-update capability using Tauri v2 updater plugin + GitHub Releases
 
 | # | Phase | Status | Priority | Effort |
 |---|-------|--------|----------|--------|
-| 1 | [Signing & Config Setup](./phase-01-signing-and-config-setup.md) | pending | P0 | 1h |
-| 2 | [Frontend Update Service & UI](./phase-02-frontend-update-service-and-ui.md) | pending | P0 | 3h |
-| 3 | [GitHub Actions Release CI](./phase-03-github-actions-release-ci.md) | pending | P0 | 2h |
-| 4 | [Version Sync & Cleanup](./phase-04-version-sync-and-cleanup.md) | pending | P1 | 1h |
+| 1 | [Signing & Config Setup](./phase-01-signing-and-config-setup.md) | ✅ completed | P0 | 1h |
+| 2 | [Frontend Update Service & UI](./phase-02-frontend-update-service-and-ui.md) | ✅ completed | P0 | 3h |
+| 3 | [GitHub Actions Release CI](./phase-03-github-actions-release-ci.md) | ✅ completed | P0 | 2h |
+| 4 | [Version Sync & Cleanup](./phase-04-version-sync-and-cleanup.md) | ✅ completed | P1 | 1h |
 
 ## Dependencies
 - Phase 2 depends on Phase 1 (pubkey in config)

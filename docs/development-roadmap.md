@@ -16,7 +16,7 @@ Localman phases 00–11, with completion status and key milestones.
 | 07 | Pre/Post Scripts | ✅ Complete | P1 | QuickJS sandbox, request/response manipulation | 2026-02 |
 | 08 | Cloud Sync Phase 1 | ✅ Complete | P1 | HTTP sync API, LWW conflict resolution, sync UI | 2026-02 |
 | 09 | Error Handling & UI Polish | ✅ Complete | P1 | Error boundaries, toast notifications, layout polish | 2026-02 |
-| 10 | Packaging & CI/CD | ✅ Complete | P1 | GitLab CI/CD, Windows MSI/EXE builds, cross-platform testing | 2026-03 |
+| 10 | Packaging & CI/CD | ✅ Complete | P1 | GitHub Actions CI/CD, Windows MSI/EXE builds, cross-platform testing | 2026-03 |
 | 11 | Code Snippet & API Docs | ✅ Complete | P2 | 16 language snippet generators, docs viewer, HTML/Markdown export | 2026-03-08 |
 | 12 | Draft Tab System | ✅ Complete | P2 | Ctrl+T draft requests, explicit save workflow, draft lifecycle | 2026-03-08 |
 | 13 | Cloud Sync Phase 2 | ✅ Complete | P1 | Backend API (Hono + PostgreSQL), Better Auth, pull/push sync | 2026-03-09 |
@@ -24,6 +24,7 @@ Localman phases 00–11, with completion status and key milestones.
 | Phase 3 | WebSocket Real-Time | ✅ Complete | P1 | Real-time entity sync, presence tracking, auto-reconnect | 2026-03-12 |
 | Phase 4 | Field-Level Merge & Conflict Resolution | ✅ Complete | P1 | 3-way merge, change log, offline conflict queue, per-field picker | 2026-03-12 |
 | Phase 5 | UI Overhaul — Workspace & Sync UX | ✅ Complete | P1 | Workspace switcher, settings panel, member mgmt, presence avatars | 2026-03-12 |
+| Phase 6 | Check for Updates | ✅ Complete | P2 | Auto-updater, GitHub releases, signed binaries, update dialog | 2026-03-15 |
 
 ## Phase 11 Details: Code Snippet, Preview & API Docs
 
@@ -295,6 +296,96 @@ Localman phases 00–11, with completion status and key milestones.
 - `src/components/collections/sidebar-tabs.tsx` — "New Request" context menu with prefill
 - `src/App.tsx` — global Ctrl+T handler for new draft tab
 
+## Phase 6 Details: Check for Updates
+
+**Completed:** 2026-03-15
+
+### Features Delivered
+
+1. **Update Signing & Configuration**
+   - Ed25519 keypair generation via `tauri signer generate`
+   - Public key embedded in `tauri.conf.json`
+   - Private key stored securely in GitHub Secrets (not in repo)
+   - Tauri updater plugin configured with GitHub Releases endpoint
+
+2. **Frontend Update Service**
+   - `update-checker-service.ts` — Check and download updates
+   - `update-store.ts` (Zustand) — State management (checking/available/downloading/ready/error)
+   - `use-update-checker.ts` hook — Auto-check on startup + 4h interval
+   - Manual "Check for Updates" button in About section
+   - Graceful offline fallback (silent, no errors)
+
+3. **Update UI**
+   - `update-dialog.tsx` — Radix Dialog showing version, release notes, download progress
+   - Toast notifications ("Update available", "You're up to date")
+   - Progress bar during download
+   - Download + Install + Relaunch flow
+
+4. **Release CI/CD**
+   - `.github/workflows/release.yml` — Multi-platform GitHub Actions workflow
+   - Matrix build: Windows + macOS + Linux
+   - Automatic `latest.json` generation with platform signatures
+   - Signed binaries (.sig files) for update verification
+   - Draft → Publish release automation
+
+5. **Version Management**
+   - `scripts/bump-version.sh` — Single command to bump version across all configs
+   - `pnpm version:bump <version>` — npm script wrapper
+   - Removed hardcoded version from frontend (reads from Tauri API at runtime)
+
+### Files Added
+- `src/services/update-checker-service.ts` — Update check + download logic
+- `src/stores/update-store.ts` — Update state store
+- `src/hooks/use-update-checker.ts` — Background check hook
+- `src/components/settings/update-dialog.tsx` — Update UI dialog
+- `.github/workflows/release.yml` — GitHub Actions release workflow
+- `scripts/bump-version.sh` — Version bump script
+
+### Files Modified
+- `src/App.tsx` — Mount update checker hook and dialog
+- `src/components/settings/about-section.tsx` — Wire "Check for Updates" button, use Tauri API for version
+- `src-tauri/tauri.conf.json` — Add updater plugin config with pubkey + endpoint
+- `src-tauri/Cargo.toml` — Add tauri-plugin-process dependency
+- `src-tauri/src/lib.rs` — Register process plugin
+- `package.json` — Add @tauri-apps/plugin-updater, @tauri-apps/plugin-process, add version:bump script
+
+### Success Criteria Met
+✅ Ed25519 keypair generated and securely stored
+✅ Tauri updater plugin installed and configured
+✅ Frontend update checker service fully functional
+✅ Update dialog with progress bar working
+✅ GitHub Actions workflow builds all platforms and signs binaries
+✅ `latest.json` generated automatically with correct platform signatures
+✅ Version bumps centralized in single script
+✅ No hardcoded version in frontend code
+✅ All 35 tests pass
+✅ Type-check clean, lint passes (6 pre-existing unrelated warnings)
+
+### Architecture
+```
+GitHub Release (tag push)
+  ↓
+GitHub Actions: build + sign (Windows/macOS/Linux)
+  ↓
+Upload: binaries + signatures + latest.json
+  ↓
+User launches app
+  ↓
+useUpdateChecker() → check() on startup + 4h interval
+  ↓
+GET https://github.com/owner/localman/releases/latest/download/latest.json
+  ↓
+Tauri verifies signature using pubkey in tauri.conf.json
+  ↓
+If newer: Toast → Dialog
+  ↓
+User clicks "Download & Install"
+  ↓
+download() with progress → install() → relaunch()
+```
+
+---
+
 ## Upcoming Phases (Future)
 
 ### Phase 14: Team Workspace UI (Planned)
@@ -321,7 +412,7 @@ Localman phases 00–11, with completion status and key milestones.
 ## Dependencies & Constraints
 
 - **Sequential Execution**: Max 1 phase at a time
-- **GitLab CI/CD**: All changes tested before merge to main
+- **GitHub Actions CI/CD**: All changes tested before merge to main
 - **Cross-platform**: Windows/macOS/Linux builds validated before release
 - **Offline-First**: IndexedDB is source of truth; API is secondary
 

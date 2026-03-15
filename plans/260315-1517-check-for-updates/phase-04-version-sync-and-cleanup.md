@@ -9,7 +9,7 @@
 
 ## Overview
 - **Priority:** P1
-- **Status:** pending
+- **Status:** ✅ completed
 - **Description:** Create version bump script and remove hardcoded version from frontend.
 
 ## Implementation Steps
@@ -72,11 +72,11 @@ Search codebase for hardcoded `0.1.0` and update or remove.
 - Verify: no hardcoded version strings remain
 
 ## Todo
-- [ ] Create bump-version.sh script
-- [ ] Add version:bump npm script
-- [ ] Search and remove any remaining hardcoded version strings
-- [ ] Test: `pnpm version:bump 0.2.0` updates all files
-- [ ] Verify git diff shows only version changes
+- [x] Create bump-version.sh script
+- [x] Add version:bump npm script
+- [x] Search and remove any remaining hardcoded version strings
+- [x] Test: `pnpm version:bump 0.2.0` updates all files
+- [x] Verify git diff shows only version changes
 
 ## Success Criteria
 - Single command bumps version in all 3 config files

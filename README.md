@@ -9,38 +9,29 @@ Offline-first desktop API client (Postman alternative) — Tauri + React + TypeS
 
 ## Getting started
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+Clone the repository and install dependencies:
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
-
-## Add your files
-
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
-
-```
-cd existing_repo
-git remote add origin https://gitlabs.inet.vn/dattqh/localman.git
-git branch -M main
-git push -uf origin main
+```bash
+git clone https://github.com/your-org/localman.git
+cd localman
+pnpm install
+pnpm tauri dev
 ```
 
-## Integrate with your tools
+See [CLAUDE.md](./CLAUDE.md) for development guidelines and project structure.
 
-- [ ] [Set up project integrations](https://gitlabs.inet.vn/dattqh/localman/-/settings/integrations)
+## Contributing
 
-## Collaborate with your team
-
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
+Contributions are welcome! Please:
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes with conventional commit messages
+4. Push to your fork and open a Pull Request
 
 ## Testing & CI
 
 - **Cross-platform testing:** See the [Cross-Platform Testing Checklist](docs/cross-platform-testing.md) for manual verification on Windows, macOS, and Linux (including performance checks).
-- **CI (GitLab):** Pipelines run on [gitlabs.inet.vn](https://gitlabs.inet.vn). On every push, lint and tests run; on tags `v*`, a Windows build produces `.msi`/`.exe` artifacts. See [Phase 01 — GitLab CI/CD (Windows)](plans/260307-1838-cicd-and-cloud-sync/phase-01-gitlab-cicd-windows.md) for pipeline details.
+- **CI (GitHub Actions):** Workflows run on every push (lint, type-check, tests) and on tags `v*` (Windows build producing `.msi`/`.exe` artifacts). See [GitHub Actions workflow configuration](.github/workflows/) for pipeline details.
 
 ***
 

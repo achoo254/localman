@@ -149,8 +149,8 @@ flowchart TD
     F -->|Pass| G["Code review"]
     G -->|Issues| C
     G -->|Approved| H["Commit (conventional)"]
-    H --> I["Push to GitLab"]
-    I --> J["CI Pipeline"]
+    H --> I["Push to GitHub"]
+    I --> J["GitHub Actions"]
     J -->|Fail| C
     J -->|Pass| K["Done ✓"]
 ```
@@ -181,7 +181,7 @@ flowchart TD
     F -->|Bugs found| G["Fix & rebuild"]
     G --> C
     F -->|Pass| H["Tag: git tag v0.x.x"]
-    H --> I["GitLab Release"]
+    H --> I["GitHub Release"]
     I --> J["Distribute to testers"]
     J --> K["Collect feedback"]
 ```

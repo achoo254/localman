@@ -8,7 +8,7 @@
 
 ## Overview
 - **Priority:** P0
-- **Status:** pending
+- **Status:** ✅ completed
 - **Description:** Create update checker service, hook, UI dialog, and wire to existing About section button + background check.
 
 ## Key Insights
@@ -219,16 +219,16 @@ export function useUpdateChecker() {
 - Modify: `src/App.tsx` (mount hook + dialog)
 
 ## Todo
-- [ ] Create update-checker-service.ts
-- [ ] Create update-store.ts
-- [ ] Create use-update-checker.ts
-- [ ] Create update-dialog.tsx (Radix Dialog)
-- [ ] Update about-section.tsx (remove hardcode, wire button)
-- [ ] Mount useUpdateChecker in App.tsx
-- [ ] Render UpdateDialog in App.tsx
-- [ ] Verify pnpm type-check passes
-- [ ] Test manual check flow (shows "up to date" when no update)
-- [ ] Test dialog open/close
+- [x] Create update-checker-service.ts
+- [x] Create update-store.ts
+- [x] Create use-update-checker.ts
+- [x] Create update-dialog.tsx (Radix Dialog)
+- [x] Update about-section.tsx (remove hardcode, wire button)
+- [x] Mount useUpdateChecker in App.tsx
+- [x] Render UpdateDialog in App.tsx
+- [x] Verify pnpm type-check passes
+- [x] Test manual check flow (shows "up to date" when no update)
+- [x] Test dialog open/close
 
 ## Success Criteria
 - Manual "Check for Updates" button works (shows toast)

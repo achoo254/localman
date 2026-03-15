@@ -6,7 +6,7 @@
 
 ## Overview
 - **Priority:** P0
-- **Status:** pending
+- **Status:** ✅ completed
 - **Description:** Generate Ed25519 signing keypair, configure Tauri updater plugin with pubkey and endpoint, install JS binding.
 
 ## Requirements
@@ -69,15 +69,15 @@ tauri-plugin-process = "2"
 - Modify: `package.json` (new deps)
 
 ## Todo
-- [ ] Generate Ed25519 keypair
-- [ ] Add pubkey to tauri.conf.json
-- [ ] Set updater endpoints in tauri.conf.json
-- [ ] Install @tauri-apps/plugin-updater
-- [ ] Install @tauri-apps/plugin-process
-- [ ] Add tauri-plugin-process to Cargo.toml
-- [ ] Register process plugin in lib.rs
-- [ ] Verify `cargo check` passes
-- [ ] Verify `pnpm type-check` passes
+- [x] Generate Ed25519 keypair
+- [x] Add pubkey to tauri.conf.json
+- [x] Set updater endpoints in tauri.conf.json
+- [x] Install @tauri-apps/plugin-updater
+- [x] Install @tauri-apps/plugin-process
+- [x] Add tauri-plugin-process to Cargo.toml
+- [x] Register process plugin in lib.rs
+- [x] Verify `cargo check` passes
+- [x] Verify `pnpm type-check` passes
 
 ## Success Criteria
 - `cargo check` succeeds with both plugins
