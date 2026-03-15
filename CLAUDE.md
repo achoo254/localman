@@ -98,11 +98,31 @@ src-tauri/        # Rust/Tauri backend (Tauri commands, native HTTP)
 
 ## Design System
 
-- **Theme:** Dark-first (`#0d0f14` bg / `#12151c` surface / `#181c25` elevated)
-- **Accent:** `#4f8ef7` (blue)
-- **HTTP method colors:** GET=green, POST=orange, PUT=yellow, DELETE=red, PATCH=purple
+**MANDATORY:** Before implementing any UI component, screen, or layout change:
+1. Read `docs/design-guidelines.md` for design tokens, component patterns, and CSS conventions
+2. Analyze `localman-design-system.pen` (Pencil file) for visual reference of all components and screens
+3. Follow existing patterns — do NOT introduce new colors, fonts, or spacing values not in the design system
+
+### Design Files
+- **`docs/design-guidelines.md`** — Design tokens, Tailwind conventions, component CSS patterns, modal/menu/dropdown specs
+- **`localman-design-system.pen`** — Visual design file (36 reusable components + 26 screens) covering:
+  - Design tokens (colors, HTTP methods, spacing)
+  - Components (buttons, inputs, tabs, badges, toggles, toasts, cards, modals)
+  - App layout (full 1440×900 with sidebar, request builder, response viewer)
+  - Context menus (collection, folder, request)
+  - Dropdowns (HTTP method, environment, workspace switcher)
+  - Selectors (auth type, body type, sidebar tabs)
+  - Request tab states (Params, Auth, Headers, Body with content)
+  - Settings pages (General, Editor, Proxy, Data, Account, About)
+  - Modals (Name Input, Save Request, Import, Export, Keyboard Shortcuts, Environment Manager, Conflict Resolution)
+
+### Theme Summary
+- **Theme:** Dark-first (`#0B1120` bg / `#0F172A` surface / `#1E293B` elevated)
+- **Accent:** `#3B82F6` (blue)
+- **HTTP method colors:** GET=`#10B981`, POST=`#3B82F6`, PUT=`#F59E0B`, DELETE=`#EF4444`, PATCH=`#8B5CF6`
 - **Fonts:** JetBrains Mono (code areas) + Inter (UI text)
 - **Spacing:** 4px base unit, border-radius 6–8px
+- **UI library:** Radix UI (Dialog, ContextMenu, Select, DropdownMenu) + Tailwind CSS
 
 ## Layout
 
