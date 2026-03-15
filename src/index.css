@@ -1,0 +1,82 @@
+@import "tailwindcss";
+@import "@fontsource/jetbrains-mono/400.css";
+@import "@fontsource/jetbrains-mono/500.css";
+@import "@fontsource/inter/400.css";
+@import "@fontsource/inter/500.css";
+@import "@fontsource/inter/600.css";
+
+@theme {
+  /* Design system — UI/UX Pro Max (Deep Space / Enterprise Gateway) */
+  --color-bg-primary: #0B1120;
+  --color-bg-secondary: #0F172A;
+  --color-bg-tertiary: #1E293B;
+  --color-accent: #3B82F6;
+  --color-accent-hover: #60A5FA;
+  
+  --color-method-get: #10B981;
+  --color-method-post: #3B82F6;
+  --color-method-put: #F59E0B;
+  --color-method-delete: #EF4444;
+  --color-method-patch: #8B5CF6;
+  
+  --spacing-1: 0.25rem;
+  --spacing-2: 0.5rem;
+  --spacing-3: 0.75rem;
+  --spacing-4: 1rem;
+  --radius-default: 8px;
+  --radius-lg: 12px;
+  
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --font-sans: "Inter", system-ui, sans-serif;
+}
+
+:root {
+  --background: var(--color-bg-primary);
+  --foreground: #F8FAFC;
+  --muted: #94A3B8;
+  --border: var(--color-bg-tertiary);
+  --font-size-base: 14px;
+  font-family: var(--font-sans);
+  font-size: var(--font-size-base);
+  color: var(--foreground);
+  background-color: var(--background);
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Base interactive elements */
+button, input, select {
+  font-family: inherit;
+  transition: all 0.2s ease-in-out;
+}
+
+/* Standard scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-bg-tertiary);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #334155;
+}
+
+/* Hide scrollbar utility */
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

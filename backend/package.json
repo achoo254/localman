@@ -1,0 +1,41 @@
+{
+  "name": "localman-backend",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "tsx watch --env-file=.env src/index.ts",
+    "build": "node esbuild.config.js",
+    "build:tsc": "tsc --noEmit",
+    "start": "node --env-file=.env dist/index.js",
+    "start:prod": "node --env-file=.env dist/index.js",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio",
+    "db:migrate-data": "tsx --env-file=.env src/scripts/migrate-user-files.ts",
+    "pm2:start": "pm2 start ecosystem.config.cjs",
+    "pm2:stop": "pm2 stop localman-api",
+    "pm2:restart": "pm2 restart localman-api"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.19.11",
+    "drizzle-orm": "^0.45.1",
+    "firebase-admin": "^13.7.0",
+    "hono": "^4.12.5",
+    "postgres": "^3.4.8",
+    "ws": "^8.19.0",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/node": "^25.3.5",
+    "@types/ws": "^8.18.1",
+    "drizzle-kit": "^0.31.9",
+    "esbuild": "^0.27.4",
+    "tsx": "^4.21.0",
+    "typescript": "~5.8.3"
+  }
+}
