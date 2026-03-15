@@ -1,0 +1,34 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir:*)",
+      "Bash(node:*)",
+      "Bash(glab auth:*)",
+      "Bash(where glab:*)",
+      "Bash(winget install:*)",
+      "Bash(scoop install:*)",
+      "Bash(curl:*)",
+      "Bash(python:*)",
+      "Bash(pnpm type-check:*)",
+      "Bash(pnpm test:*)",
+      "Bash(~/.claude/skills/.venv/Scripts/python.exe:*)",
+      "Bash(python3:*)",
+      "Bash(pnpm lint:*)",
+      "Bash(npm install:*)",
+      "Bash(pnpm add:*)",
+      "Bash(pnpm approve-builds:*)",
+      "Bash(pnpm:*)",
+      "Bash(glab project:*)",
+      "Read(//usr/local/bin/**)",
+      "Read(//mnt/c/**)",
+      "Read(//c/ProgramData/chocolatey/bin/**)",
+      "Read(//c/Users/hoandat-pc/AppData/Local/Programs/**)",
+      "Bash(powershell.exe -Command \"where.exe glab\")",
+      "Bash(do:*)",
+      "Bash(ls:*)",
+      "Bash(npx tsc:*)",
+      "Bash(wc:*)",
+      "Bash(do echo:*)"
+    ]
+  }
+}

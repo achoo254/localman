@@ -1,0 +1,6 @@
+packages:
+  - "backend"
+
+ignoredBuiltDependencies:
+  - esbuild
+  - puppeteer
