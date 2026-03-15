@@ -152,6 +152,12 @@ localman/
 - **WS Event Handler** (`ws-event-handler.ts`) — Apply real-time updates to Dexie and Zustand stores
 - **Sync Reconciliation** (`sync-reconciliation.ts`) — Reconcile local vs. remote state after reconnect
 
+#### Update Checker Service (`update-checker-service.ts`)
+- **Check for updates** — Query GitHub Releases via `@tauri-apps/plugin-updater`
+- **Download with progress** — Stream download with progress callback
+- **Install & relaunch** — Atomic install + app restart
+- Graceful offline fallback (no errors, silent skip)
+
 ### Components (`src/components/`)
 
 #### Request (`request/`)
@@ -188,6 +194,8 @@ localman/
 
 #### Settings (`settings/`)
 - `general-settings.tsx` — app preferences
+- `about-section.tsx` — app version (from Tauri API), "Check for Updates" button
+- `update-dialog.tsx` — update available dialog with changelog, progress bar, install button
 
 #### Layout (`layout/`)
 - `main-layout.tsx` — overall app shell
@@ -204,6 +212,11 @@ localman/
   - `drafts: Record<string, ApiRequest>` — in-memory draft requests (not persisted until save)
   - `createDraftTab()` — create transient draft (Ctrl+T)
   - `saveDraftToCollection()` — persist draft to IndexedDB, close draft tab
+- `update-store.ts` — Update checker state (checking/available/downloading/ready/error)
+  - `status` — current state (idle, checking, available, downloading, ready, error)
+  - `updateInfo` — version, notes, date
+  - `progress` — download progress (bytes/total)
+  - `dialogOpen` — update dialog visibility
 - `settings-store.ts` — user preferences, theme, last selected language
 - Other domain-specific stores
 
@@ -358,7 +371,7 @@ Full TypeScript coverage. `tsconfig.json` with strict mode enabled.
 - **Frontend**: Vite + React + TypeScript
 - **Desktop**: Tauri (Rust) wraps Vite build
 - **Build**: `pnpm build` (frontend), `pnpm tauri build` (full desktop app)
-- **CI/CD**: GitLab (lint, test, Windows MSI/EXE on tags `v*`)
+- **CI/CD**: GitHub Actions (lint, test, Windows MSI/EXE on tags `v*`)
 
 ## Development Commands
 
@@ -577,6 +590,33 @@ GET /api/auth/signin/github  (or other OAuth providers)
 - `src/components/request/request-panel.tsx` — integrated snippet + description
 - `src/components/collections/sidebar-tabs.tsx` — added Docs tab
 - `package.json` — added `react-markdown`
+
+## Phase 6 Additions: Check for Updates (2026-03-15)
+
+### New Files (6 total)
+- **Update Checker Service** (`src/services/update-checker-service.ts`) — Check for updates, download with progress, install + relaunch
+- **Update Store** (`src/stores/update-store.ts`) — Zustand state management (status, updateInfo, progress, dialogOpen)
+- **Update Checker Hook** (`src/hooks/use-update-checker.ts`) — Auto-check on startup + 4h interval, manual check trigger
+- **Update Dialog** (`src/components/settings/update-dialog.tsx`) — Radix Dialog with version, changelog, progress bar, install button
+- **Release Workflow** (`.github/workflows/release.yml`) — GitHub Actions multi-platform build + sign + release
+- **Version Bump Script** (`scripts/bump-version.sh`) — Single command to bump version across all configs
+
+### Modified Files
+- `src/App.tsx` — mount update checker hook and render update dialog
+- `src/components/settings/about-section.tsx` — use Tauri API for version, wire "Check for Updates" button
+- `src-tauri/tauri.conf.json` — add updater plugin config with public key + GitHub Releases endpoint
+- `src-tauri/Cargo.toml` — add tauri-plugin-process dependency
+- `src-tauri/src/lib.rs` — register process plugin for relaunch capability
+- `package.json` — add @tauri-apps/plugin-updater, @tauri-apps/plugin-process; add version:bump script
+
+### Key Features
+- **Auto-check**: Startup + every 4 hours in background
+- **Manual check**: "Check for Updates" button in About section
+- **Progress**: Download progress bar with byte count
+- **Toast notifications**: "Update available" or "You're up to date"
+- **Graceful fallback**: Offline = silent skip (no error messages)
+- **Cross-platform**: Windows/macOS/Linux signed binaries via GitHub Actions
+- **Secure**: Ed25519 signatures verified by Tauri using embedded public key
 
 ## Unresolved Questions
 

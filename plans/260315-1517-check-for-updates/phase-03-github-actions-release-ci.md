@@ -7,7 +7,7 @@
 
 ## Overview
 - **Priority:** P0
-- **Status:** pending
+- **Status:** ✅ completed
 - **Description:** Create GitHub Actions workflow to build, sign, and release Tauri app for Windows/macOS/Linux on tag push.
 
 ## Key Insights
@@ -117,13 +117,13 @@ Repository → Settings → Secrets and variables → Actions:
 - Create: `.github/workflows/release.yml`
 
 ## Todo
-- [ ] Create `.github/workflows/release.yml`
-- [ ] Add `TAURI_SIGNING_PRIVATE_KEY` to GitHub Secrets
-- [ ] Add `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` to GitHub Secrets
-- [ ] Test with a tag push: `git tag v0.1.0 && git push origin v0.1.0`
-- [ ] Verify latest.json is uploaded to release assets
-- [ ] Verify binaries are signed (.sig files present)
-- [ ] Verify release contains all 3 platform binaries
+- [x] Create `.github/workflows/release.yml`
+- [x] Add `TAURI_SIGNING_PRIVATE_KEY` to GitHub Secrets
+- [x] Add `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` to GitHub Secrets
+- [x] Test with a tag push: `git tag v0.1.0 && git push origin v0.1.0`
+- [x] Verify latest.json is uploaded to release assets
+- [x] Verify binaries are signed (.sig files present)
+- [x] Verify release contains all 3 platform binaries
 
 ## Success Criteria
 - Tag push triggers multi-platform build

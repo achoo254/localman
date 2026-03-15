@@ -5,11 +5,14 @@ import { RequestTabBar } from "./components/request/request-tab-bar";
 import { RequestPanel } from "./components/request/request-panel";
 import { ResponsePanel } from "./components/response/response-panel";
 import { SaveRequestDialog } from "./components/request/save-request-dialog";
+import { UpdateDialog } from "./components/settings/update-dialog";
 import { useRequestStore } from "./stores/request-store";
 import { useSettingsStore } from "./stores/settings-store";
+import { useUpdateChecker } from "./hooks/use-update-checker";
 import "./App.css";
 
 function App() {
+  useUpdateChecker();
   const loadSettings = useSettingsStore(s => s.load);
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
   const [saveDialogTabId, setSaveDialogTabId] = useState<string | null>(null);
@@ -36,6 +39,7 @@ function App() {
   }, []);
 
   return (
+    <>
     <AppLayout>
       <div className="flex h-full flex-col">
         <RequestTabBar onRequestSaveDialog={handleRequestSaveDialog} />
@@ -65,6 +69,8 @@ function App() {
         }}
       />
     </AppLayout>
+    <UpdateDialog />
+  </>
   );
 }
 
