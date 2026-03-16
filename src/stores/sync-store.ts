@@ -16,6 +16,7 @@ import { syncAll } from '../services/sync/entity-sync-service'
 import { clearAllPendingChanges } from '../services/sync/offline-change-queue'
 import { wsManager, type WsConnectionState } from '../services/sync/websocket-manager'
 import { initWsEventHandlers, disposeWsEventHandlers } from '../services/sync/ws-event-handler'
+import { FEATURES } from '../utils/feature-flags'
 import type { CloudSyncConfig } from '../types/cloud-sync'
 import { DEFAULT_CLOUD_SYNC_CONFIG, CLOUD_SYNC_CONFIG_KEY } from '../types/cloud-sync'
 import { db } from '../db/database'
@@ -71,6 +72,13 @@ async function persistCloudConfig(config: CloudSyncConfig): Promise<void> {
 /** Cleanup fn for WS state listener */
 let wsStateCleanup: (() => void) | null = null
 let authUnsubscribe: (() => void) | null = null
+/** Cleanup refs for auto-sync */
+let onlineHandler: (() => void) | null = null
+let periodicSyncInterval: ReturnType<typeof setInterval> | null = null
+let onlineDebounceTimer: ReturnType<typeof setTimeout> | null = null
+
+const AUTO_SYNC_DEBOUNCE_MS = 2000
+const PERIODIC_SYNC_INTERVAL_MS = 5 * 60 * 1000 // 5 minutes
 
 /** Connect WebSocket using Firebase token */
 async function connectWs(config: CloudSyncConfig): Promise<void> {
@@ -117,6 +125,31 @@ export const useSyncStore = create<SyncStore>((set, get) => ({
         set({ authLoading: false })
       }
     })
+
+    // Auto-sync on reconnect: debounced online listener
+    if (onlineHandler) window.removeEventListener('online', onlineHandler)
+    onlineHandler = () => {
+      if (!FEATURES.CLOUD_SYNC) return
+      const { config: cfg, status } = get()
+      if (cfg.enabled && status !== 'syncing') {
+        if (onlineDebounceTimer) clearTimeout(onlineDebounceTimer)
+        onlineDebounceTimer = setTimeout(() => {
+          onlineDebounceTimer = null
+          void get().syncAll()
+        }, AUTO_SYNC_DEBOUNCE_MS)
+      }
+    }
+    window.addEventListener('online', onlineHandler)
+
+    // Periodic sync every 5 min when authenticated and online
+    if (periodicSyncInterval) clearInterval(periodicSyncInterval)
+    periodicSyncInterval = setInterval(() => {
+      if (!FEATURES.CLOUD_SYNC) return
+      const { config: cfg, status } = get()
+      if (cfg.enabled && status !== 'syncing' && navigator.onLine) {
+        void get().syncAll()
+      }
+    }, PERIODIC_SYNC_INTERVAL_MS)
   },
 
   async saveConfig(config: CloudSyncConfig) {
@@ -159,6 +192,10 @@ export const useSyncStore = create<SyncStore>((set, get) => ({
     // Unsubscribe auth listener
     authUnsubscribe?.()
     authUnsubscribe = null
+    // Clean up auto-sync listeners
+    if (onlineHandler) { window.removeEventListener('online', onlineHandler); onlineHandler = null }
+    if (onlineDebounceTimer) { clearTimeout(onlineDebounceTimer); onlineDebounceTimer = null }
+    if (periodicSyncInterval) { clearInterval(periodicSyncInterval); periodicSyncInterval = null }
     // Disconnect WebSocket
     wsStateCleanup?.()
     wsStateCleanup = null
