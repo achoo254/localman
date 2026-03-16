@@ -7,6 +7,21 @@ import type { ApiRequest } from '../types/models';
 import * as requestService from '../db/services/request-service';
 import * as draftService from '../db/services/draft-service';
 import { handleDbError } from '../utils/db-error-handler';
+import { addPendingChange } from '../services/sync/offline-change-queue';
+
+/** Queue a sync change — non-blocking, failures won't break UI */
+async function queueSyncChange(
+  entityId: string,
+  action: 'create' | 'update' | 'delete',
+  changes: Record<string, unknown>,
+  version: number = 1,
+): Promise<void> {
+  try {
+    await addPendingChange('request', entityId, action, changes, version);
+  } catch {
+    // Non-blocking — sync queue failure shouldn't break the UI
+  }
+}
 
 export interface TabInfo {
   id: string;
@@ -224,6 +239,7 @@ export const useRequestStore = create<RequestStore>((set, get) => ({
       sort_order: draft.sort_order,
     });
 
+    void queueSyncChange(saved.id, 'create', { name: saved.name, collection_id: collectionId, folder_id: folderId }, saved.version ?? 1);
     const remainingDrafts = Object.fromEntries(Object.entries(get().drafts).filter(([k]) => k !== tabId));
     // Remove draft from IndexedDB after saving as real request
     const timer = draftSaveTimers.get(tabId);
@@ -258,6 +274,7 @@ export const useRequestStore = create<RequestStore>((set, get) => ({
       auth: defaultAuth,
       sort_order: 0,
     });
+    void queueSyncChange(request.id, 'create', { name: request.name, collection_id: collectionId, folder_id: folderId }, request.version ?? 1);
     get().openRequest(request);
     return request;
   },
@@ -276,6 +293,18 @@ export const useRequestStore = create<RequestStore>((set, get) => ({
       handleDbError(err, 'save request');
       return;
     }
+    void queueSyncChange(snapshot.id, 'update', {
+      name: snapshot.name,
+      method: snapshot.method,
+      url: snapshot.url,
+      params: snapshot.params,
+      headers: snapshot.headers,
+      body: snapshot.body,
+      auth: snapshot.auth,
+      folder_id: snapshot.folder_id,
+      collection_id: snapshot.collection_id,
+      sort_order: snapshot.sort_order,
+    }, snapshot.version ?? 1);
     // Only clear dirty flag if no newer edit arrived during the async save
     if (get().activeRequest?.updated_at === snapshot.updated_at) {
       set({ isDirty: false });

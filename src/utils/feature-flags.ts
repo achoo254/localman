@@ -4,5 +4,5 @@
  */
 
 export const FEATURES = {
-  CLOUD_SYNC: false,
+  CLOUD_SYNC: true,
 } as const;

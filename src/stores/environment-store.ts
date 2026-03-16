@@ -7,6 +7,21 @@ import type { Environment, EnvVariable } from '../types/models';
 import type { InterpolationContext } from '../services/interpolation-engine';
 import * as environmentService from '../db/services/environment-service';
 import * as settingsService from '../db/services/settings-service';
+import { addPendingChange } from '../services/sync/offline-change-queue';
+
+/** Queue a sync change for environment entities — non-blocking */
+async function queueSyncChange(
+  entityId: string,
+  action: 'create' | 'update' | 'delete',
+  changes: Record<string, unknown>,
+  version: number = 1,
+): Promise<void> {
+  try {
+    await addPendingChange('environment', entityId, action, changes, version);
+  } catch {
+    // Non-blocking — sync queue failure shouldn't break the UI
+  }
+}
 
 const GLOBAL_VARS_KEY = 'global_variables';
 
@@ -92,6 +107,7 @@ export const useEnvironmentStore = create<EnvironmentStore>((set, get) => ({
 
   async createEnvironment(name: string) {
     const env = await environmentService.create({ name, variables: [], is_active: false });
+    void queueSyncChange(env.id, 'create', { name, variables: [], is_active: false }, env.version ?? 1);
     const environments = await environmentService.getAll();
     set({ environments });
     return env;
@@ -99,12 +115,14 @@ export const useEnvironmentStore = create<EnvironmentStore>((set, get) => ({
 
   async updateEnvironment(id: string, data: Partial<Pick<Environment, 'name'>>) {
     await environmentService.update(id, data);
+    void queueSyncChange(id, 'update', data as Record<string, unknown>);
     const environments = await environmentService.getAll();
     set({ environments });
   },
 
   async deleteEnvironment(id: string) {
     await environmentService.remove(id);
+    void queueSyncChange(id, 'delete', {});
     set(s => ({ environments: s.environments.filter(e => e.id !== id) }));
   },
 
@@ -113,12 +131,14 @@ export const useEnvironmentStore = create<EnvironmentStore>((set, get) => ({
     if (!env) return;
     const variables = env.variables.map(v => (v.id === variable.id ? variable : v));
     await environmentService.update(envId, { variables });
+    void queueSyncChange(envId, 'update', { variables });
     const environments = await environmentService.getAll();
     set({ environments });
   },
 
   async setEnvironmentVariables(envId: string, variables: EnvVariable[]) {
     await environmentService.update(envId, { variables });
+    void queueSyncChange(envId, 'update', { variables });
     const environments = await environmentService.getAll();
     set({ environments });
   },
@@ -129,6 +149,7 @@ export const useEnvironmentStore = create<EnvironmentStore>((set, get) => ({
     const newVar: EnvVariable = { ...variable, id: crypto.randomUUID() };
     const variables = [...env.variables, newVar];
     await environmentService.update(envId, { variables });
+    void queueSyncChange(envId, 'update', { variables });
     const environments = await environmentService.getAll();
     set({ environments });
   },
@@ -138,6 +159,7 @@ export const useEnvironmentStore = create<EnvironmentStore>((set, get) => ({
     if (!env) return;
     const variables = env.variables.filter(v => v.id !== variableId);
     await environmentService.update(envId, { variables });
+    void queueSyncChange(envId, 'update', { variables });
     const environments = await environmentService.getAll();
     set({ environments });
   },
@@ -184,7 +206,9 @@ export const useEnvironmentStore = create<EnvironmentStore>((set, get) => ({
         byKey.set(k, { id: crypto.randomUUID(), key: k, value });
       }
     }
-    await environmentService.update(active.id, { variables: Array.from(byKey.values()) });
+    const updatedVars = Array.from(byKey.values());
+    await environmentService.update(active.id, { variables: updatedVars });
+    void queueSyncChange(active.id, 'update', { variables: updatedVars });
     const environments = await environmentService.getAll();
     set({ environments });
   },

@@ -17,6 +17,14 @@ vi.mock('firebase/auth', () => ({
   GoogleAuthProvider: vi.fn(),
 }));
 
+// Mock Firebase config imports
+vi.mock('../../firebase-config', () => ({
+  auth: {},
+}));
+vi.mock('../../firebase-config.ts', () => ({
+  auth: {},
+}));
+
 vi.mock('react-resizable-panels', () => ({
   Group: ({ children }: { children: React.ReactNode }) =>
     React.createElement('div', { 'data-testid': 'resizable-group' }, children),
