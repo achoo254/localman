@@ -11,7 +11,7 @@
     "build:mac": "tauri build --target aarch64-apple-darwin",
     "build:linux": "tauri build --target x86_64-unknown-linux-gnu",
     "preview": "vite preview",
-    "tauri": "tauri dev",
+    "tauri": "tauri",
     "type-check": "tsc --noEmit",
     "lint": "eslint src --ext .ts,.tsx",
     "test": "vitest run",
