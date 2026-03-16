@@ -51,7 +51,7 @@ jobs:
         if: matrix.target == 'linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev xvfb
 
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
@@ -61,11 +61,25 @@ jobs:
         with:
           workspaces: src-tauri
 
-      - name: Build and release
+      - name: Build and release (Linux)
+        if: matrix.target == 'linux'
         uses: tauri-apps/tauri-action@v0
         with:
           releaseId: ${{ needs.create-release.outputs.release_id }}
-          uploadUpdaterJson: true
+          includeUpdaterJson: true
+          args: --bundles deb,appimage,updater
+          tauriScript: xvfb-run pnpm tauri
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+
+      - name: Build and release (Windows/macOS)
+        if: matrix.target != 'linux'
+        uses: tauri-apps/tauri-action@v0
+        with:
+          releaseId: ${{ needs.create-release.outputs.release_id }}
+          includeUpdaterJson: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
