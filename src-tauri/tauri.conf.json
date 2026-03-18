@@ -44,6 +44,13 @@
     ],
     "shortDescription": "Offline-first API client",
     "longDescription": "Localman — The API client that lives on your machine. Postman alternative with collections, environments, and local-first data.",
-    "category": "DeveloperTool"
+    "category": "DeveloperTool",
+    "fileAssociations": [
+      {
+        "ext": ["json"],
+        "mimeType": "application/json",
+        "description": "JSON Collection File"
+      }
+    ]
   }
 }
