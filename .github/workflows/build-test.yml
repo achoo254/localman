@@ -30,41 +30,53 @@ jobs:
           - os: ubuntu-latest
             target: linux
     runs-on: ${{ matrix.os }}
-    if: >-
-      github.event.inputs.platform == 'all' ||
-      github.event.inputs.platform == matrix.target
 
     steps:
+      - name: Skip check
+        id: skip
+        shell: bash
+        run: |
+          if [[ "${{ inputs.platform }}" != "all" && "${{ inputs.platform }}" != "${{ matrix.target }}" ]]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - uses: actions/checkout@v4
+        if: steps.skip.outputs.skip != 'true'
 
       - uses: pnpm/action-setup@v4
+        if: steps.skip.outputs.skip != 'true'
       - uses: actions/setup-node@v4
+        if: steps.skip.outputs.skip != 'true'
         with:
           node-version: 22
           cache: pnpm
 
       - run: pnpm install
+        if: steps.skip.outputs.skip != 'true'
 
       - name: Install Linux dependencies
-        if: matrix.target == 'linux'
+        if: steps.skip.outputs.skip != 'true' && matrix.target == 'linux'
         run: |
           sudo apt-get update
           sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev xvfb
 
       - uses: dtolnay/rust-toolchain@stable
+        if: steps.skip.outputs.skip != 'true'
       - uses: swatinem/rust-cache@v2
+        if: steps.skip.outputs.skip != 'true'
         with:
           workspaces: src-tauri
 
       - name: Build (Linux)
-        if: matrix.target == 'linux'
+        if: steps.skip.outputs.skip != 'true' && matrix.target == 'linux'
         run: xvfb-run pnpm tauri build --bundles deb,appimage
 
       - name: Build (Windows/macOS)
-        if: matrix.target != 'linux'
+        if: steps.skip.outputs.skip != 'true' && matrix.target != 'linux'
         run: pnpm tauri build
 
       - name: Upload artifacts
+        if: steps.skip.outputs.skip != 'true'
         uses: actions/upload-artifact@v4
         with:
           name: localman-${{ matrix.target }}
