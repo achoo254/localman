@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Localman — API Client Offline-First Miễn Phí</title>
+  <meta name="description" content="Công cụ test API sống trên máy bạn, đồng bộ đám mây khi cần, và không bao giờ cần internet để hoạt động. Miễn phí. Mã nguồn mở.">
+  <meta name="keywords" content="API client, Postman alternative, offline API tool, desktop API client, free API testing">
+  <meta property="og:title" content="Localman — API Client Offline-First Miễn Phí">
+  <meta property="og:description" content="Công cụ test API miễn phí, mã nguồn mở, chạy offline hoàn toàn. Thay thế Postman.">
+  <meta property="og:type" content="website">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg-primary: #0B1120;
+      --bg-secondary: #0F172A;
+      --bg-tertiary: #1E293B;
+      --accent: #3B82F6;
+      --accent-hover: #60A5FA;
+      --text-primary: #F8FAFC;
+      --text-secondary: #94A3B8;
+      --text-muted: #64748B;
+      --color-get: #10B981;
+      --color-post: #3B82F6;
+      --color-put: #F59E0B;
+      --color-delete: #EF4444;
+      --color-patch: #8B5CF6;
+      --border: #334155;
+      --radius: 8px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    code, .mono { font-family: 'JetBrains Mono', monospace; }
+
+    a { color: var(--accent); text-decoration: none; transition: color 0.2s; }
+    a:hover { color: var(--accent-hover); }
+
+    .container { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+
+    /* ─── NAV ─── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+      background: rgba(11, 17, 32, 0.85); backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+    nav .container {
+      display: flex; align-items: center; justify-content: space-between;
+      height: 60px;
+    }
+    .nav-logo {
+      font-weight: 800; font-size: 1.25rem; color: var(--text-primary);
+      display: flex; align-items: center; gap: 8px;
+    }
+    .nav-logo svg { width: 28px; height: 28px; }
+    .nav-links { display: flex; gap: 28px; align-items: center; }
+    .nav-links a { color: var(--text-secondary); font-size: 0.9rem; font-weight: 500; }
+    .nav-links a:hover { color: var(--text-primary); }
+    .btn-nav {
+      background: var(--accent); color: #fff; padding: 8px 20px;
+      border-radius: var(--radius); font-weight: 600; font-size: 0.875rem;
+      transition: background 0.2s;
+    }
+    .btn-nav:hover { background: var(--accent-hover); color: #fff; }
+
+    /* ─── HERO ─── */
+    .hero {
+      padding: 160px 0 100px; text-align: center;
+      background: radial-gradient(ellipse at 50% 0%, rgba(59,130,246,0.08) 0%, transparent 60%);
+    }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--bg-tertiary); border: 1px solid var(--border);
+      padding: 6px 16px; border-radius: 100px; font-size: 0.8rem;
+      color: var(--text-secondary); margin-bottom: 28px;
+    }
+    .hero-badge .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--color-get); }
+    .hero h1 {
+      font-size: clamp(2.2rem, 5vw, 3.5rem); font-weight: 800;
+      line-height: 1.15; max-width: 780px; margin: 0 auto 20px;
+    }
+    .hero h1 .accent { color: var(--accent); }
+    .hero .subtitle {
+      font-size: clamp(1.05rem, 2vw, 1.25rem); color: var(--text-secondary);
+      max-width: 620px; margin: 0 auto 40px; line-height: 1.7;
+    }
+    .hero-cta { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+    .btn-primary {
+      background: var(--accent); color: #fff; padding: 14px 32px;
+      border-radius: var(--radius); font-weight: 700; font-size: 1rem;
+      transition: all 0.2s; border: none; cursor: pointer;
+      box-shadow: 0 0 24px rgba(59,130,246,0.25);
+    }
+    .btn-primary:hover { background: var(--accent-hover); color: #fff; transform: translateY(-1px); }
+    .btn-secondary {
+      background: transparent; color: var(--text-primary); padding: 14px 32px;
+      border-radius: var(--radius); font-weight: 600; font-size: 1rem;
+      border: 1px solid var(--border); transition: all 0.2s; cursor: pointer;
+    }
+    .btn-secondary:hover { border-color: var(--text-muted); background: var(--bg-secondary); }
+    .hero-stats {
+      display: flex; justify-content: center; gap: 48px; margin-top: 56px;
+      flex-wrap: wrap;
+    }
+    .stat { text-align: center; }
+    .stat-value { font-size: 1.75rem; font-weight: 800; color: var(--text-primary); }
+    .stat-value.green { color: var(--color-get); }
+    .stat-value.blue { color: var(--accent); }
+    .stat-value.amber { color: var(--color-put); }
+    .stat-label { font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; }
+
+    /* ─── SCREENSHOT ─── */
+    .screenshot {
+      padding: 0 0 80px; text-align: center;
+    }
+    .screenshot img {
+      max-width: 100%; border-radius: 12px;
+      border: 1px solid var(--border);
+      box-shadow: 0 24px 80px rgba(0,0,0,0.4);
+    }
+
+    /* ─── SECTIONS ─── */
+    section { padding: 100px 0; }
+    .section-label {
+      text-transform: uppercase; font-size: 0.75rem; font-weight: 700;
+      letter-spacing: 2px; color: var(--accent); margin-bottom: 12px;
+    }
+    .section-title {
+      font-size: clamp(1.75rem, 3.5vw, 2.5rem); font-weight: 800;
+      margin-bottom: 16px; line-height: 1.2;
+    }
+    .section-desc {
+      font-size: 1.05rem; color: var(--text-secondary); max-width: 640px;
+      line-height: 1.7;
+    }
+    .section-desc.center { margin: 0 auto; text-align: center; }
+
+    /* ─── PROBLEM ─── */
+    .problem { background: var(--bg-secondary); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+    .problem-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px; margin-top: 48px;
+    }
+    .problem-card {
+      background: var(--bg-primary); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 28px;
+    }
+    .problem-card .icon {
+      width: 44px; height: 44px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 16px; font-size: 1.25rem;
+    }
+    .problem-card .icon.red { background: rgba(239,68,68,0.12); color: var(--color-delete); }
+    .problem-card .icon.amber { background: rgba(245,158,11,0.12); color: var(--color-put); }
+    .problem-card .icon.purple { background: rgba(139,92,246,0.12); color: var(--color-patch); }
+    .problem-card h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: 8px; }
+    .problem-card p { font-size: 0.9rem; color: var(--text-secondary); line-height: 1.6; }
+
+    /* ─── FEATURES ─── */
+    .features-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 24px; margin-top: 48px;
+    }
+    .feature-card {
+      background: var(--bg-secondary); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 28px;
+      transition: border-color 0.2s;
+    }
+    .feature-card:hover { border-color: var(--accent); }
+    .feature-icon {
+      width: 40px; height: 40px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 16px; font-size: 1.1rem;
+      background: rgba(59,130,246,0.1); color: var(--accent);
+    }
+    .feature-card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 8px; }
+    .feature-card p { font-size: 0.875rem; color: var(--text-secondary); line-height: 1.6; }
+    .feature-tag {
+      display: inline-block; font-size: 0.7rem; font-weight: 600;
+      padding: 2px 8px; border-radius: 4px; margin-top: 12px;
+      background: rgba(16,185,129,0.1); color: var(--color-get);
+    }
+
+    /* ─── COMPARISON ─── */
+    .comparison { background: var(--bg-secondary); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+    .comparison-table {
+      width: 100%; border-collapse: collapse; margin-top: 48px;
+      font-size: 0.9rem;
+    }
+    .comparison-table th, .comparison-table td {
+      padding: 14px 20px; text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    .comparison-table thead th {
+      font-weight: 700; font-size: 0.95rem;
+      border-bottom: 2px solid var(--border);
+    }
+    .comparison-table th:first-child { color: var(--text-muted); font-weight: 500; }
+    .comparison-table .col-localman { color: var(--color-get); font-weight: 600; }
+    .comparison-table .col-postman { color: var(--text-muted); }
+    .comparison-table tbody tr:hover { background: rgba(59,130,246,0.03); }
+    .check { color: var(--color-get); }
+    .cross { color: var(--color-delete); }
+
+    /* ─── CODE SNIPPET PREVIEW ─── */
+    .snippet-section { text-align: center; }
+    .snippet-box {
+      background: var(--bg-secondary); border: 1px solid var(--border);
+      border-radius: 12px; padding: 32px; margin-top: 48px;
+      text-align: left; max-width: 720px; margin-left: auto; margin-right: auto;
+    }
+    .snippet-header {
+      display: flex; gap: 8px; margin-bottom: 20px;
+    }
+    .snippet-dot { width: 12px; height: 12px; border-radius: 50%; }
+    .snippet-dot.r { background: #EF4444; }
+    .snippet-dot.y { background: #F59E0B; }
+    .snippet-dot.g { background: #10B981; }
+    .snippet-code {
+      font-family: 'JetBrains Mono', monospace; font-size: 0.85rem;
+      line-height: 1.8; color: var(--text-secondary);
+    }
+    .snippet-code .kw { color: var(--color-patch); }
+    .snippet-code .str { color: var(--color-get); }
+    .snippet-code .fn { color: var(--accent); }
+    .snippet-code .cm { color: var(--text-muted); }
+    .snippet-code .num { color: var(--color-put); }
+
+    /* ─── STORY ─── */
+    .story { text-align: center; }
+    .story blockquote {
+      font-size: clamp(1.1rem, 2vw, 1.35rem); font-style: italic;
+      color: var(--text-secondary); max-width: 700px; margin: 32px auto 0;
+      line-height: 1.8; border-left: 3px solid var(--accent); padding-left: 24px;
+      text-align: left;
+    }
+
+    /* ─── CTA ─── */
+    .cta {
+      text-align: center; padding: 120px 0;
+      background: radial-gradient(ellipse at 50% 100%, rgba(59,130,246,0.06) 0%, transparent 60%);
+    }
+    .cta h2 { font-size: clamp(2rem, 4vw, 2.75rem); font-weight: 800; margin-bottom: 16px; }
+    .cta p { color: var(--text-secondary); font-size: 1.1rem; margin-bottom: 40px; }
+    .cta-platforms {
+      display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;
+      margin-bottom: 24px;
+    }
+    .btn-platform {
+      display: inline-flex; align-items: center; gap: 10px;
+      background: var(--bg-secondary); border: 1px solid var(--border);
+      color: var(--text-primary); padding: 14px 28px; border-radius: var(--radius);
+      font-weight: 600; font-size: 0.95rem; transition: all 0.2s; cursor: pointer;
+    }
+    .btn-platform:hover { border-color: var(--accent); background: var(--bg-tertiary); color: #fff; }
+    .btn-platform svg { width: 20px; height: 20px; }
+    .cta-note { font-size: 0.8rem; color: var(--text-muted); margin-top: 20px; }
+
+    /* ─── FOOTER ─── */
+    footer {
+      border-top: 1px solid var(--border); padding: 40px 0;
+      text-align: center; color: var(--text-muted); font-size: 0.85rem;
+    }
+    footer a { color: var(--text-secondary); }
+    footer .footer-links { display: flex; gap: 24px; justify-content: center; margin-bottom: 16px; }
+
+    /* ─── RESPONSIVE ─── */
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+      .hero { padding: 120px 0 60px; }
+      .hero-stats { gap: 24px; }
+      section { padding: 60px 0; }
+      .comparison-table { font-size: 0.8rem; }
+      .comparison-table th, .comparison-table td { padding: 10px 12px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="container">
+    <a href="#" class="nav-logo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="7.5 4.21 12 6.81 16.5 4.21"/><polyline points="7.5 19.79 7.5 14.6 3 12"/><polyline points="21 12 16.5 14.6 16.5 19.79"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+      Localman
+    </a>
+    <div class="nav-links">
+      <a href="#features">Tính năng</a>
+      <a href="#comparison">So sánh</a>
+      <a href="https://github.com/achoo254/localman" target="_blank">GitHub</a>
+      <a href="#download" class="btn-nav">Tải về miễn phí</a>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-badge">
+      <span class="dot"></span>
+      v0.2.0 — Mã nguồn mở &middot; MIT License
+    </div>
+    <h1>
+      Công cụ test API <span class="accent">không cần internet</span> để hoạt động.
+    </h1>
+    <p class="subtitle">
+      Miễn phí. Mã nguồn mở. Chạy offline hoàn toàn. Dữ liệu của bạn — ở trên máy bạn, không phải server của ai khác.
+    </p>
+    <div class="hero-cta">
+      <a href="#download" class="btn-primary">Tải về miễn phí</a>
+      <a href="https://github.com/achoo254/localman" target="_blank" class="btn-secondary">Xem mã nguồn</a>
+    </div>
+    <div class="hero-stats">
+      <div class="stat">
+        <div class="stat-value green">&lt;1s</div>
+        <div class="stat-label">Thời gian khởi động</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value blue">~50MB</div>
+        <div class="stat-label">RAM sử dụng</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value amber">16</div>
+        <div class="stat-label">Ngôn ngữ Code Snippets</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value green">$0</div>
+        <div class="stat-label">Mãi mãi miễn phí</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SCREENSHOT -->
+<div class="screenshot container">
+  <img src="https://github.com/achoo254/localman/blob/main/docs/screenshots/app-layout.png?raw=true" alt="Localman App Screenshot" loading="lazy">
+</div>
+
+<!-- PROBLEM -->
+<section class="problem" id="problem">
+  <div class="container">
+    <div class="section-label">Vấn đề</div>
+    <h2 class="section-title">Postman đang tính phí bạn $228/năm để làm gì?</h2>
+    <p class="section-desc">
+      Bạn đang dùng Postman hàng ngày. Nhưng mỗi request bạn gửi — Postman đều biết. Token, endpoint nội bộ, cấu trúc API — tất cả đi qua server của họ.
+    </p>
+    <div class="problem-grid">
+      <div class="problem-card">
+        <div class="icon red">&#128274;</div>
+        <h3>Dữ liệu bị gửi lên cloud</h3>
+        <p>Token xác thực, endpoint nội bộ, dữ liệu staging — tất cả nằm trên server của Postman. Bạn có thực sự kiểm soát dữ liệu của mình?</p>
+      </div>
+      <div class="problem-card">
+        <div class="icon amber">&#9889;</div>
+        <h3>Mất mạng = mất việc</h3>
+        <p>Wifi trục trặc, ISP bị sự cố, đang trên máy bay — Postman ngừng hoạt động. Còn deadline thì không chờ bạn.</p>
+      </div>
+      <div class="problem-card">
+        <div class="icon purple">&#128187;</div>
+        <h3>Electron ngốn RAM</h3>
+        <p>300MB RAM chỉ để gửi HTTP request. Máy chậm lại, pin cạn nhanh, và bạn ngồi chờ vòng tròn xoay mỗi sáng.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section id="features">
+  <div class="container">
+    <div style="text-align:center;">
+      <div class="section-label">Tính năng</div>
+      <h2 class="section-title">Đầy đủ tính năng. Không thiếu thứ gì.</h2>
+      <p class="section-desc center">
+        Localman được xây dựng với nguyên tắc: <strong>dữ liệu của bạn thuộc về bạn.</strong>
+        Tất cả được lưu trực tiếp trên máy tính, không qua server trung gian.
+      </p>
+    </div>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">&#9889;</div>
+        <h3>Request Builder</h3>
+        <p>GET, POST, PUT, DELETE, PATCH. Auth: Basic, Bearer, API Key, OAuth 2.0 tự động refresh token. Body: JSON, XML, Form Data với syntax highlighting.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">&#128193;</div>
+        <h3>Collections & Folders</h3>
+        <p>Tổ chức requests theo cấu trúc thư mục lồng nhau. Drag & drop, context menu, tìm kiếm nhanh.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">&#127760;</div>
+        <h3>Environments & Biến</h3>
+        <p>Nội suy biến <code class="mono">{{varName}}</code> trong URL, headers, body. Biến động: <code class="mono">{{$guid}}</code>, <code class="mono">{{$timestamp}}</code>.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">&#128196;</div>
+        <h3>Code Snippets — 16 ngôn ngữ</h3>
+        <p>Tự động sinh code: cURL, Python, JavaScript, Go, Java, PHP, C#, Ruby, Swift, Kotlin, Dart, Rust, PowerShell, HTTPie.</p>
+        <span class="feature-tag">Phổ biến nhất</span>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">&#128220;</div>
+        <h3>Pre/Post Scripts</h3>
+        <p>Sandbox QuickJS an toàn. Xử lý request/response theo logic tùy chỉnh, set biến, validate response.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">&#128202;</div>
+        <h3>Lịch sử & Analytics</h3>
+        <p>Tự động ghi lại mọi request. Tìm kiếm, lọc, chạy lại bằng 1 click. Theo dõi thời gian response.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">&#128259;</div>
+        <h3>Import / Export</h3>
+        <p>Import từ cURL, Postman v2.1, OpenAPI 3.0. Export JSON native. Di chuyển dữ liệu trong 30 giây.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">&#9729;</div>
+        <h3>Cloud Sync (Tùy chọn)</h3>
+        <p>Đồng bộ đám mây khi cần. Team Workspaces chia sẻ collections. WebSocket real-time, conflict resolution.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">&#128221;</div>
+        <h3>Tài liệu API</h3>
+        <p>Nhúng mô tả Markdown cho mỗi request. Xuất HTML với mục lục tự động. Chia sẻ docs dễ dàng.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CODE SNIPPET -->
+<section class="snippet-section">
+  <div class="container">
+    <div class="section-label">Developer Experience</div>
+    <h2 class="section-title">Sinh code tự động — 16 ngôn ngữ</h2>
+    <p class="section-desc center">Một click để chuyển request thành code chạy được ngay.</p>
+    <div class="snippet-box">
+      <div class="snippet-header">
+        <span class="snippet-dot r"></span>
+        <span class="snippet-dot y"></span>
+        <span class="snippet-dot g"></span>
+      </div>
+      <div class="snippet-code">
+        <span class="cm"># Python — requests</span><br>
+        <span class="kw">import</span> requests<br><br>
+        response = requests.<span class="fn">post</span>(<br>
+        &nbsp;&nbsp;<span class="str">"https://api.example.com/users"</span>,<br>
+        &nbsp;&nbsp;headers={<span class="str">"Authorization"</span>: <span class="str">"Bearer {{token}}"</span>},<br>
+        &nbsp;&nbsp;json={<span class="str">"name"</span>: <span class="str">"Localman"</span>, <span class="str">"role"</span>: <span class="str">"admin"</span>}<br>
+        )<br><br>
+        <span class="fn">print</span>(response.status_code) <span class="cm"># 200</span><br>
+        <span class="fn">print</span>(response.<span class="fn">json</span>())
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- COMPARISON -->
+<section class="comparison" id="comparison">
+  <div class="container">
+    <div style="text-align:center;">
+      <div class="section-label">So sánh</div>
+      <h2 class="section-title">Localman vs Postman — So sánh thẳng thắn</h2>
+    </div>
+    <table class="comparison-table">
+      <thead>
+        <tr>
+          <th></th>
+          <th>Localman</th>
+          <th>Postman</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Giá</td>
+          <td class="col-localman"><span class="check">&#10003;</span> Miễn phí, không giới hạn</td>
+          <td class="col-postman"><span class="cross">&#10007;</span> $228+/người/năm</td>
+        </tr>
+        <tr>
+          <td>Mã nguồn mở</td>
+          <td class="col-localman"><span class="check">&#10003;</span> MIT License</td>
+          <td class="col-postman"><span class="cross">&#10007;</span> Không</td>
+        </tr>
+        <tr>
+          <td>Lưu trữ dữ liệu</td>
+          <td class="col-localman"><span class="check">&#10003;</span> Trên máy của bạn</td>
+          <td class="col-postman"><span class="cross">&#10007;</span> Server Postman</td>
+        </tr>
+        <tr>
+          <td>Hoạt động offline</td>
+          <td class="col-localman"><span class="check">&#10003;</span> 100%</td>
+          <td class="col-postman"><span class="cross">&#10007;</span> Cần internet</td>
+        </tr>
+        <tr>
+          <td>RAM sử dụng</td>
+          <td class="col-localman"><span class="check">&#10003;</span> ~50MB</td>
+          <td class="col-postman"><span class="cross">&#10007;</span> ~300MB</td>
+        </tr>
+        <tr>
+          <td>Khởi động</td>
+          <td class="col-localman"><span class="check">&#10003;</span> Dưới 1 giây</td>
+          <td class="col-postman"><span class="cross">&#10007;</span> 3–5 giây</td>
+        </tr>
+        <tr>
+          <td>Đồng bộ cloud</td>
+          <td class="col-localman"><span class="check">&#10003;</span> Tùy chọn</td>
+          <td class="col-postman"><span class="cross">&#10007;</span> Bắt buộc</td>
+        </tr>
+        <tr>
+          <td>Vendor lock-in</td>
+          <td class="col-localman"><span class="check">&#10003;</span> Không</td>
+          <td class="col-postman"><span class="cross">&#10007;</span> Có</td>
+        </tr>
+        <tr>
+          <td>Cộng tác real-time</td>
+          <td class="col-localman"><span class="check">&#10003;</span> WebSocket (miễn phí)</td>
+          <td class="col-postman">Chỉ gói trả phí</td>
+        </tr>
+        <tr>
+          <td>Code Snippets</td>
+          <td class="col-localman"><span class="check">&#10003;</span> 16 ngôn ngữ</td>
+          <td class="col-postman">Có</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- STORY -->
+<section class="story">
+  <div class="container">
+    <div class="section-label">Câu chuyện</div>
+    <h2 class="section-title">Xây dựng bởi developer, cho developer.</h2>
+    <blockquote>
+      Chúng tôi xây dựng Localman vì cũng chán ngấy với Postman. Chán ngấy với việc trả tiền cho công cụ đáng lẽ phải miễn phí. Chán ngấy với việc chờ ứng dụng khởi động. Và chán ngấy với việc không biết dữ liệu API nội bộ đang nằm ở đâu trên server của người khác.
+      <br><br>
+      Mã nguồn hoàn toàn mở. MIT License. Không có gói premium giới hạn tính năng cốt lõi. Không có chuyện bạn thức dậy một ngày thấy tính năng mình đang dùng bị chuyển sang tier trả phí.
+    </blockquote>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta" id="download">
+  <div class="container">
+    <h2>Dùng thử ngay. Miễn phí. Mãi mãi.</h2>
+    <p>Không cần tài khoản. Không cần credit card. Không cần internet sau khi cài.</p>
+    <div class="cta-platforms">
+      <a href="https://github.com/achoo254/localman/releases/download/v0.2.0/localman_0.2.0_x64-setup.exe" class="btn-platform" target="_blank">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M0 3.449L9.75 2.1v9.451H0m10.949-9.602L24 0v11.4H10.949M0 12.6h9.75v9.451L0 20.699M10.949 12.6H24V24l-12.9-1.801"/></svg>
+        Windows (.exe)
+      </a>
+      <a href="https://github.com/achoo254/localman/releases/download/v0.2.0/localman_0.2.0_aarch64.dmg" class="btn-platform" target="_blank">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+        macOS (.dmg)
+      </a>
+      <a href="https://github.com/achoo254/localman/releases/download/v0.2.0/localman_0.2.0_amd64.deb" class="btn-platform" target="_blank">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.504 0c-.155 0-.315.008-.48.021-4.226.333-3.105 4.807-3.17 6.298-.076 1.092-.3 1.953-1.05 3.02-.885 1.051-2.127 2.75-2.716 4.521-.278.832-.41 1.684-.287 2.489a.424.424 0 00-.11.135c-.26.268-.45.6-.663.839-.199.199-.485.267-.797.4-.313.136-.658.269-.864.68-.09.189-.136.394-.132.602 0 .199.027.4.055.536.058.399.116.728.04.97-.249.68-.28 1.145-.106 1.484.174.334.535.47.94.601.81.2 1.91.135 2.774.6.926.466 1.866.67 2.616.47.526-.116.97-.464 1.208-.946.587-.003 1.23-.269 2.26-.334.699-.058 1.574.267 2.577.2.025.134.063.198.114.333l.003.003c.391.778 1.113 1.368 1.884 1.43.199.023.395-.05.589-.09.599-.13 1.254.198 1.37-.27.02-.087.027-.184.021-.285-.005-.2-.027-.4-.05-.6a3.36 3.36 0 01-.05-.852c.046-.378.14-.667.283-1.045.374-.852.467-1.725.238-2.507-.054-.188-.133-.358-.218-.52.167-.468.27-.957.27-1.544 0-.276-.02-.558-.062-.833-.22-1.547-1.04-2.737-2.093-3.737-.556-.527-1.182-1.01-1.824-1.399-.443-.269-.886-.468-1.318-.577a4.152 4.152 0 00-1.15-.152c-.41.003-.797.052-1.15.133-.77.197-1.435.564-2.005 1.015-.507.4-.923.864-1.237 1.376-.16.254-.27.512-.35.755a2.21 2.21 0 00-.113.666c0 .2.02.4.057.585.124.677.45 1.2.985 1.66.334.285.672.404 1.017.404.22 0 .44-.05.635-.15.573-.233.861-.7.861-1.26 0-.352-.138-.7-.392-.97a1.223 1.223 0 00-.91-.39c-.254 0-.5.1-.685.27a.69.69 0 00-.204.52c0 .2.101.4.285.517a.33.33 0 01.06.049.303.303 0 01-.09.1 1.09 1.09 0 01-.328.047c-.097 0-.18-.012-.248-.036-.283-.103-.52-.322-.72-.566-.097-.119-.178-.255-.235-.4a1.543 1.543 0 01-.102-.456 2.432 2.432 0 01-.014-.361c.01-.199.038-.398.085-.596.11-.449.343-.878.69-1.282.348-.399.785-.747 1.297-1.02.257-.141.535-.26.834-.345.15-.041.3-.075.455-.093.153-.02.31-.027.47-.021.319.017.625.078.917.178.584.2 1.118.509 1.602.868.968.72 1.705 1.639 2.155 2.65a4.3 4.3 0 01.398 1.878c0 .7-.163 1.378-.5 2.018a4.16 4.16 0 01-.497.77 3.5 3.5 0 01-.3.297c-.1.085-.205.162-.32.227l-.044.023a1.67 1.67 0 01-.247.104l-.068.023c-.038.011-.073.02-.106.027-.1.024-.193.04-.278.049-.166.02-.31.014-.42-.01a1.423 1.423 0 01-.322-.1c-.178-.076-.345-.176-.496-.3-.302-.244-.548-.569-.727-.939a3.034 3.034 0 01-.282-.965 4.15 4.15 0 01-.04-.656c.006-.223.025-.44.056-.648.035-.235.083-.46.143-.67.144-.505.358-.958.636-1.348.14-.197.3-.38.47-.547.256-.247.544-.46.858-.635a4.09 4.09 0 011.123-.44 3.8 3.8 0 01.547-.067c.084-.004.168-.005.25 0"/></svg>
+        Linux (.deb)
+      </a>
+    </div>
+    <p class="cta-note">
+      Đã có collection trong Postman? Import vào Localman trong 30 giây.
+    </p>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="container">
+    <div class="footer-links">
+      <a href="https://github.com/achoo254/localman" target="_blank">GitHub</a>
+      <a href="https://github.com/achoo254/localman/blob/main/docs/system-architecture.md" target="_blank">Kiến trúc</a>
+      <a href="https://github.com/achoo254/localman/blob/main/docs/development-roadmap.md" target="_blank">Roadmap</a>
+      <a href="https://github.com/achoo254/localman/issues" target="_blank">Báo lỗi</a>
+    </div>
+    <p>Localman &copy; 2026 — Mã nguồn mở. MIT License. Dữ liệu của bạn, trên máy của bạn.</p>
+  </div>
+</footer>
+
+</body>
+</html>
