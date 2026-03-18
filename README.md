@@ -4,7 +4,7 @@
 
 Localman is a privacy-first, offline-capable desktop API client (Postman alternative) built with **Tauri + React + TypeScript**. All your API data stays on your machine — no vendor lock-in, no cloud dependency, no privacy concerns.
 
-**Status:** Core API client complete. Cloud sync, WebSocket real-time, and auto-updates deployed. [See roadmap](docs/development-roadmap.md).
+**Version:** 0.2.0 | **Status:** Core API client complete. Cloud sync, WebSocket real-time, and auto-updates deployed. [See roadmap](docs/development-roadmap.md).
 
 ---
 
@@ -73,7 +73,7 @@ Localman is a privacy-first, offline-capable desktop API client (Postman alterna
 ### Installation
 
 ```bash
-git clone https://github.com/yourusername/localman.git
+git clone https://github.com/achoo254/localman.git
 cd localman
 pnpm install
 pnpm tauri dev        # Launch desktop app with hot reload
@@ -112,7 +112,7 @@ pnpm build            # Build frontend assets
 pnpm tauri build      # Production desktop build (all platforms)
 pnpm lint             # Run ESLint
 pnpm type-check       # TypeScript type checking
-pnpm test             # Unit tests (Vitest, 35 tests)
+pnpm test             # Unit tests (Vitest, 35 tests, 8 suites)
 pnpm test:e2e         # E2E tests (Playwright)
 ```
 
@@ -158,13 +158,14 @@ See [System Architecture](docs/system-architecture.md) for detailed data flow di
 
 | Document | Purpose |
 |---|---|
-| [**Codebase Summary**](docs/codebase-summary.md) | Directory structure, 87 components, 8 stores, 50+ services |
+| [**Codebase Summary**](docs/codebase-summary.md) | Directory structure, 84 components, 11 stores, 50+ services |
 | [**System Architecture**](docs/system-architecture.md) | Data flow, offline-first pattern, sync engine, 3-way merge |
 | [**Design Guidelines**](docs/design-guidelines.md) | Design tokens, Tailwind conventions, component patterns |
 | [**Development Roadmap**](docs/development-roadmap.md) | Phase history, completed features, upcoming work |
 | [**Code Standards**](docs/code-standards.md) | File naming, structure, TypeScript conventions |
 | [**Workflow Guide**](docs/workflow-guide.md) | Request flow, keyboard shortcuts, debugging (Vietnamese) |
 | [**Project Overview & PDR**](docs/project-overview-pdr.md) | Vision, problem statement, competitive analysis |
+| [**Project Changelog**](docs/project-changelog.md) | Detailed record of all changes, features, and fixes |
 
 ---
 
@@ -174,8 +175,8 @@ See [System Architecture](docs/system-architecture.md) for detailed data flow di
 - **E2E Tests** — Playwright smoke tests, run via `pnpm test:e2e`
 - **Linting** — ESLint on every push
 - **Type Checking** — TypeScript strict mode
-- **CI Pipeline** — GitHub Actions (lint, test, type-check on every PR)
-- **Release Builds** — Multi-platform auto-builds on tag `v*` (Windows/macOS/Linux)
+- **CI Pipeline** — GitHub Actions: `ci.yml` (lint, test, type-check), `build-test.yml` (cross-platform), `release.yml` (tag-triggered builds)
+- **Release Builds** — GitHub Actions auto-builds on tag `v*` (Windows/macOS/Linux) with signed updater
 
 See [Cross-Platform Testing Checklist](docs/cross-platform-testing.md) for QA procedures.
 
@@ -214,7 +215,8 @@ Licensed under the MIT License — see LICENSE file for details.
 | **Code Snippets** | ✅ Complete | 16 language generators (Python, Go, JS, Java, etc.) |
 | **Auto-Updater** | ✅ Complete | Signed GitHub Releases, cross-platform builds |
 | **Cloud Sync v2** | ✅ Complete | 3-way merge, field-level conflict resolution |
-| **Phase 10** | 🔄 In Progress | Performance tuning, Tauri bundler config |
+| **API Documentation** | ✅ Complete | Markdown descriptions, HTML export with TOC |
+| **Packaging & Polish** | 🔄 In Progress | Performance tuning, Tauri bundler config, cross-platform testing |
 
 For detailed roadmap and known issues, see [Development Roadmap](docs/development-roadmap.md).
 
@@ -222,7 +224,7 @@ For detailed roadmap and known issues, see [Development Roadmap](docs/developmen
 
 ## Getting Help
 
-- **Issues** — Found a bug? [Open an issue](https://github.com/yourusername/localman/issues)
-- **Discussions** — Questions? [Start a discussion](https://github.com/yourusername/localman/discussions)
+- **Issues** — Found a bug? [Open an issue](https://github.com/achoo254/localman/issues)
+- **Discussions** — Questions? [Start a discussion](https://github.com/achoo254/localman/discussions)
 - **Docs** — Check [documentation](./docs) for detailed guides
 - **Examples** — See [plans/](./plans) directory for architecture decisions and phase plans
