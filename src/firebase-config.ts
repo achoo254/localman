@@ -26,9 +26,21 @@ function getFirebaseAuth(): Auth {
 /** Exported as getter so imports don't trigger initialization at module load time */
 export { getFirebaseAuth }
 
+/** Check whether Firebase credentials are configured (env vars present) */
+export function isFirebaseConfigured(): boolean {
+  return !!firebaseConfig.apiKey
+}
+
 /** @deprecated Use getFirebaseAuth() instead — kept for backward compat */
 export const auth = new Proxy({} as Auth, {
   get(_target, prop) {
+    // When Firebase is not configured, return safe defaults instead of throwing.
+    // This allows offline-first code to call auth.currentUser without crashing.
+    if (!firebaseConfig.apiKey) {
+      if (prop === 'currentUser') return null
+      if (typeof prop === 'string') return undefined
+      return undefined
+    }
     return Reflect.get(getFirebaseAuth(), prop)
   },
 })
