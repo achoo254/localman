@@ -316,25 +316,26 @@ All notable changes to Localman documented here. Format based on [Keep a Changel
 
 ### Added
 
-- **Backend API Server** (Node.js + Hono + PostgreSQL + Drizzle ORM + Better Auth)
+- **Backend API Server** (Node.js + Hono + PostgreSQL + Drizzle ORM + Firebase Auth)
   - Health check endpoint: `GET /api/health`
-  - Cloud sync endpoints: `POST /api/sync/pull`, `POST /api/sync/push`
-  - Better Auth integration: signup, login, logout, OAuth (GitHub, etc.)
+  - Entity sync endpoints: `POST /api/workspaces/:wsId/sync/pull|push`
+  - Firebase Admin SDK integration for Google OAuth
   - JWT-based authentication with auth guard middleware
   - Comprehensive error handling with JSON response formatting
 
 - **Database Layer** (PostgreSQL + Drizzle ORM)
-  - `sync_collections` and `sync_requests` tables for cloud-synced data
-  - Better Auth schema: user, account, session, verification tables
+  - Normalized entity tables: collections, folders, requests, environments
+  - Workspace + RBAC tables: workspace_members, workspace_invites
+  - Change log table for field-level delta sync
   - Migration support via Drizzle migrations
   - TypeScript-first schema definitions
 
 - **Frontend Cloud Sync Integration**
-  - `CloudAuthClient` — Better Auth session management (login, logout, getSession)
-  - `CloudSyncService` — Pull/push sync with Last-Write-Wins conflict resolution
-  - `CloudLoginForm` component — Login/logout UI in settings
+  - `FirebaseAuthClient` — Firebase Auth session management (Google OAuth)
+  - `EntitySyncService` — Pull/push sync with field-level 3-way merge
+  - `CloudLoginForm` component — Google login UI in settings
   - Support for both offline-only (legacy) and cloud sync modes
-  - Better Auth session stored in IndexedDB settings store
+  - Firebase session stored in IndexedDB settings store
   - Automatic token refresh on expiry
   - Fallback to offline mode if backend unavailable
 
@@ -468,6 +469,53 @@ All notable changes to Localman documented here. Format based on [Keep a Changel
 - `src/components/docs/docs-viewer-page.tsx` — API docs viewer page
 - `src/components/docs/docs-request-card.tsx` — individual request documentation card
 - `src/components/docs/docs-table-of-contents.tsx` — table of contents sidebar
+
+## [Phase 6: Check for Updates] — 2026-03-15
+
+### Added
+- **Update Checker Service** (`src/services/update-checker-service.ts`)
+  - Check GitHub Releases for new versions
+  - Download with progress tracking
+  - Install + relaunch capability
+  - Graceful offline fallback
+
+- **Update Store** (`src/stores/update-store.ts`)
+  - Zustand state: status (idle/checking/available/downloading/ready/error)
+  - Update info: version, release notes, date
+  - Download progress: bytes/total
+
+- **Update UI Components**
+  - Auto-check on startup + 4-hour interval
+  - "Check for Updates" button in About section
+  - Update dialog with release notes + progress bar
+  - Toast notifications for status
+
+- **Release Workflow** (`.github/workflows/release.yml`)
+  - Matrix builds: Windows + macOS + Linux
+  - Ed25519 signed binaries
+  - Automatic `latest.json` generation
+  - GitHub Releases integration
+
+- **Version Management**
+  - `scripts/bump-version.sh` for centralized versioning
+  - Tauri updater plugin configuration
+  - GitHub Releases as distribution channel
+
+### Modified
+- `src/App.tsx` — mount update checker + dialog
+- `src/components/settings/about-section.tsx` — version display + check button
+- `src-tauri/tauri.conf.json` — updater plugin + public key
+- `src-tauri/Cargo.toml` — process plugin for relaunch
+- `package.json` — @tauri-apps/plugin-updater, version:bump script
+
+### Success Criteria Met
+✅ Ed25519 keypair generated and securely stored
+✅ GitHub Actions workflow builds all platforms
+✅ Auto-check functionality with 4-hour interval
+✅ Manual "Check for Updates" button working
+✅ Download progress tracking with UI
+✅ All 35 tests pass, type-check clean
+✅ Cross-platform signed binaries
 
 ## [Phase 10] — 2026-02-XX
 

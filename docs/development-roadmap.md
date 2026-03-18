@@ -19,7 +19,7 @@ Localman phases 00–11, with completion status and key milestones.
 | 10 | Packaging & CI/CD | ✅ Complete | P1 | GitHub Actions CI/CD, Windows MSI/EXE builds, cross-platform testing | 2026-03 |
 | 11 | Code Snippet & API Docs | ✅ Complete | P2 | 16 language snippet generators, docs viewer, HTML/Markdown export | 2026-03-08 |
 | 12 | Draft Tab System | ✅ Complete | P2 | Ctrl+T draft requests, explicit save workflow, draft lifecycle | 2026-03-08 |
-| 13 | Cloud Sync Phase 2 | ✅ Complete | P1 | Backend API (Hono + PostgreSQL), Better Auth, pull/push sync | 2026-03-09 |
+| 13 | Cloud Sync Phase 2 | ✅ Complete | P1 | Backend API (Hono + PostgreSQL), Firebase Auth, pull/push sync | 2026-03-09 |
 | Phase 1 | Cloud Sync → Team Workspace | ✅ Complete | P1 | Normalized entities, workspaces, RBAC, invites, delta sync | 2026-03-11 |
 | Phase 3 | WebSocket Real-Time | ✅ Complete | P1 | Real-time entity sync, presence tracking, auto-reconnect | 2026-03-12 |
 | Phase 4 | Field-Level Merge & Conflict Resolution | ✅ Complete | P1 | 3-way merge, change log, offline conflict queue, per-field picker | 2026-03-12 |
@@ -185,44 +185,47 @@ Localman phases 00–11, with completion status and key milestones.
 ✅ All tests pass (35/35), type-check clean, builds succeed
 ✅ Graceful fallback to HTTP if WS unavailable
 
-### Known Issues (Phase 4 Fixes)
+### Known Issues (Tracked for Phase 4+ Fixes)
 
 | Issue | Severity | Status |
 |-------|----------|--------|
-| Entity type mismatch (server sends `update`, client expects `updated`) | CRITICAL | TODO |
-| Reconnect event never fires (early `reconnectAttempt` reset) | CRITICAL | TODO |
-| No RBAC check on WS mutations (viewers can broadcast fake events) | CRITICAL | TODO |
-| No message size limit (64KB DoS vector) | HIGH | TODO |
-| No per-connection rate limiting | HIGH | TODO |
-| Listener leak in sync-store (`onStateChange` never unsubscribed) | HIGH | TODO |
-| No channel name validation (arbitrary string creation) | HIGH | TODO |
-| No validation on entity payload passthrough | MEDIUM | TODO |
-| `lastEventTime` not reset on account switch | MEDIUM | TODO |
-| Presence store uses non-serializable `Map` | MEDIUM | TODO |
+| Entity type mismatch (server sends `update`, client expects `updated`) | CRITICAL | Backlog |
+| Reconnect event never fires (early `reconnectAttempt` reset) | CRITICAL | Backlog |
+| No RBAC check on WS mutations (viewers can broadcast fake events) | CRITICAL | Backlog |
+| No message size limit (64KB DoS vector) | HIGH | Backlog |
+| No per-connection rate limiting | HIGH | Backlog |
+| Listener leak in sync-store (`onStateChange` never unsubscribed) | HIGH | Backlog |
+| No channel name validation (arbitrary string creation) | HIGH | Backlog |
+| No validation on entity payload passthrough | MEDIUM | Backlog |
+| `lastEventTime` not reset on account switch | MEDIUM | Backlog |
+| Presence store uses non-serializable `Map` | MEDIUM | Backlog |
+
+**Note:** Phase 3 marked complete for WebSocket server + client implementation. Known security/stability issues identified for hardening in Phase 4+.
 
 ---
 
-## Phase 13 Details: Cloud Sync Phase 2 — Backend & Better Auth
+## Phase 13 Details: Cloud Sync Phase 2 — Backend & Firebase Auth
 
 **Completed:** 2026-03-09
 
 ### Features Delivered
 
-1. **Backend API Server** (Node.js + Hono + PostgreSQL + Better Auth)
+1. **Backend API Server** (Node.js + Hono + PostgreSQL + Firebase Auth)
    - Health check endpoint: `GET /api/health`
-   - Cloud sync endpoints: `POST /api/sync/pull`, `POST /api/sync/push`
-   - Better Auth integration for OAuth (GitHub, etc.) and session management
+   - Entity sync endpoints: `POST /api/workspaces/:wsId/sync/pull|push`
+   - Firebase Admin SDK integration for Google OAuth and session management
    - JWT-based authentication with auth guard middleware
    - Comprehensive error handling
 
 2. **Database Layer** (PostgreSQL + Drizzle ORM)
-   - `sync_collections` and `sync_requests` tables for cloud-synced data
-   - Better Auth schema (user, account, session, verification)
+   - Normalized entity tables (collections, folders, requests, environments)
+   - Workspace + RBAC tables (workspace_members, workspace_invites)
+   - Change log table for field-level merge tracking
    - TypeScript-first schema with migration support
 
 3. **Frontend Cloud Sync Integration**
-   - `CloudAuthClient` — Better Auth session management (login, logout, getSession)
-   - `CloudSyncService` — Pull/push with Last-Write-Wins conflict resolution
+   - `FirebaseAuthClient` — Firebase Auth session management (Google OAuth)
+   - `EntitySyncService` — Pull/push with field-level 3-way merge
    - `CloudLoginForm` component in settings
    - Support for both offline-only (legacy) and cloud sync modes
    - Automatic token refresh on expiry, fallback to offline if backend unavailable

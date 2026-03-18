@@ -13,9 +13,9 @@ graph TB
         Tauri["Tauri Bridge<br/>(Rust — HTTP, File, Window)"]
     end
 
-    subgraph Backend["Backend API (Phase 2)"]
-        API["Hono API Server"]
-        Auth["Better Auth"]
+    subgraph Backend["Backend API (Phase 13)"]
+        API["Hono v4.12 API Server"]
+        Auth["Firebase Auth"]
         PG["PostgreSQL<br/>(Drizzle ORM)"]
     end
 
@@ -113,25 +113,25 @@ graph LR
 ```mermaid
 sequenceDiagram
     participant App as Desktop App
-    participant Auth as Better Auth
-    participant Sync as Sync API
+    participant Auth as Firebase Auth
+    participant Sync as Entity Sync API
     participant DB as PostgreSQL
 
-    App->>Auth: POST /api/auth/login
-    Auth-->>App: Session token
+    App->>Auth: Google OAuth login
+    Auth-->>App: Firebase ID token + JWT
 
     Note over App: Pull remote changes
-    App->>Sync: POST /api/sync/pull {since}
+    App->>Sync: POST /api/workspaces/:wsId/sync/pull {entityType?, since?}
     Sync->>DB: SELECT WHERE updatedAt > since
-    DB-->>Sync: collections + requests
-    Sync-->>App: {collections, requests, updatedAt}
-    App->>App: Merge vào IndexedDB (LWW)
+    DB-->>Sync: entities + changeLog
+    Sync-->>App: {collections, requests, conflicts?, updatedAt}
+    App->>App: 3-way merge to IndexedDB
 
     Note over App: Push local changes
-    App->>Sync: POST /api/sync/push {collections, requests, deletions}
-    Sync->>DB: UPSERT + DELETE
-    DB-->>Sync: OK
-    Sync-->>App: {success, syncedAt, conflicts?}
+    App->>Sync: POST /api/workspaces/:wsId/sync/push {entities, deletions}
+    Sync->>DB: Field-level merge + UPSERT
+    DB-->>Sync: Conflicts (if any)
+    Sync-->>App: {syncedAt, conflicts?}
 ```
 
 ## 6. Development Workflow
@@ -163,7 +163,7 @@ flowchart TD
 | `pnpm dev` | Vite dev server (browser only) |
 | `pnpm lint` | ESLint check |
 | `pnpm type-check` | TypeScript check |
-| `pnpm test --run` | Vitest (41 tests) |
+| `pnpm test --run` | Vitest (35 tests) |
 | `pnpm tauri build` | Build production app |
 | `cargo check` | Check Rust compilation |
 | `cargo clippy` | Rust linter |
@@ -200,30 +200,37 @@ flowchart TD
 ```
 localman/
 ├── src/                    # Frontend React
-│   ├── components/         # UI components
-│   │   ├── layout/         # AppLayout, Titlebar, Sidebar, StatusBar
+│   ├── components/         # UI components (86 total)
+│   │   ├── layout/         # AppLayout, Titlebar, Sidebar
 │   │   ├── request/        # RequestPanel, UrlBar, RequestTabs
-│   │   ├── response/       # ResponseViewer, ResponseActions
-│   │   ├── collections/    # CollectionTree, FolderItem
-│   │   ├── environments/   # EnvironmentBar, EnvironmentManager
-│   │   ├── import-export/  # ImportDialog, export utils
-│   │   ├── settings/       # SettingsPage (6 tabs)
+│   │   ├── response/       # ResponseViewer, syntax highlighting
+│   │   ├── collections/    # CollectionTree, workspace filtering
+│   │   ├── environments/   # EnvironmentSelector, interpolation
+│   │   ├── settings/       # SettingsPage (General, Editor, Data, Account, Workspaces)
+│   │   ├── sync/           # SyncStatusBadge, ConflictResolutionDialog
 │   │   └── common/         # Toast, Modal, KeyboardShortcuts
-│   ├── stores/             # Zustand state stores
-│   ├── db/                 # Dexie.js IndexedDB layer
-│   ├── services/           # HTTP client, sync, interpolation, scripts
-│   ├── hooks/              # Custom React hooks
-│   ├── utils/              # Helpers, URL params, tree builder
-│   └── types/              # TypeScript type definitions
-├── src-tauri/              # Rust/Tauri backend
-│   ├── src/                # Rust source (main.rs, commands)
+│   ├── stores/             # Zustand state (11 stores: request, response, collections, sync, etc.)
+│   ├── db/                 # Dexie.js IndexedDB layer (Dexie v4.3)
+│   ├── services/           # HTTP client, sync, importers/exporters, scripts, snippets (50 files)
+│   ├── hooks/              # Custom React hooks (5 custom hooks)
+│   ├── utils/              # Helpers, variable interpolation, tree builder (11 utilities)
+│   └── types/              # TypeScript type definitions (8 type files)
+├── src-tauri/              # Rust/Tauri backend (Tauri 2)
+│   ├── src/                # Rust source (plugin registration)
 │   └── tauri.conf.json     # Tauri configuration
-├── backend/                # Cloud sync backend (Hono + Better Auth)
-│   ├── src/                # API routes, auth, DB schema
-│   └── drizzle/            # Database migrations
-├── docs/                   # Project documentation
-├── plans/                  # Implementation plans
-└── tests/                  # E2E tests (Playwright)
+├── backend/                # Cloud sync API server (Hono 4.12 + PostgreSQL + Firebase Auth)
+│   ├── src/                # API routes, middleware, DB schema, services
+│   │   ├── routes/         # Health, workspace, collection, entity-sync, environment
+│   │   ├── middleware/     # Firebase auth guard, RBAC, error handling
+│   │   ├── db/             # Drizzle ORM schema (entities, workspaces, auth)
+│   │   ├── services/       # Merge engine, change log, workspace logic
+│   │   └── ws/             # WebSocket server (channels, presence, auth)
+│   ├── drizzle/            # Database migrations
+│   └── ecosystem.config.cjs # PM2 deployment config
+├── docs/                   # Project documentation (7 guides)
+├── plans/                  # Development phases and implementation plans
+├── .github/workflows/      # GitHub Actions CI/CD (lint, test, release builds)
+└── tests/                  # Vitest unit tests (35 tests) + Playwright E2E
 ```
 
 ## 9. Keyboard Shortcuts
@@ -257,7 +264,7 @@ graph LR
 
     subgraph Fonts
         Code["JetBrains Mono<br/>(code areas)"]
-        Head["Syne<br/>(UI headlines)"]
+        UI["Inter<br/>(UI text)"]
     end
 ```
 
