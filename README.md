@@ -14,7 +14,7 @@ Localman is a privacy-first, offline-capable desktop API client (Postman alterna
 
 ### The Problem with Postman
 - **Privacy Risk:** Your API calls, auth tokens, and requests route through Postman's cloud servers
-- **Expensive:** Team subscriptions cost $180+/user/year; personal tier limits collections
+- **Expensive:** Team subscriptions cost $228+/user/year; personal tier limits collections
 - **Slow:** Electron-based (heavy RAM, slow startup, sluggish UI)
 - **No Internet, No Work:** Requires internet for most features
 - **Vendor Lock-in:** Your API library is trapped in Postman's ecosystem
@@ -25,7 +25,7 @@ Localman is a privacy-first, offline-capable desktop API client (Postman alterna
 |---|---|---|
 | **Data Location** | Your machine only | Postman servers |
 | **Offline Capable** | ✅ Works 100% offline | ❌ Requires internet |
-| **Cost** | ✅ Free, no limits | ❌ $180+/user/year |
+| **Cost** | ✅ Free, no limits | ❌ $228+/user/year |
 | **Performance** | ✅ Tauri (Rust) — instant startup | ❌ Electron — slow to load |
 | **Privacy** | ✅ No cloud dependency | ❌ All data sent to cloud |
 | **Cloud Sync** | ✅ Optional, end-to-end | ❌ Mandatory by design |
