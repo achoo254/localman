@@ -19,6 +19,7 @@ import { initWsEventHandlers, disposeWsEventHandlers } from '../services/sync/ws
 import type { CloudSyncConfig } from '../types/cloud-sync'
 import { DEFAULT_CLOUD_SYNC_CONFIG, CLOUD_SYNC_CONFIG_KEY } from '../types/cloud-sync'
 import { db } from '../db/database'
+import { FEATURES } from '../utils/feature-flags'
 
 export type SyncStatus = 'idle' | 'syncing' | 'error'
 
@@ -92,7 +93,7 @@ export const useSyncStore = create<SyncStore>((set, get) => ({
   workspaces: [],
   wsState: 'disconnected' as WsConnectionState,
   _abort: false,
-  authLoading: true,
+  authLoading: FEATURES.CLOUD_SYNC,  // false when cloud sync disabled — avoids infinite "Checking auth..."
 
   async loadConfig() {
     const config = await loadCloudConfig()
