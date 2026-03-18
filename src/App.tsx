@@ -9,10 +9,12 @@ import { UpdateDialog } from "./components/settings/update-dialog";
 import { useRequestStore } from "./stores/request-store";
 import { useSettingsStore } from "./stores/settings-store";
 import { useUpdateChecker } from "./hooks/use-update-checker";
+import { useFileOpenHandler } from "./hooks/use-file-open-handler";
 import "./App.css";
 
 function App() {
   useUpdateChecker();
+  useFileOpenHandler();
   const loadSettings = useSettingsStore(s => s.load);
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
   const [saveDialogTabId, setSaveDialogTabId] = useState<string | null>(null);
