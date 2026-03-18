@@ -5,7 +5,7 @@ fn emit_file_open(app: &tauri::AppHandle, args: &[String]) {
     // First arg is the executable path, subsequent args are file paths from OS file association
     for arg in args.iter().skip(1) {
         let path = std::path::Path::new(arg);
-        if path.extension().map_or(false, |ext| ext == "json") && path.exists() {
+        if path.extension().is_some_and(|ext| ext == "json") && path.exists() {
             let _ = app.emit("file-open", arg.clone());
             break;
         }
