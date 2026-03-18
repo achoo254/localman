@@ -1,16 +1,33 @@
+use std::sync::Mutex;
 use tauri::{Emitter, Manager};
 
-/// Emit file path to frontend when app receives a file via CLI args or single-instance.
-fn emit_file_open(app: &tauri::AppHandle, args: &[String]) {
+/// Extract the first valid .json file path from CLI args.
+fn extract_json_path(args: &[String]) -> Option<String> {
     // First arg is the executable path, subsequent args are file paths from OS file association
     for arg in args.iter().skip(1) {
         let path = std::path::Path::new(arg);
         if path.extension().is_some_and(|ext| ext == "json") && path.exists() {
-            let _ = app.emit("file-open", arg.clone());
-            break;
+            return Some(arg.clone());
         }
     }
+    None
 }
+
+/// Emit file path to frontend when app receives a file via single-instance (frontend already loaded).
+fn emit_file_open(app: &tauri::AppHandle, args: &[String]) {
+    if let Some(path) = extract_json_path(args) {
+        let _ = app.emit("file-open", path);
+    }
+}
+
+/// Tauri command: frontend calls this on mount to retrieve any file path passed at startup.
+/// Returns the path once, then clears it so it's not re-processed.
+#[tauri::command]
+fn get_startup_file(state: tauri::State<'_, StartupFile>) -> Option<String> {
+    state.0.lock().unwrap().take()
+}
+
+struct StartupFile(Mutex<Option<String>>);
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -30,11 +47,12 @@ pub fn run() {
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_process::init())
-        .invoke_handler(tauri::generate_handler![])
+        .invoke_handler(tauri::generate_handler![get_startup_file])
         .setup(|app| {
-            // On first launch, check if a file path was passed via CLI
+            // On first launch, store file path for frontend to retrieve when ready
             let args: Vec<String> = std::env::args().collect();
-            emit_file_open(app.handle(), &args);
+            let startup_path = extract_json_path(&args);
+            app.manage(StartupFile(Mutex::new(startup_path)));
             Ok(())
         })
         .run(tauri::generate_context!())
