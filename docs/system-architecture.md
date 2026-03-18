@@ -24,7 +24,7 @@ High-level architecture of Localman: a distributed offline-first API client with
 │             (Node.js + Hono + PostgreSQL)                    │
 ├─────────────────────────────────────────────────────────────┤
 │                  API Routes (Hono)                            │
-│  Health | Auth (Better Auth) | Sync (pull/push)             │
+│  Health | Auth (Firebase) | Sync (pull/push)             │
 ├─────────────────────────────────────────────────────────────┤
 │                  Database Layer (Drizzle)                     │
 │  sync_collections | sync_requests | user | session          │
@@ -212,13 +212,12 @@ GET /api/health
 #### Authentication (Firebase)
 ```
 Client-side:
-- Firebase Auth SDK (client initialization)
-- Google OAuth sign-in
+- Firebase Auth SDK (Google OAuth sign-in)
 - ID token obtained from Firebase
 
 Server-side:
 - Verify ID token via Firebase Admin SDK
-- Create user record (if new)
+- Create user record (if new) with email + displayName
 - Return JWT for API requests (using Firebase token)
 ```
 
@@ -450,11 +449,11 @@ CREATE TABLE change_log (
 );
 ```
 
-#### Better Auth Tables (auto-managed)
-```sql
--- user, account, session, verification, etc.
--- See Better Auth docs for full schema
-```
+#### Firebase Auth Integration
+No separate auth tables. User identity maps from Firebase UID:
+- Firebase Admin SDK validates ID tokens
+- User records created on first login
+- Session tokens cached with 5-minute TTL
 
 ### Deployment
 
