@@ -45,6 +45,16 @@ function AccountSection() {
     setBusy(false);
   };
 
+  // When cloud sync is disabled, skip auth loading state entirely
+  if (!FEATURES.CLOUD_SYNC) {
+    return (
+      <section className="flex flex-col gap-3">
+        <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">Account</h3>
+        <p className="text-xs text-slate-500">Cloud sync — Coming Soon</p>
+      </section>
+    );
+  }
+
   const authenticated = isAuthenticated();
 
   if (authLoading) {

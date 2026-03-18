@@ -3,7 +3,7 @@
  */
 
 import { signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, type User } from 'firebase/auth'
-import { auth } from '../../firebase-config'
+import { auth, isFirebaseConfigured } from '../../firebase-config'
 import { getHttpClient } from '../../utils/tauri-http-client'
 import { getApiBaseUrl } from '../../utils/api-base-url'
 
@@ -15,20 +15,28 @@ export async function signInWithGoogle(): Promise<User> {
 }
 
 export async function firebaseSignOut(): Promise<void> {
+  if (!isFirebaseConfigured()) return
   await signOut(auth)
 }
 
 export function getCurrentUser(): User | null {
+  if (!isFirebaseConfigured()) return null
   return auth.currentUser
 }
 
 export async function getIdToken(): Promise<string | null> {
+  if (!isFirebaseConfigured()) return null
   const user = auth.currentUser
   if (!user) return null
   return user.getIdToken()
 }
 
 export function onAuthChanged(callback: (user: User | null) => void): () => void {
+  if (!isFirebaseConfigured()) {
+    // Firebase not configured — immediately signal "no user" and return no-op unsubscribe
+    callback(null)
+    return () => {}
+  }
   return onAuthStateChanged(auth, callback)
 }
 
