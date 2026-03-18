@@ -4,7 +4,9 @@
 
 Localman is a privacy-first, offline-capable desktop API client (Postman alternative) built with **Tauri + React + TypeScript**. All your API data stays on your machine — no vendor lock-in, no cloud dependency, no privacy concerns.
 
-**Version:** 0.2.0 | **Status:** Core API client complete. Cloud sync, WebSocket real-time, and auto-updates deployed. [See roadmap](docs/development-roadmap.md).
+**Version:** 0.2.0 | **Status:** Core API client complete. Cloud sync, WebSocket real-time, and auto-updates deployed. [See roadmap](https://github.com/achoo254/localman/blob/main/docs/development-roadmap.md).
+
+![Localman — Offline-first API Client](https://github.com/achoo254/localman/blob/main/docs/screenshots/app-layout.png?raw=true)
 
 ---
 
@@ -60,6 +62,12 @@ Localman is a privacy-first, offline-capable desktop API client (Postman alterna
 - **Offline-First Architecture** — Works without internet; syncs when online (Last-Write-Wins + 3-way merge)
 - **Auto-Update** — Signed GitHub releases with cross-platform builds (Windows/macOS/Linux)
 
+### More Screenshots
+
+| Request Builder | Settings |
+|---|---|
+| ![Request Params](https://github.com/achoo254/localman/blob/main/docs/screenshots/request-params.png?raw=true) | ![Settings](https://github.com/achoo254/localman/blob/main/docs/screenshots/settings-general.png?raw=true) |
+
 ---
 
 ## Quick Start
@@ -97,7 +105,7 @@ npm install
 npm run dev            # Hono server on http://localhost:3000
 ```
 
-See [Backend Setup Guide](docs/codebase-summary.md#backend-architecture) for PostgreSQL configuration.
+See [Backend Setup Guide](https://github.com/achoo254/localman/blob/main/docs/codebase-summary.md#backend-architecture) for PostgreSQL configuration.
 
 ---
 
@@ -150,7 +158,7 @@ Localman uses **offline-first architecture**:
 - **Editor:** CodeMirror 6 (syntax highlighting)
 - **Backend:** Hono 4 + Firebase Admin SDK + PostgreSQL
 
-See [System Architecture](docs/system-architecture.md) for detailed data flow diagrams.
+See [System Architecture](https://github.com/achoo254/localman/blob/main/docs/system-architecture.md) for detailed data flow diagrams.
 
 ---
 
@@ -158,14 +166,14 @@ See [System Architecture](docs/system-architecture.md) for detailed data flow di
 
 | Document | Purpose |
 |---|---|
-| [**Codebase Summary**](docs/codebase-summary.md) | Directory structure, 84 components, 11 stores, 50+ services |
-| [**System Architecture**](docs/system-architecture.md) | Data flow, offline-first pattern, sync engine, 3-way merge |
-| [**Design Guidelines**](docs/design-guidelines.md) | Design tokens, Tailwind conventions, component patterns |
-| [**Development Roadmap**](docs/development-roadmap.md) | Phase history, completed features, upcoming work |
-| [**Code Standards**](docs/code-standards.md) | File naming, structure, TypeScript conventions |
-| [**Workflow Guide**](docs/workflow-guide.md) | Request flow, keyboard shortcuts, debugging (Vietnamese) |
-| [**Project Overview & PDR**](docs/project-overview-pdr.md) | Vision, problem statement, competitive analysis |
-| [**Project Changelog**](docs/project-changelog.md) | Detailed record of all changes, features, and fixes |
+| [**Codebase Summary**](https://github.com/achoo254/localman/blob/main/docs/codebase-summary.md) | Directory structure, 84 components, 11 stores, 50+ services |
+| [**System Architecture**](https://github.com/achoo254/localman/blob/main/docs/system-architecture.md) | Data flow, offline-first pattern, sync engine, 3-way merge |
+| [**Design Guidelines**](https://github.com/achoo254/localman/blob/main/docs/design-guidelines.md) | Design tokens, Tailwind conventions, component patterns |
+| [**Development Roadmap**](https://github.com/achoo254/localman/blob/main/docs/development-roadmap.md) | Phase history, completed features, upcoming work |
+| [**Code Standards**](https://github.com/achoo254/localman/blob/main/docs/code-standards.md) | File naming, structure, TypeScript conventions |
+| [**Workflow Guide**](https://github.com/achoo254/localman/blob/main/docs/workflow-guide.md) | Request flow, keyboard shortcuts, debugging (Vietnamese) |
+| [**Project Overview & PDR**](https://github.com/achoo254/localman/blob/main/docs/project-overview-pdr.md) | Vision, problem statement, competitive analysis |
+| [**Project Changelog**](https://github.com/achoo254/localman/blob/main/docs/project-changelog.md) | Detailed record of all changes, features, and fixes |
 
 ---
 
@@ -178,7 +186,7 @@ See [System Architecture](docs/system-architecture.md) for detailed data flow di
 - **CI Pipeline** — GitHub Actions: `ci.yml` (lint, test, type-check), `build-test.yml` (cross-platform), `release.yml` (tag-triggered builds)
 - **Release Builds** — GitHub Actions auto-builds on tag `v*` (Windows/macOS/Linux) with signed updater
 
-See [Cross-Platform Testing Checklist](docs/cross-platform-testing.md) for QA procedures.
+See [Cross-Platform Testing Checklist](https://github.com/achoo254/localman/blob/main/docs/cross-platform-testing.md) for QA procedures.
 
 ---
 
@@ -188,7 +196,7 @@ Contributions are welcome! Please follow these steps:
 
 1. **Fork** the repository
 2. **Create** a feature branch (`git checkout -b feature/awesome-feature`)
-3. **Code** — Follow [Code Standards](docs/code-standards.md)
+3. **Code** — Follow [Code Standards](https://github.com/achoo254/localman/blob/main/docs/code-standards.md)
 4. **Test** — Ensure `pnpm test` and `pnpm lint` pass
 5. **Commit** — Use conventional commit format (`feat:`, `fix:`, `docs:`, etc.)
 6. **Push** — GitHub Actions will run CI checks
@@ -218,7 +226,7 @@ Licensed under the MIT License — see LICENSE file for details.
 | **API Documentation** | ✅ Complete | Markdown descriptions, HTML export with TOC |
 | **Packaging & Polish** | 🔄 In Progress | Performance tuning, Tauri bundler config, cross-platform testing |
 
-For detailed roadmap and known issues, see [Development Roadmap](docs/development-roadmap.md).
+For detailed roadmap and known issues, see [Development Roadmap](https://github.com/achoo254/localman/blob/main/docs/development-roadmap.md).
 
 ---
 
@@ -226,5 +234,5 @@ For detailed roadmap and known issues, see [Development Roadmap](docs/developmen
 
 - **Issues** — Found a bug? [Open an issue](https://github.com/achoo254/localman/issues)
 - **Discussions** — Questions? [Start a discussion](https://github.com/achoo254/localman/discussions)
-- **Docs** — Check [documentation](./docs) for detailed guides
-- **Examples** — See [plans/](./plans) directory for architecture decisions and phase plans
+- **Docs** — Check [documentation](https://github.com/achoo254/localman/tree/main/docs) for detailed guides
+- **Examples** — See [plans/](https://github.com/achoo254/localman/tree/main/plans) directory for architecture decisions and phase plans
