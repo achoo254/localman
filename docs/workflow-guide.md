@@ -6,25 +6,23 @@ Hướng dẫn quy trình phát triển, kiến trúc dữ liệu, và release w
 
 ```mermaid
 graph TB
-    subgraph Desktop["Localman Desktop App"]
+    subgraph SPA["Localman Web SPA"]
         UI["React UI<br/>(Components + Zustand)"]
         Services["Services Layer<br/>(HTTP Client, Interpolation, Scripts)"]
         DB["IndexedDB<br/>(Dexie.js)"]
-        Tauri["Tauri Bridge<br/>(Rust — HTTP, File, Window)"]
+        Firebase["Firebase JS SDK<br/>(Google sign-in, ID token)"]
     end
 
-    subgraph Backend["Backend API (Phase 2)"]
-        API["Hono API Server"]
-        Auth["Better Auth"]
-        PG["PostgreSQL<br/>(Drizzle ORM)"]
+    subgraph Backend["Fastify Proxy Backend (optional)"]
+        Proxy["POST /proxy<br/>(undici — CORS bypass)"]
+        Auth["firebase-admin<br/>(token verify)"]
     end
 
     UI --> Services
     Services --> DB
-    Services --> Tauri
-    Tauri -->|"HTTPS"| API
-    API --> Auth
-    API --> PG
+    Services --> Firebase
+    Services -->|"remote targets"| Proxy
+    Proxy --> Auth
 ```
 
 ## 2. Luồng xử lý Request (Core Workflow)
@@ -36,7 +34,7 @@ sequenceDiagram
     participant Store as Zustand Store
     participant Prep as Request Preparer
     participant Script as QuickJS Sandbox
-    participant HTTP as Tauri HTTP Plugin
+    participant HTTP as HTTP Client
     participant IDB as IndexedDB
 
     User->>UI: Nhập URL, headers, body
@@ -54,8 +52,11 @@ sequenceDiagram
         Script-->>Prep: Modified request
     end
 
-    Prep->>HTTP: execute(preparedRequest)
-    HTTP-->>HTTP: Bypass CORS (native HTTP)
+    alt localhost target
+        Prep->>HTTP: direct fetch()
+    else remote target
+        Prep->>HTTP: POST /proxy → undici → target
+    end
     HTTP-->>UI: HttpResponse
 
     opt Post-request Script
@@ -73,15 +74,14 @@ sequenceDiagram
 ```mermaid
 flowchart LR
     A["User Action"] --> B["Write IndexedDB"]
-    B --> C{"Online?"}
-    C -->|Yes| D["Sync to Cloud"]
-    C -->|No| E["Queue in pending_sync"]
-    E --> F{"Reconnect?"}
-    F -->|Yes| D
-    D --> G["Conflict?"]
-    G -->|No| H["Done ✓"]
-    G -->|Yes| I["LWW by updated_at"]
-    I --> H
+    B --> C["UI updates immediately"]
+    C --> D{"Need remote API?"}
+    D -->|No| E["Done ✓"]
+    D -->|Yes| F{"localhost?"}
+    F -->|Yes| G["Direct fetch()"]
+    F -->|No| H["POST /proxy → undici"]
+    G --> I["Response displayed"]
+    H --> I
 ```
 
 ## 4. Quản lý State (Zustand Stores)
@@ -92,9 +92,8 @@ graph LR
         CS["collections-store<br/>CRUD collections/folders"]
         RS["request-store<br/>Active tab, drafts"]
         RES["response-store<br/>HTTP response, history"]
-        ES["environment-store<br/>Variables, active env"]
+        ES["env-store<br/>Variables, active env"]
         SS["settings-store<br/>Theme, preferences"]
-        SYS["sync-store<br/>Cloud session, sync status"]
     end
 
     subgraph Persistence
@@ -108,33 +107,7 @@ graph LR
     SS --> IDB
 ```
 
-## 5. Cloud Sync Flow
-
-```mermaid
-sequenceDiagram
-    participant App as Desktop App
-    participant Auth as Better Auth
-    participant Sync as Sync API
-    participant DB as PostgreSQL
-
-    App->>Auth: POST /api/auth/login
-    Auth-->>App: Session token
-
-    Note over App: Pull remote changes
-    App->>Sync: POST /api/sync/pull {since}
-    Sync->>DB: SELECT WHERE updatedAt > since
-    DB-->>Sync: collections + requests
-    Sync-->>App: {collections, requests, updatedAt}
-    App->>App: Merge vào IndexedDB (LWW)
-
-    Note over App: Push local changes
-    App->>Sync: POST /api/sync/push {collections, requests, deletions}
-    Sync->>DB: UPSERT + DELETE
-    DB-->>Sync: OK
-    Sync-->>App: {success, syncedAt, conflicts?}
-```
-
-## 6. Development Workflow
+## 5. Development Workflow
 
 ```mermaid
 flowchart TD
@@ -149,8 +122,8 @@ flowchart TD
     F -->|Pass| G["Code review"]
     G -->|Issues| C
     G -->|Approved| H["Commit (conventional)"]
-    H --> I["Push to GitLab"]
-    I --> J["CI Pipeline"]
+    H --> I["Push to GitHub"]
+    I --> J["CI Pipeline (lint + test)"]
     J -->|Fail| C
     J -->|Pass| K["Done ✓"]
 ```
@@ -159,74 +132,56 @@ flowchart TD
 
 | Command | Mục đích |
 |---------|----------|
-| `pnpm tauri dev` | Dev server + Tauri window |
-| `pnpm dev` | Vite dev server (browser only) |
+| `pnpm dev:all` | FE (Vite :5173) + BE (Fastify :3000) concurrently |
+| `pnpm dev` | Vite dev server only |
+| `pnpm dev:be` | Fastify proxy only |
 | `pnpm lint` | ESLint check |
 | `pnpm type-check` | TypeScript check |
-| `pnpm test --run` | Vitest (41 tests) |
-| `pnpm tauri build` | Build production app |
-| `cargo check` | Check Rust compilation |
-| `cargo clippy` | Rust linter |
+| `pnpm test --run` | Vitest |
+| `pnpm build` | Build frontend → dist/ |
+| `pnpm --filter backend build` | Compile backend TypeScript |
 
-## 7. Release Workflow
+## 6. Release Workflow
 
 ```mermaid
 flowchart TD
     A["Fix lint & type errors"] --> B["pnpm lint && pnpm type-check && pnpm test"]
-    B --> C["pnpm tauri build"]
-    C --> D["Windows: .msi + .exe"]
-    C --> E["macOS: .dmg + .app"]
-    D --> F["Smoke test"]
-    E --> F
-    F -->|Bugs found| G["Fix & rebuild"]
+    B --> C["pnpm build"]
+    C --> D["Deploy dist/ to static host"]
+    D --> E["docker build backend/ → push image"]
+    E --> F["Smoke test on staging"]
+    F -->|Bugs found| G["Fix & redeploy"]
     G --> C
     F -->|Pass| H["Tag: git tag v0.x.x"]
-    H --> I["GitLab Release"]
+    H --> I["GitHub Release (gh release create)"]
     I --> J["Distribute to testers"]
     J --> K["Collect feedback"]
 ```
 
-### Artifacts location
-
-| Platform | Format | Path |
-|----------|--------|------|
-| Windows | `.msi` | `src-tauri/target/release/bundle/msi/` |
-| Windows | `.exe` (NSIS) | `src-tauri/target/release/bundle/nsis/` |
-| macOS | `.dmg` | `src-tauri/target/release/bundle/dmg/` |
-| macOS | `.app` | `src-tauri/target/release/bundle/macos/` |
-
-## 8. Cấu trúc thư mục
+## 7. Cấu trúc thư mục
 
 ```
 localman/
-├── src/                    # Frontend React
+├── src/                    # Frontend React SPA
 │   ├── components/         # UI components
-│   │   ├── layout/         # AppLayout, Titlebar, Sidebar, StatusBar
+│   │   ├── layout/         # MainLayout, Titlebar, Sidebar
 │   │   ├── request/        # RequestPanel, UrlBar, RequestTabs
-│   │   ├── response/       # ResponseViewer, ResponseActions
 │   │   ├── collections/    # CollectionTree, FolderItem
-│   │   ├── environments/   # EnvironmentBar, EnvironmentManager
-│   │   ├── import-export/  # ImportDialog, export utils
-│   │   ├── settings/       # SettingsPage (6 tabs)
-│   │   └── common/         # Toast, Modal, KeyboardShortcuts
+│   │   ├── settings/       # SettingsPage, auth form
+│   │   └── common/         # Toast, ErrorBoundary, KeyValueEditor
 │   ├── stores/             # Zustand state stores
 │   ├── db/                 # Dexie.js IndexedDB layer
-│   ├── services/           # HTTP client, sync, interpolation, scripts
-│   ├── hooks/              # Custom React hooks
-│   ├── utils/              # Helpers, URL params, tree builder
+│   ├── services/           # HTTP client, interpolation, scripts, snippets
+│   ├── utils/              # Helpers, feature-flags, db-error-handler
 │   └── types/              # TypeScript type definitions
-├── src-tauri/              # Rust/Tauri backend
-│   ├── src/                # Rust source (main.rs, commands)
-│   └── tauri.conf.json     # Tauri configuration
-├── backend/                # Cloud sync backend (Hono + Better Auth)
-│   ├── src/                # API routes, auth, DB schema
-│   └── drizzle/            # Database migrations
+├── backend/                # Fastify proxy backend
+│   └── src/                # index.ts, auth.ts, proxy.ts
 ├── docs/                   # Project documentation
 ├── plans/                  # Implementation plans
-└── tests/                  # E2E tests (Playwright)
+└── tests/                  # Vitest unit tests
 ```
 
-## 9. Keyboard Shortcuts
+## 8. Keyboard Shortcuts
 
 | Shortcut | Action |
 |----------|--------|
@@ -236,28 +191,28 @@ localman/
 | `Ctrl+S` | Save request |
 | `Ctrl+/` | Toggle keyboard shortcuts modal |
 
-## 10. Design System
+## 9. Design System
 
 ```mermaid
 graph LR
     subgraph Colors
-        BG["Background<br/>#0d0f14"]
-        SF["Surface<br/>#12151c"]
-        EL["Elevated<br/>#181c25"]
-        AC["Accent<br/>#4f8ef7"]
+        BG["Background<br/>#0B1120"]
+        SF["Surface<br/>#0F172A"]
+        EL["Elevated<br/>#1E293B"]
+        AC["Accent<br/>#3B82F6"]
     end
 
     subgraph Methods["HTTP Method Colors"]
-        GET["GET 🟢"]
-        POST["POST 🟠"]
-        PUT["PUT 🟡"]
-        DEL["DELETE 🔴"]
-        PATCH["PATCH 🟣"]
+        GET["GET #10B981"]
+        POST["POST #3B82F6"]
+        PUT["PUT #F59E0B"]
+        DEL["DELETE #EF4444"]
+        PATCH["PATCH #8B5CF6"]
     end
 
     subgraph Fonts
         Code["JetBrains Mono<br/>(code areas)"]
-        Head["Syne<br/>(UI headlines)"]
+        UI["Inter<br/>(UI text)"]
     end
 ```
 
