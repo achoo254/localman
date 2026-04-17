@@ -1,0 +1,95 @@
+AUDIT RESULTS — 2026-04-17
+===========================
+
+## SYNC STORES TO DELETE
+src/stores/sync-store.ts
+src/stores/sync-store.reconnect.test.ts
+src/stores/conflict-store.ts
+src/stores/presence-store.ts
+src/stores/workspace-store.ts
+src/stores/environment-store.sync.test.ts
+src/stores/request-store.sync.test.ts
+
+## SYNC SERVICES TO DELETE (whole dir)
+src/services/sync/
+  - conflict-queue.ts
+  - entity-sync-service.ts
+  - firebase-auth-client.ts
+  - offline-change-queue.ts
+  - offline-queue-replay.ts
+  - sync-reconciliation.ts
+  - websocket-manager.ts
+  - ws-event-handler.ts
+src/services/auth-handler.ts
+src/services/auth-handler.test.ts
+
+## SYNC UI COMPONENTS TO DELETE
+src/components/sync/conflict-resolution-dialog.tsx
+src/components/sync/conflict-field-diff.tsx
+src/components/common/presence-avatars.tsx
+src/components/common/sync-status-badge.tsx
+src/components/layout/sync-status-indicator.tsx
+src/components/layout/workspace-switcher.tsx
+src/components/settings/account-workspaces-settings.tsx
+src/components/settings/cloud-login-form.tsx
+src/components/settings/sync-settings.tsx
+src/components/settings/workspace-invite-dialog.tsx
+src/components/settings/workspace-list.tsx
+src/components/settings/workspace-member-dialog.tsx
+
+## STORES TO REFACTOR (remove sync hooks: addPendingChange)
+src/stores/environment-store.ts
+src/stores/request-store.ts
+src/stores/collections-store.ts
+src/stores/settings-store.ts (remove encrypted refresh-token)
+src/stores/history-store.ts (verify)
+
+## COMPONENTS REFERENCING SYNC/WORKSPACE STORES (refactor or strip)
+src/components/layout/sidebar.tsx — useSyncStore, useWorkspaceStore
+src/components/layout/app-layout.tsx — useSyncStore
+src/components/collections/collection-context-menu.tsx — type WorkspaceInfo
+src/components/collections/collection-tree.tsx — type WorkspaceInfo
+src/components/collections/collections-tab-sections.tsx — useWorkspaceStore, useSyncStore
+src/components/collections/sidebar-tabs.tsx — useWorkspaceStore + Tauri dialog
+
+## TAURI USAGES IN SRC
+src/services/http-client.ts (whole rewrite)
+src/utils/tauri-http-client.ts (delete)
+src/components/history/history-sidebar-tab.tsx — confirm dialog
+src/components/response/response-actions.tsx — save+writeTextFile
+src/services/import-export-service.ts — open/save+readTextFile/writeTextFile
+src/components/environments/environment-manager.tsx — confirm
+src/components/request/request-tab-bar.tsx — dynamic confirm
+src/components/request/body-binary-picker.tsx — open
+src/components/request/request-panel.tsx — confirm
+src/components/docs/docs-viewer-page.tsx — dynamic save+writeTextFile
+src/components/layout/status-bar.tsx — getVersion
+src/components/layout/titlebar.tsx — getCurrentWindow
+src/components/collections/sidebar-tabs.tsx — confirm
+src/test/setup.ts — vi.mock @tauri-apps
+
+## TAURI DEPS (root package.json)
+@tauri-apps/api
+@tauri-apps/plugin-dialog
+@tauri-apps/plugin-fs
+@tauri-apps/plugin-http
+@tauri-apps/plugin-opener
+
+## TAURI BUILD SCRIPTS (root package.json)
+build:windows, build:mac, build:linux, tauri
+
+## OLD BACKEND FILES TO DELETE
+backend/src/                   (whole)
+backend/drizzle/
+backend/auth-schema.ts
+backend/drizzle.config.ts
+backend/ecosystem.config.cjs
+backend/esbuild.config.js
+backend/plans/                 (verify exists)
+backend/deploy/
+backend/localman-36eac-firebase-adminsdk-fbsvc-e4898843d3.json
+
+## OLD COMPLETED SYNC PLAN DIRS TO DELETE
+plans/260313-1021-*
+plans/260313-1351-*
+plans/260316-1322-*

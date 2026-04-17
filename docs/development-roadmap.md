@@ -16,7 +16,7 @@ Localman phases 00–11, with completion status and key milestones.
 | 07 | Pre/Post Scripts | ✅ Complete | P1 | QuickJS sandbox, request/response manipulation | 2026-02 |
 | 08 | Cloud Sync Phase 1 | ✅ Complete | P1 | HTTP sync API, LWW conflict resolution, sync UI | 2026-02 |
 | 09 | Error Handling & UI Polish | ✅ Complete | P1 | Error boundaries, toast notifications, layout polish | 2026-02 |
-| 10 | Packaging & CI/CD | ✅ Complete | P1 | GitLab CI/CD, Windows MSI/EXE builds, cross-platform testing | 2026-03 |
+| 10 | Packaging & CI/CD | ✅ Complete | P1 | CI/CD pipeline, Windows MSI/EXE builds, cross-platform testing | 2026-03 |
 | 11 | Code Snippet & API Docs | ✅ Complete | P2 | 16 language snippet generators, docs viewer, HTML/Markdown export | 2026-03-08 |
 | 12 | Draft Tab System | ✅ Complete | P2 | Ctrl+T draft requests, explicit save workflow, draft lifecycle | 2026-03-08 |
 | 13 | Cloud Sync Phase 2 | ✅ Complete | P1 | Backend API (Hono + PostgreSQL), Better Auth, pull/push sync | 2026-03-09 |
@@ -321,7 +321,7 @@ Localman phases 00–11, with completion status and key milestones.
 ## Dependencies & Constraints
 
 - **Sequential Execution**: Max 1 phase at a time
-- **GitLab CI/CD**: All changes tested before merge to main
+- **GitHub Actions CI**: All changes tested before merge to main
 - **Cross-platform**: Windows/macOS/Linux builds validated before release
 - **Offline-First**: IndexedDB is source of truth; API is secondary
 
