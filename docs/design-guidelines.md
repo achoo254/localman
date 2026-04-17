@@ -1,6 +1,6 @@
 # Design Guidelines — Localman
 
-> Dark-first desktop API client. Offline-first, Tauri + React + TypeScript.
+> Dark-first web API client. Offline-first, React + TypeScript + Vite.
 
 ## Prerequisites — READ BEFORE IMPLEMENTING
 
@@ -453,5 +453,5 @@ Buttons:   flex items-center gap-1.5 rounded-lg px-3 py-1.5
 - No `text-white` for body text — use `text-slate-200` or `text-[var(--foreground)]`
 - No manual save buttons — auto-save on every change
 - No modals for minor feedback — use toast notifications only
-- No browser fetch for API calls — use Tauri HTTP plugin only
+- Remote API calls route through `/proxy` backend — no direct browser fetch to cross-origin targets
 - No mixing density modes — keep consistent spacing within screens

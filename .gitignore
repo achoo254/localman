@@ -28,3 +28,7 @@ dist-ssr
 *.sln
 *.sw?
 .env
+*firebase-adminsdk*.json
+client/.env
+backend/.env
+.env.local
