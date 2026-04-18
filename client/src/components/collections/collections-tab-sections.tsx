@@ -42,7 +42,7 @@ export function CollectionsTabSections({
   const isLoading = collections === undefined;
 
   if (isLoading) {
-    return <p className="p-4 text-sm text-gray-500">Loading…</p>;
+    return <p className="p-4 text-sm text-[var(--color-text-subtle)]">Loading…</p>;
   }
 
   const hasAnyCollections = personalTree.length > 0;
@@ -61,7 +61,7 @@ export function CollectionsTabSections({
         <button
           type="button"
           onClick={() => onCreateCollection(null)}
-          className="rounded-lg bg-[var(--color-accent)] px-5 py-2 text-[13px] font-semibold text-white transition-all hover:bg-[var(--color-accent-hover)] hover:shadow-md active:scale-95"
+          className="rounded-lg bg-[var(--color-accent)] px-5 py-2 text-[length:var(--text-sm)] font-semibold text-[var(--color-text-on-accent)] transition-all hover:bg-[var(--color-accent-hover)] hover:shadow-md active:scale-95"
         >
           New collection
         </button>
@@ -96,7 +96,7 @@ export function CollectionsTabSections({
         <button
           type="button"
           onClick={() => onCreateCollection(null)}
-          className="w-full rounded-lg border border-dashed border-slate-700/60 py-2.5 text-[13px] font-medium text-slate-400 transition-colors hover:text-slate-200 hover:border-slate-500 hover:bg-white/[0.02]"
+          className="w-full rounded-lg border border-dashed border-slate-700/60 py-2.5 text-[length:var(--text-sm)] font-medium text-slate-400 transition-colors hover:text-slate-200 hover:border-slate-500 hover:bg-white/[0.02]"
         >
           + New collection
         </button>

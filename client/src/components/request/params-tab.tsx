@@ -23,6 +23,7 @@ export function ParamsTab({ params, onChange }: ParamsTabProps) {
         placeholderKey="Query key"
         placeholderValue="Value ({{var}})"
         getResolvedValue={v => interpolateString(v, getInterpolationContext())}
+        enableChipPopover
       />
     </div>
   );

@@ -22,7 +22,7 @@ export function CollectionSectionHeader({
       <button
         type="button"
         onClick={onToggle}
-        className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-slate-500 hover:text-slate-300 transition-colors"
+        className="flex items-center gap-1 text-[length:var(--text-meta)] font-semibold uppercase tracking-wider text-slate-500 hover:text-slate-300 transition-colors"
       >
         {isCollapsed ? (
           <ChevronRight className="h-3 w-3" />

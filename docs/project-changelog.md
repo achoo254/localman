@@ -2,6 +2,24 @@
 
 All notable changes to Localman documented here. Format based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [Design Token Compliance] — 2026-04-18
+
+### Changed
+- ~100 hardcoded values across `client/src/components/**` replaced with CSS variable tokens
+- `--color-text-inverse` renamed → `--color-text-on-accent: #FFFFFF` (semantic clarity)
+- Toast palette: Tailwind `red-950`/`emerald-950` → `--color-toast-error-*`/`--color-toast-success-*` tokens
+- Dialog overlays: `bg-black/50` → `bg-[var(--color-bg-overlay)]`; ~50 `text-[Npx]` → `@layer utilities` token shims
+- `--color-bg-primary-80: rgba(11,17,32,0.8)` baked as explicit token (Tailwind v4 `/80`-on-var safety)
+
+### Added
+- Husky + lint-staged pre-commit guard (`scripts/check-design-tokens.sh`) blocks forbidden patterns on staged files
+- Root `package.json` created to host `lint-staged` config
+
+### Verified
+- type-check PASS, lint PASS, build PASS
+
+---
+
 ## [Phase 1 Offline-First Release Fixes] — 2026-03-13
 
 ### Added

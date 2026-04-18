@@ -1,0 +1,17 @@
+{
+  "name": "localman",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^15.5.2"
+  },
+  "lint-staged": {
+    "client/src/**/*.{ts,tsx}": [
+      "bash scripts/check-design-tokens.sh"
+    ]
+  }
+}

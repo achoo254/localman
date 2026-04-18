@@ -5,6 +5,7 @@
 import { useCallback, useState } from 'react';
 import type { EnvVariable } from '../../types/models';
 import { Eye, EyeOff } from 'lucide-react';
+import { VariableValuePopover } from '../common/variable-value-popover';
 
 interface VariableTableProps {
   variables: EnvVariable[];
@@ -12,6 +13,8 @@ interface VariableTableProps {
   onAdd: () => void;
   onRemove: (id: string) => void;
   disabled?: boolean;
+  /** Shown as source label inside value popover (env name or "Global"). */
+  sourceLabel?: string;
 }
 
 const MASK = '••••••••';
@@ -22,6 +25,7 @@ export function VariableTable({
   onAdd,
   onRemove,
   disabled = false,
+  sourceLabel,
 }: VariableTableProps) {
   const update = useCallback(
     (idx: number, patch: Partial<EnvVariable>) => {
@@ -52,6 +56,7 @@ export function VariableTable({
               onUpdate={patch => update(idx, patch)}
               onRemove={() => onRemove(v.id)}
               disabled={disabled}
+              sourceLabel={sourceLabel}
             />
           ))}
         </tbody>
@@ -60,7 +65,7 @@ export function VariableTable({
         type="button"
         onClick={onAdd}
         disabled={disabled}
-        className="mt-2 self-start rounded-lg px-3 py-1.5 text-[13px] font-medium text-[var(--color-accent)] transition-colors hover:bg-[var(--color-bg-tertiary)] disabled:opacity-50 flex items-center gap-1.5"
+        className="mt-2 self-start rounded-lg px-3 py-1.5 text-[length:var(--text-sm)] font-medium text-[var(--color-accent)] transition-colors hover:bg-[var(--color-bg-tertiary)] disabled:opacity-50 flex items-center gap-1.5"
       >
         <span className="text-base leading-none">+</span>
         Add variable
@@ -74,11 +79,13 @@ function VariableRow({
   onUpdate,
   onRemove,
   disabled,
+  sourceLabel,
 }: {
   variable: EnvVariable;
   onUpdate: (patch: Partial<EnvVariable>) => void;
   onRemove: () => void;
   disabled: boolean;
+  sourceLabel?: string;
 }) {
   const [reveal, setReveal] = useState(false);
   const showValue = !variable.secret || reveal;
@@ -91,23 +98,31 @@ function VariableRow({
           onChange={e => onUpdate({ key: e.target.value })}
           placeholder="Key"
           disabled={disabled}
-          className="w-full rounded-md border border-transparent bg-transparent px-2 py-1.5 font-mono text-[13px] outline-none transition-colors hover:border-[var(--color-bg-tertiary)] focus:border-[var(--color-accent)] focus:bg-[var(--color-bg-secondary)]"
+          className="w-full rounded-md border border-transparent bg-transparent px-2 py-1.5 font-mono text-[length:var(--text-sm)] outline-none transition-colors hover:border-[var(--color-bg-tertiary)] focus:border-[var(--color-accent)] focus:bg-[var(--color-bg-secondary)]"
         />
       </td>
       <td className="p-1">
-        <input
-          type={showValue ? 'text' : 'password'}
-          value={showValue ? variable.value : MASK}
-          onChange={e => {
-            // Reject if field is masked or value equals the mask sentinel
-            if (!showValue || e.target.value === MASK) return;
-            onUpdate({ value: e.target.value });
-          }}
-          placeholder="Value"
-          disabled={disabled || (variable.secret && !reveal)}
-          readOnly={variable.secret && !reveal}
-          className="w-full rounded-md border border-transparent bg-transparent px-2 py-1.5 font-mono text-[13px] outline-none transition-colors hover:border-[var(--color-bg-tertiary)] focus:border-[var(--color-accent)] focus:bg-[var(--color-bg-secondary)]"
-        />
+        <VariableValuePopover
+          value={showValue ? variable.value : ''}
+          onChange={v => onUpdate({ value: v })}
+          secret={!!variable.secret && !reveal}
+          sourceLabel={sourceLabel}
+          disabled={disabled}
+        >
+          <input
+            type={showValue ? 'text' : 'password'}
+            value={showValue ? variable.value : MASK}
+            onChange={e => {
+              // Reject if field is masked or value equals the mask sentinel
+              if (!showValue || e.target.value === MASK) return;
+              onUpdate({ value: e.target.value });
+            }}
+            placeholder="Value"
+            disabled={disabled || (variable.secret && !reveal)}
+            readOnly={variable.secret && !reveal}
+            className="w-full rounded-md border border-transparent bg-transparent px-2 py-1.5 font-mono text-[length:var(--text-sm)] outline-none transition-colors hover:border-[var(--color-bg-tertiary)] focus:border-[var(--color-accent)] focus:bg-[var(--color-bg-secondary)]"
+          />
+        </VariableValuePopover>
       </td>
       <td className="p-1">
         {variable.secret && (

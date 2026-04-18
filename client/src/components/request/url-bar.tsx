@@ -59,6 +59,7 @@ export function UrlBar({
           placeholder="https://api.example.com/..."
           onKeyDown={handleKeyDown}
           getResolvedValue={getResolvedUrl}
+          enableChipPopover
         />
       </div>
       <div className="shrink-0 flex items-center gap-1 pr-1">
@@ -85,7 +86,7 @@ export function UrlBar({
             type="button"
             onClick={onSend}
             disabled={disabled}
-            className="flex items-center justify-center rounded-lg bg-[var(--color-accent)] px-6 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:bg-[var(--color-accent-hover)] hover:shadow-md active:scale-95 disabled:pointer-events-none disabled:opacity-50"
+            className="flex items-center justify-center rounded-lg bg-[var(--color-accent)] px-6 py-2 text-sm font-semibold text-[var(--color-text-on-accent)] shadow-sm transition-all hover:bg-[var(--color-accent-hover)] hover:shadow-md active:scale-95 disabled:pointer-events-none disabled:opacity-50"
           >
             Send
           </button>

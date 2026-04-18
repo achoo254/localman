@@ -33,14 +33,14 @@ export function BodyTab({ body, onChange, disabled }: BodyTabProps) {
 
   return (
     <div className="flex flex-col">
-      <div className="flex gap-1 border-b border-[var(--color-bg-tertiary)] p-2 bg-[#0B1120] overflow-x-auto scrollbar-none">
+      <div className="flex gap-1 border-b border-[var(--color-bg-tertiary)] p-2 bg-[var(--color-bg-primary)] overflow-x-auto scrollbar-none">
         {BODY_TYPES.map(({ value, label }) => (
           <button
             key={value}
             type="button"
             onClick={() => setType(value)}
             disabled={disabled}
-            className={`rounded-lg px-3 py-1.5 text-[13px] font-medium whitespace-nowrap transition-colors ${
+            className={`rounded-lg px-3 py-1.5 text-[length:var(--text-sm)] font-medium whitespace-nowrap transition-colors ${
               body.type === value
                 ? 'bg-[var(--color-bg-primary)] text-[var(--color-accent)] shadow-sm'
                 : 'text-slate-500 hover:text-slate-200 hover:bg-white/5'

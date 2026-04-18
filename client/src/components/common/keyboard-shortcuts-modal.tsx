@@ -14,8 +14,8 @@ export function KeyboardShortcutsModal({ open, onOpenChange }: KeyboardShortcuts
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 bg-black/50" />
-        <Dialog.Content className="fixed left-1/2 top-1/2 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-lg border border-[var(--color-bg-tertiary)] bg-[var(--color-bg-secondary)] p-4 shadow-lg">
+        <Dialog.Overlay className="fixed inset-0 z-[var(--z-modal-backdrop)] bg-[var(--color-bg-overlay)]" />
+        <Dialog.Content className="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-lg border border-[var(--color-bg-tertiary)] bg-[var(--color-bg-secondary)] p-4 shadow-lg">
           <Dialog.Title className="text-sm font-semibold text-slate-200">Keyboard shortcuts</Dialog.Title>
           <div className="mt-4 flex flex-col gap-4">
             {KEYBOARD_SHORTCUTS.map(({ category, items }) => (

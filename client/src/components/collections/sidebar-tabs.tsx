@@ -184,7 +184,7 @@ export function SidebarTabs({ onOpenEnvironmentManager }: SidebarTabsProps) {
     <>
       <div className="flex flex-1 min-h-0">
         {/* Tab icon strip */}
-        <div className="flex flex-col border-r border-[var(--color-bg-tertiary)] w-12 shrink-0 py-3 gap-2 items-center bg-[#0B1120]">
+        <div className="flex flex-col border-r border-[var(--color-bg-tertiary)] w-12 shrink-0 py-3 gap-2 items-center bg-[var(--color-bg-primary)]">
           <button
             type="button"
             aria-label="Collections"
@@ -243,7 +243,7 @@ export function SidebarTabs({ onOpenEnvironmentManager }: SidebarTabsProps) {
             (onOpenEnvironmentManager ? (
               <EnvironmentSidebarTab onOpenManager={onOpenEnvironmentManager} />
             ) : (
-              <div className="p-4 text-sm text-gray-500">Environments</div>
+              <div className="p-4 text-sm text-[var(--color-text-subtle)]">Environments</div>
             ))}
           {activeTab === 'docs' && <DocsViewerPage />}
         </div>

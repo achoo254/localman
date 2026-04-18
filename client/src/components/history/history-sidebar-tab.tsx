@@ -53,7 +53,7 @@ export function HistorySidebarTab() {
         <div className="flex items-center gap-1.5">
           <span className="text-xs font-medium text-slate-400">History</span>
           {entries.length > 0 && (
-            <span className="text-[10px] text-slate-600 bg-slate-800 rounded-full px-1.5 py-0.5 font-medium leading-none">
+            <span className="text-[length:var(--text-meta)] text-slate-600 bg-slate-800 rounded-full px-1.5 py-0.5 font-medium leading-none">
               {entries.length}
             </span>
           )}
@@ -61,7 +61,7 @@ export function HistorySidebarTab() {
         {entries.length > 0 && (
           <button
             type="button"
-            className="flex items-center gap-1 text-[11px] text-slate-500 hover:text-red-400 transition-colors cursor-pointer"
+            className="flex items-center gap-1 text-[length:var(--text-xs)] text-slate-500 hover:text-red-400 transition-colors cursor-pointer"
             onClick={handleClear}
           >
             <Trash2 className="w-3 h-3" />
@@ -107,7 +107,7 @@ export function HistorySidebarTab() {
               <div className="p-2">
                 <button
                   type="button"
-                  className="w-full flex items-center justify-center gap-1.5 rounded-md border border-dashed border-slate-700 py-2 text-[11px] text-slate-500 hover:text-slate-300 hover:border-slate-500 transition-colors cursor-pointer disabled:opacity-50"
+                  className="w-full flex items-center justify-center gap-1.5 rounded-md border border-dashed border-slate-700 py-2 text-[length:var(--text-xs)] text-slate-500 hover:text-slate-300 hover:border-slate-500 transition-colors cursor-pointer disabled:opacity-50"
                   onClick={() => void loadEntries(true)}
                   disabled={isLoading}
                 >

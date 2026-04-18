@@ -24,13 +24,7 @@ export function StatusBar() {
 
   return (
     <footer
-      className="flex h-7 shrink-0 items-center gap-4 px-4 text-xs"
-      style={{
-        background: 'var(--color-bg-secondary)',
-        borderTop: '1px solid var(--color-bg-tertiary)',
-        color: 'var(--foreground)',
-        opacity: 0.8,
-      }}
+      className="flex h-7 shrink-0 items-center gap-4 border-t border-[var(--color-bg-tertiary)] bg-[var(--color-bg-secondary)] px-4 text-xs text-[var(--foreground)] opacity-80"
     >
       <span style={{ color: 'var(--color-accent)', opacity: 0.7 }}>Localman {APP_VERSION}</span>
       <span className="ml-auto opacity-50 flex items-center gap-1.5">

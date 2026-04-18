@@ -22,6 +22,7 @@ export function BodyFormEditor({ pairs, onChange }: BodyFormEditorProps) {
         placeholderKey="Key"
         placeholderValue="Value ({{var}})"
         getResolvedValue={v => interpolateString(v, getInterpolationContext())}
+        enableChipPopover
       />
     </div>
   );

@@ -117,7 +117,7 @@ export function DocsViewerPage() {
         <button
           type="button"
           onClick={() => handleExport('html')}
-          className="shrink-0 flex items-center gap-1 rounded-md px-2 py-1.5 text-[11px] text-slate-400 hover:text-slate-200 hover:bg-white/5 transition-colors"
+          className="shrink-0 flex items-center gap-1 rounded-md px-2 py-1.5 text-[length:var(--text-xs)] text-slate-400 hover:text-slate-200 hover:bg-white/5 transition-colors"
           title="Export as HTML"
         >
           <FileCode className="h-3.5 w-3.5" />
@@ -126,7 +126,7 @@ export function DocsViewerPage() {
         <button
           type="button"
           onClick={() => handleExport('markdown')}
-          className="shrink-0 flex items-center gap-1 rounded-md px-2 py-1.5 text-[11px] text-slate-400 hover:text-slate-200 hover:bg-white/5 transition-colors"
+          className="shrink-0 flex items-center gap-1 rounded-md px-2 py-1.5 text-[length:var(--text-xs)] text-slate-400 hover:text-slate-200 hover:bg-white/5 transition-colors"
           title="Export as Markdown"
         >
           <Download className="h-3.5 w-3.5" />

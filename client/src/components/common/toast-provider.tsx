@@ -40,7 +40,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   return (
     <Toast.Provider swipeDirection="right">
       {children}
-      <Toast.Viewport className="fixed bottom-0 right-0 z-[100] flex max-w-[380px] flex-col gap-2 p-4 outline-none">
+      <Toast.Viewport className="fixed bottom-0 right-0 z-[var(--z-notification)] flex max-w-[380px] flex-col gap-2 p-4 outline-none">
         {toasts.map((t) => (
           <ToastRoot key={t.id} item={t} onOpenChange={(open) => !open && remove(t.id)} />
         ))}
@@ -64,9 +64,9 @@ function ToastRoot({
   const isError = item.variant === 'error';
   const isSuccess = item.variant === 'success';
   const className = isError
-    ? 'bg-red-950/90 border-red-500/50 text-red-200'
+    ? 'bg-[var(--color-toast-error-bg)] border-[var(--color-toast-error-border)] text-[var(--color-toast-error-text)]'
     : isSuccess
-      ? 'bg-emerald-950/90 border-emerald-500/50 text-emerald-200'
+      ? 'bg-[var(--color-toast-success-bg)] border-[var(--color-toast-success-border)] text-[var(--color-toast-success-text)]'
       : 'bg-[var(--color-bg-tertiary)] border-[var(--color-bg-tertiary)] text-[var(--foreground)]';
 
   return (

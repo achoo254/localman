@@ -38,7 +38,7 @@ function TocChildren({ nodes, depth }: { nodes: TreeNode[]; depth: number }) {
               }}
             >
               {node.method && (
-                <span className={`text-[10px] font-bold shrink-0 ${METHOD_TEXT_CLASSES[node.method] ?? 'text-slate-500'}`}>
+                <span className={`text-[length:var(--text-meta)] font-bold shrink-0 ${METHOD_TEXT_CLASSES[node.method] ?? 'text-slate-500'}`}>
                   {node.method.slice(0, 3)}
                 </span>
               )}

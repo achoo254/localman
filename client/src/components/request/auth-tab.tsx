@@ -35,8 +35,8 @@ export function AuthTab({ auth, onChange }: AuthTabProps) {
             onClick={() => setType(value)}
             className={`rounded px-3 py-1.5 text-sm ${
               auth.type === value
-                ? 'bg-[var(--color-accent)] text-white'
-                : 'bg-[var(--color-bg-secondary)] text-gray-400 hover:bg-[var(--color-bg-tertiary)]'
+                ? 'bg-[var(--color-accent)] text-[var(--color-text-on-accent)]'
+                : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-muted)] hover:bg-[var(--color-bg-tertiary)]'
             }`}
           >
             {label}
@@ -45,39 +45,42 @@ export function AuthTab({ auth, onChange }: AuthTabProps) {
       </div>
       {auth.type === 'bearer' && (
         <div className="flex flex-col gap-2">
-          <label className="text-sm text-gray-400">Token</label>
+          <label className="text-sm text-[var(--color-text-muted)]">Token</label>
           <VariableHighlightInput
             value={auth.bearerToken ?? ''}
             onChange={v => onChange({ ...auth, bearerToken: v })}
             placeholder="Bearer token ({{token}})"
             type="password"
             getResolvedValue={() => interpolateString(auth.bearerToken ?? '', getInterpolationContext())}
+            enableChipPopover
           />
         </div>
       )}
       {auth.type === 'basic' && (
         <div className="flex flex-col gap-2">
-          <label className="text-sm text-gray-400">Username</label>
+          <label className="text-sm text-[var(--color-text-muted)]">Username</label>
           <VariableHighlightInput
             value={auth.username ?? ''}
             onChange={v => onChange({ ...auth, username: v })}
             placeholder="Username ({{user}})"
             type="text"
             getResolvedValue={() => interpolateString(auth.username ?? '', getInterpolationContext())}
+            enableChipPopover
           />
-          <label className="text-sm text-gray-400">Password</label>
+          <label className="text-sm text-[var(--color-text-muted)]">Password</label>
           <VariableHighlightInput
             value={auth.password ?? ''}
             onChange={v => onChange({ ...auth, password: v })}
             placeholder="Password ({{pass}})"
             type="password"
             getResolvedValue={() => interpolateString(auth.password ?? '', getInterpolationContext())}
+            enableChipPopover
           />
         </div>
       )}
       {auth.type === 'api-key' && (
         <div className="flex flex-col gap-2">
-          <label htmlFor="auth-apikey-header" className="text-sm text-gray-400">Key (header name or query param)</label>
+          <label htmlFor="auth-apikey-header" className="text-sm text-[var(--color-text-muted)]">Key (header name or query param)</label>
           <input
             id="auth-apikey-header"
             type="text"
@@ -86,13 +89,14 @@ export function AuthTab({ auth, onChange }: AuthTabProps) {
             placeholder="X-API-Key"
             className="rounded border border-[var(--color-bg-tertiary)] bg-[var(--color-bg-secondary)] px-3 py-2 font-mono text-sm outline-none focus:ring-1 focus:ring-[var(--color-accent)]"
           />
-          <label className="text-sm text-gray-400">Value</label>
+          <label className="text-sm text-[var(--color-text-muted)]">Value</label>
           <VariableHighlightInput
             value={auth.apiKeyValue ?? ''}
             onChange={v => onChange({ ...auth, apiKeyValue: v })}
             placeholder="API key value ({{var}})"
             type="password"
             getResolvedValue={() => interpolateString(auth.apiKeyValue ?? '', getInterpolationContext())}
+            enableChipPopover
           />
         </div>
       )}

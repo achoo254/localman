@@ -23,13 +23,13 @@ export function CollectionSearch() {
 
   return (
     <div className="relative px-2 py-1.5">
-      <Search className="absolute left-5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
+      <Search className="absolute left-5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-text-subtle)]" />
       <input
         type="text"
         value={local}
         onChange={handleChange}
         placeholder="Search requests..."
-        className="w-full rounded border border-[var(--color-bg-tertiary)] bg-[var(--color-bg-primary)] py-1.5 pl-8 pr-2 text-sm placeholder:text-gray-500 focus:border-[var(--color-accent)] focus:outline-none"
+        className="w-full rounded border border-[var(--color-bg-tertiary)] bg-[var(--color-bg-primary)] py-1.5 pl-8 pr-2 text-sm placeholder:text-[var(--color-text-subtle)] focus:border-[var(--color-accent)] focus:outline-none"
       />
     </div>
   );

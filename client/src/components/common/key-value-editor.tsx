@@ -16,6 +16,8 @@ interface KeyValueEditorProps {
   showDescription?: boolean;
   /** When provided, value cells use VariableHighlightInput with resolved tooltip. */
   getResolvedValue?: (value: string) => string;
+  /** Enable Case-B chip popover on {{var}} spans inside the value cell. */
+  enableChipPopover?: boolean;
 }
 
 export function KeyValueEditor({
@@ -25,6 +27,7 @@ export function KeyValueEditor({
   placeholderValue = 'Value',
   showDescription = false,
   getResolvedValue,
+  enableChipPopover,
 }: KeyValueEditorProps) {
   const update = useCallback(
     (idx: number, patch: Partial<KeyValuePair>) => {
@@ -76,7 +79,7 @@ export function KeyValueEditor({
                   value={p.key}
                   onChange={e => update(idx, { key: e.target.value })}
                   placeholder={placeholderKey}
-                  className="w-full rounded-md border border-transparent bg-transparent px-2 py-1.5 font-mono text-[13px] outline-none transition-colors hover:border-[var(--color-bg-tertiary)] focus:border-[var(--color-accent)] focus:bg-[var(--color-bg-secondary)]"
+                  className="w-full rounded-md border border-transparent bg-transparent px-2 py-1.5 font-mono text-[length:var(--text-sm)] outline-none transition-colors hover:border-[var(--color-bg-tertiary)] focus:border-[var(--color-accent)] focus:bg-[var(--color-bg-secondary)]"
                 />
               </td>
               <td className="p-1 min-w-0">
@@ -87,6 +90,7 @@ export function KeyValueEditor({
                       onChange={v => update(idx, { value: v })}
                       placeholder={placeholderValue}
                       getResolvedValue={() => getResolvedValue(p.value)}
+                      enableChipPopover={enableChipPopover}
                       className="py-1.5"
                     />
                   </div>
@@ -95,7 +99,7 @@ export function KeyValueEditor({
                     value={p.value}
                     onChange={e => update(idx, { value: e.target.value })}
                     placeholder={placeholderValue}
-                    className="w-full rounded-md border border-transparent bg-transparent px-2 py-1.5 font-mono text-[13px] outline-none transition-colors hover:border-[var(--color-bg-tertiary)] focus:border-[var(--color-accent)] focus:bg-[var(--color-bg-secondary)]"
+                    className="w-full rounded-md border border-transparent bg-transparent px-2 py-1.5 font-mono text-[length:var(--text-sm)] outline-none transition-colors hover:border-[var(--color-bg-tertiary)] focus:border-[var(--color-accent)] focus:bg-[var(--color-bg-secondary)]"
                   />
                 )}
               </td>
@@ -105,7 +109,7 @@ export function KeyValueEditor({
                     value={p.description ?? ''}
                     onChange={e => update(idx, { description: e.target.value })}
                     placeholder="Description"
-                    className="w-full rounded-md border border-transparent bg-transparent px-2 py-1.5 text-[13px] outline-none transition-colors hover:border-[var(--color-bg-tertiary)] focus:border-[var(--color-accent)] focus:bg-[var(--color-bg-secondary)]"
+                    className="w-full rounded-md border border-transparent bg-transparent px-2 py-1.5 text-[length:var(--text-sm)] outline-none transition-colors hover:border-[var(--color-bg-tertiary)] focus:border-[var(--color-accent)] focus:bg-[var(--color-bg-secondary)]"
                   />
                 </td>
               )}
@@ -126,7 +130,7 @@ export function KeyValueEditor({
       <button
         type="button"
         onClick={addRow}
-        className="mt-2 self-start rounded-lg px-3 py-1.5 text-[13px] font-medium text-[var(--color-accent)] transition-colors hover:bg-[var(--color-bg-tertiary)] flex items-center gap-1.5"
+        className="mt-2 self-start rounded-lg px-3 py-1.5 text-[length:var(--text-sm)] font-medium text-[var(--color-accent)] transition-colors hover:bg-[var(--color-bg-tertiary)] flex items-center gap-1.5"
       >
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
         Add row

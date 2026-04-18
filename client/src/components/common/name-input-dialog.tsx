@@ -54,8 +54,8 @@ export function NameInputDialog({
   return (
     <Dialog.Root open={open} onOpenChange={handleOpenChange}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 bg-black/50" />
-        <Dialog.Content className="fixed left-1/2 top-1/2 w-full max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-lg border border-[var(--color-bg-tertiary)] bg-[var(--color-bg-secondary)] p-4 shadow-lg">
+        <Dialog.Overlay className="fixed inset-0 z-[var(--z-modal-backdrop)] bg-[var(--color-bg-overlay)]" />
+        <Dialog.Content className="fixed left-1/2 top-1/2 z-50 w-full max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-lg border border-[var(--color-bg-tertiary)] bg-[var(--color-bg-secondary)] p-4 shadow-lg">
           <Dialog.Title className="text-sm font-medium">{title}</Dialog.Title>
           <form onSubmit={handleSubmit} className="mt-3 flex flex-col gap-3">
             <input
@@ -69,14 +69,14 @@ export function NameInputDialog({
             />
             <div className="flex justify-end gap-2">
               <Dialog.Close asChild>
-                <button type="button" className="rounded px-3 py-1.5 text-sm text-gray-400 hover:text-[var(--foreground)]">
+                <button type="button" className="rounded px-3 py-1.5 text-sm text-[var(--color-text-muted)] hover:text-[var(--foreground)]">
                   Cancel
                 </button>
               </Dialog.Close>
               <button
                 type="submit"
                 disabled={!name.trim() || saving}
-                className="rounded bg-[var(--color-accent)] px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50"
+                className="rounded bg-[var(--color-accent)] px-3 py-1.5 text-sm font-medium text-[var(--color-text-on-accent)] disabled:opacity-50"
               >
                 {saving ? '…' : confirmLabel}
               </button>

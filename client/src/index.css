@@ -5,37 +5,174 @@
 @import "@fontsource/inter/500.css";
 @import "@fontsource/inter/600.css";
 
+/* ==========================================================================
+   Localman Design Tokens
+   - Dark-first (Deep Space / Enterprise Gateway theme)
+   - Aligned with inet-viui token scales (spacing, elevation, motion, zIndex, radius)
+   - All component styles MUST consume these tokens — no hardcoded hex/px
+   ========================================================================== */
+
 @theme {
-  /* Design system — UI/UX Pro Max (Deep Space / Enterprise Gateway) */
-  --color-bg-primary: #0B1120;
-  --color-bg-secondary: #0F172A;
-  --color-bg-tertiary: #1E293B;
+  /* -------- COLOR · Surfaces (dark-first elevation ladder) -------------- */
+  --color-bg-primary: #0B1120;     /* page background */
+  --color-bg-secondary: #0F172A;   /* sidebar, titlebar, status bar */
+  --color-bg-tertiary: #1E293B;    /* hover, borders, elevated surfaces */
+  --color-bg-elevated: #273449;    /* popovers, dropdowns (one step above tertiary) */
+  --color-bg-overlay: rgba(0, 0, 0, 0.6);  /* modal backdrop */
+  --color-bg-primary-80: rgba(11, 17, 32, 0.8);  /* 80% primary — script console etc */
+
+  /* -------- COLOR · Brand / Accent -------------------------------------- */
   --color-accent: #3B82F6;
   --color-accent-hover: #60A5FA;
-  
+  --color-accent-active: #2563EB;
+  --color-accent-soft: rgba(59, 130, 246, 0.2);   /* active-item tint */
+  --color-accent-ring: rgba(59, 130, 246, 0.4);   /* focus-ring glow */
+
+  /* -------- COLOR · Text ------------------------------------------------ */
+  --color-text-primary: #F8FAFC;    /* slate-50 */
+  --color-text-secondary: #CBD5E1;  /* slate-300 */
+  --color-text-muted: #94A3B8;      /* slate-400 */
+  --color-text-subtle: #64748B;     /* slate-500 — labels, placeholders */
+  --color-text-disabled: #475569;   /* slate-600 */
+  --color-text-on-accent: #FFFFFF;  /* text on accent/danger/success fills */
+
+  /* -------- COLOR · Borders --------------------------------------------- */
+  --color-border-default: #1E293B;
+  --color-border-strong: #334155;
+  --color-border-focus: #3B82F6;
+
+  /* -------- COLOR · HTTP Methods --------------------------------------- */
   --color-method-get: #10B981;
   --color-method-post: #3B82F6;
   --color-method-put: #F59E0B;
   --color-method-delete: #EF4444;
   --color-method-patch: #8B5CF6;
-  
-  --spacing-1: 0.25rem;
-  --spacing-2: 0.5rem;
-  --spacing-3: 0.75rem;
-  --spacing-4: 1rem;
-  --radius-default: 8px;
-  --radius-lg: 12px;
-  
-  --font-mono: "JetBrains Mono", ui-monospace, monospace;
-  --font-sans: "Inter", system-ui, sans-serif;
+  --color-method-head: #06B6D4;
+  --color-method-options: #64748B;
+
+  /* -------- COLOR · Status / Feedback ---------------------------------- */
+  --color-success: #10B981;        /* emerald-500 — 2xx, connected */
+  --color-success-soft: rgba(16, 185, 129, 0.15);
+  --color-warning: #F59E0B;        /* amber-500 — 3xx, slow */
+  --color-warning-soft: rgba(245, 158, 11, 0.15);
+  --color-danger: #EF4444;         /* red-500 — 4xx/5xx, error */
+  --color-danger-soft: rgba(239, 68, 68, 0.15);
+  --color-info: #38BDF8;           /* sky-400 — info badges */
+  --color-info-soft: rgba(56, 189, 248, 0.15);
+
+  /* -------- COLOR · Toast variants (replace red-950/emerald-950 palette) - */
+  --color-toast-error-bg:       rgba(127, 29, 29, 0.90);  /* red-950/90 */
+  --color-toast-error-border:   rgba(239, 68, 68, 0.50);  /* red-500/50 */
+  --color-toast-error-text:     #FECACA;                   /* red-200 */
+  --color-toast-success-bg:     rgba(6, 78, 59, 0.90);    /* emerald-950/90 */
+  --color-toast-success-border: rgba(16, 185, 129, 0.50); /* emerald-500/50 */
+  --color-toast-success-text:   #A7F3D0;                   /* emerald-200 */
+
+  /* -------- TYPOGRAPHY · Families --------------------------------------- */
+  --font-sans: "Inter", system-ui, -apple-system, Segoe UI, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* -------- TYPOGRAPHY · Scale (px-based — :root font-size = 14px, */
+  /*          so rem math varies; px keeps visual parity with legacy text-[Npx]) */
+  --text-meta: 10px;   /* status bar, timestamps */
+  --text-xs: 11px;     /* mono badges, tiny metadata */
+  --text-sm: 13px;     /* body, input values */
+  --text-base: 14px;   /* tab labels, sidebar, buttons */
+  --text-md: 15px;     /* card titles */
+  --text-lg: 16px;     /* modal titles, section headings */
+  --text-xl: 18px;     /* page headings */
+  --text-2xl: 22px;    /* marketing/hero */
+
+  /* -------- TYPOGRAPHY · Line Height ------------------------------------ */
+  --leading-tight: 1.2;
+  --leading-snug: 1.35;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.65;
+
+  /* -------- TYPOGRAPHY · Weight ---------------------------------------- */
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* -------- SPACING · 4px grid (inet-viui compatible) ------------------- */
+  --spacing-0: 0;
+  --spacing-px: 1px;
+  --spacing-1: 0.25rem;    /*  4px — icon/text gap */
+  --spacing-2: 0.5rem;     /*  8px — small gap */
+  --spacing-3: 0.75rem;    /* 12px — sidebar padding */
+  --spacing-4: 1rem;       /* 16px — standard content padding */
+  --spacing-5: 1.25rem;    /* 20px — card padding */
+  --spacing-6: 1.5rem;     /* 24px — large section gap */
+  --spacing-8: 2rem;       /* 32px — page-level padding */
+  --spacing-10: 2.5rem;    /* 40px — titlebar height */
+  --spacing-12: 3rem;      /* 48px */
+  --spacing-16: 4rem;      /* 64px */
+
+  /* -------- LAYOUT · Fixed dimensions ---------------------------------- */
+  --layout-titlebar-h: 2.5rem;    /* 40px */
+  --layout-envbar-h: 2.25rem;     /* 36px */
+  --layout-reqtab-h: 2.3125rem;   /* 37px */
+  --layout-statusbar-h: 1.5rem;   /* 24px */
+  --layout-sidebar-w: 16.25rem;   /* 260px */
+
+  /* -------- SHAPE · Border radius (inet-viui shape.borderRadius) -------- */
+  --radius-none: 0;
+  --radius-sm: 4px;       /* checkboxes, code pills */
+  --radius-md: 6px;       /* buttons, inputs, badges */
+  --radius-default: 8px;  /* cards, panels, dropdowns */
+  --radius-lg: 12px;      /* modals, large containers */
+  --radius-xl: 16px;
+  --radius-full: 9999px;  /* pills, toggle knobs */
+
+  /* -------- ELEVATION · Shadow ladder (dark-tuned) --------------------- */
+  --shadow-none: none;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.25);
+  --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.30);
+  --shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.35);
+  --shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.45);
+  --shadow-glow-accent: 0 0 0 3px var(--color-accent-ring);
+  --shadow-glow-danger: 0 0 0 3px rgba(239, 68, 68, 0.35);
+
+  /* -------- MOTION · Duration + Easing (inet-viui motion.*) ------------ */
+  --duration-instant: 0ms;
+  --duration-fast: 150ms;
+  --duration-normal: 200ms;
+  --duration-slow: 300ms;
+  --duration-slower: 500ms;
+
+  --ease-linear: linear;
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
+  /* -------- Z-INDEX · Layer map ---------------------------------------- */
+  /* Ordering chosen so root-level popovers (context menus, variable popovers)  */
+  /* sit BELOW dialog backdrop. Popovers rendered INSIDE a modal inherit the   */
+  /* modal's stacking context, so internal popovers still paint above modal.   */
+  --z-behind: -1;
+  --z-base: 0;
+  --z-dropdown: 100;
+  --z-popover: 150;
+  --z-sticky: 200;
+  --z-fixed: 300;
+  --z-modal-backdrop: 400;
+  --z-modal: 500;
+  --z-tooltip: 600;
+  --z-notification: 700;
+  --z-loading: 900;
+  --z-max: 9999;
 }
 
+/* -------- LEGACY root aliases (kept for runtime consumption) ----------- */
 :root {
   --background: var(--color-bg-primary);
-  --foreground: #F8FAFC;
-  --muted: #94A3B8;
-  --border: var(--color-bg-tertiary);
+  --foreground: var(--color-text-primary);
+  --muted: var(--color-text-muted);
+  --border: var(--color-border-default);
   --font-size-base: 14px;
+
   font-family: var(--font-sans);
   font-size: var(--font-size-base);
   color: var(--foreground);
@@ -50,13 +187,24 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Base interactive elements */
-button, input, select {
+/* Base interactive defaults */
+button, input, select, textarea {
   font-family: inherit;
-  transition: all 0.2s ease-in-out;
+  transition: color var(--duration-normal) var(--ease-in-out),
+              background-color var(--duration-normal) var(--ease-in-out),
+              border-color var(--duration-normal) var(--ease-in-out),
+              opacity var(--duration-normal) var(--ease-in-out);
 }
 
-/* Standard scrollbar */
+/* Reduced motion opt-out */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -65,18 +213,28 @@ button, input, select {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--color-bg-tertiary);
-  border-radius: 4px;
+  background: var(--color-border-default);
+  border-radius: var(--radius-sm);
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #334155;
+  background: var(--color-border-strong);
 }
 
-/* Hide scrollbar utility */
-.scrollbar-none::-webkit-scrollbar {
-  display: none;
-}
+.scrollbar-none::-webkit-scrollbar { display: none; }
 .scrollbar-none {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+/* -------- Typography utility shims (Tailwind v4 JIT fallback) ----------
+   text-[length:var(--text-X)] is emitted by components but Tailwind v4
+   JIT does not trace dynamic CSS var in the length: modifier. These
+   explicit class rules ensure font-size is applied at runtime.          */
+@layer utilities {
+  .text-\[length\:var\(--text-meta\)\] { font-size: var(--text-meta); }
+  .text-\[length\:var\(--text-xs\)\]   { font-size: var(--text-xs); }
+  .text-\[length\:var\(--text-sm\)\]   { font-size: var(--text-sm); }
+  .text-\[length\:var\(--text-md\)\]   { font-size: var(--text-md); }
+  .text-\[length\:var\(--text-lg\)\]   { font-size: var(--text-lg); }
+  .text-\[length\:var\(--text-xl\)\]   { font-size: var(--text-xl); }
 }

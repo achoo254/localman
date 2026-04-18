@@ -94,7 +94,7 @@ export function RequestTabBar({ onRequestSaveDialog }: RequestTabBarProps) {
 
   if (openTabs.length === 0) {
     return (
-      <div className="flex border-b border-[var(--color-bg-tertiary)] h-[37px] bg-[#0B1120] items-center px-1">
+      <div className="flex border-b border-[var(--color-bg-tertiary)] h-[37px] bg-[var(--color-bg-primary)] items-center px-1">
         <button
           type="button"
           onClick={() => createDraftTab()}
@@ -109,9 +109,9 @@ export function RequestTabBar({ onRequestSaveDialog }: RequestTabBarProps) {
   }
 
   return (
-    <div className="flex relative border-b border-[var(--color-bg-tertiary)] bg-[#0B1120] h-[37px] min-w-0 w-full group">
+    <div className="flex relative border-b border-[var(--color-bg-tertiary)] bg-[var(--color-bg-primary)] h-[37px] min-w-0 w-full group">
       {canScrollLeft && (
-        <div className="absolute left-0 top-0 bottom-0 flex items-center bg-gradient-to-r from-[#0B1120] via-[#0B1120] to-transparent w-10 z-10 pl-1 pt-1">
+        <div className="absolute left-0 top-0 bottom-0 flex items-center bg-gradient-to-r from-[var(--color-bg-primary)] via-[var(--color-bg-primary)] to-transparent w-10 z-10 pl-1 pt-1">
           <button
             type="button"
             onClick={handleScrollLeft}
@@ -177,7 +177,7 @@ export function RequestTabBar({ onRequestSaveDialog }: RequestTabBarProps) {
         ))}
       </div>
 
-      <div className="flex items-center gap-1 shrink-0 bg-[#0B1120] pl-1 pr-1 h-full shadow-[-8px_0_12px_rgba(11,17,32,1)] z-10 pt-1">
+      <div className="flex items-center gap-1 shrink-0 bg-[var(--color-bg-primary)] pl-1 pr-1 h-full shadow-[-8px_0_12px_rgba(11,17,32,1)] z-10 pt-1">
         {canScrollRight && (
           <button
             type="button"

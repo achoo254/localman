@@ -68,12 +68,12 @@ export function SaveRequestDialog({
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 bg-black/50" />
-        <Dialog.Content className="fixed left-1/2 top-1/2 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-lg border border-[var(--color-bg-tertiary)] bg-[var(--color-bg-secondary)] p-4 shadow-lg">
+        <Dialog.Overlay className="fixed inset-0 z-[var(--z-modal-backdrop)] bg-[var(--color-bg-overlay)]" />
+        <Dialog.Content className="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-lg border border-[var(--color-bg-tertiary)] bg-[var(--color-bg-secondary)] p-4 shadow-lg">
           <Dialog.Title className="text-sm font-medium">Save request</Dialog.Title>
-          <p className="mt-1 text-xs text-gray-500">Save this request to a collection.</p>
+          <p className="mt-1 text-xs text-[var(--color-text-subtle)]">Save this request to a collection.</p>
           <div className="mt-3 space-y-2">
-            <label className="block text-xs text-gray-400">Name</label>
+            <label className="block text-xs text-[var(--color-text-muted)]">Name</label>
             <input
               ref={nameInputRef}
               type="text"
@@ -83,7 +83,7 @@ export function SaveRequestDialog({
               className="w-full rounded border border-[var(--color-bg-tertiary)] bg-[var(--color-bg-primary)] px-3 py-2 text-sm focus:border-[var(--color-accent)] focus:outline-none"
               placeholder="Request name"
             />
-            <label className="block text-xs text-gray-400">Collection</label>
+            <label className="block text-xs text-[var(--color-text-muted)]">Collection</label>
             <select
               value={selectedCollectionId ?? ''}
               onChange={e => {
@@ -99,7 +99,7 @@ export function SaveRequestDialog({
             </select>
             {selectedCollectionId && foldersInCollection.length > 0 && (
               <>
-                <label className="block text-xs text-gray-400">Folder (optional)</label>
+                <label className="block text-xs text-[var(--color-text-muted)]">Folder (optional)</label>
                 <select
                   value={selectedFolderId ?? ''}
                   onChange={e => setSelectedFolderId(e.target.value || null)}
@@ -115,7 +115,7 @@ export function SaveRequestDialog({
           </div>
           <div className="mt-4 flex justify-end gap-2">
             <Dialog.Close asChild>
-              <button type="button" className="rounded px-3 py-1.5 text-sm text-gray-400 hover:text-[var(--foreground)]">
+              <button type="button" className="rounded px-3 py-1.5 text-sm text-[var(--color-text-muted)] hover:text-[var(--foreground)]">
                 Cancel
               </button>
             </Dialog.Close>
@@ -123,7 +123,7 @@ export function SaveRequestDialog({
               type="button"
               disabled={!selectedCollectionId || saving}
               onClick={handleSave}
-              className="rounded bg-[var(--color-accent)] px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50"
+              className="rounded bg-[var(--color-accent)] px-3 py-1.5 text-sm font-medium text-[var(--color-text-on-accent)] disabled:opacity-50"
             >
               {saving ? '…' : 'Save'}
             </button>

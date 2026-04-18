@@ -102,7 +102,7 @@ export function DataSettings() {
               type="button"
               onClick={handleClearAll}
               disabled={clearing}
-              className="rounded bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700 disabled:opacity-50 w-fit"
+              className="rounded bg-red-600 px-4 py-2 text-sm text-[var(--color-text-on-accent)] hover:bg-red-700 disabled:opacity-50 w-fit"
             >
               {clearing ? 'Clearing…' : 'Confirm clear'}
             </button>

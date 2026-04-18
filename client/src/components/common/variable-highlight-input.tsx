@@ -3,10 +3,15 @@
  * When focused, shows native input for correct cursor/selection.
  * When blurred, shows overlay with colored variable highlights.
  * Optional tooltip showing resolved value when getResolvedValue is provided.
+ *
+ * When `enableChipPopover` is true, each {{var}} chip in the overlay becomes a
+ * clickable popover trigger (Case B). Tooltip path is gated off to avoid double UI.
  */
 
 import { useRef, useState, useCallback } from 'react';
 import * as Tooltip from '@radix-ui/react-tooltip';
+import { VariableChipPopover } from './variable-chip-popover';
+import { useUiPanelStore } from '../../stores/ui-panel-store';
 
 interface VariableHighlightInputProps {
   value: string;
@@ -14,9 +19,11 @@ interface VariableHighlightInputProps {
   placeholder?: string;
   className?: string;
   onKeyDown?: (e: React.KeyboardEvent) => void;
-  /** When provided, tooltip on hover shows this resolved string (e.g. URL with vars replaced). */
+  /** When provided, tooltip on hover shows this resolved string. */
   getResolvedValue?: () => string;
   type?: 'text' | 'password';
+  /** When true, each {{var}} chip opens a VariableChipPopover on click. */
+  enableChipPopover?: boolean;
 }
 
 const VAR_PATTERN = /\{\{[^}]+\}\}/g;
@@ -47,38 +54,65 @@ export function VariableHighlightInput({
   onKeyDown,
   getResolvedValue,
   type = 'text',
+  enableChipPopover = false,
 }: VariableHighlightInputProps) {
   const [focused, setFocused] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const segments = segmentize(value);
   const resolved = getResolvedValue?.() ?? '';
   const hasVars = segments.some(s => s.isVar);
+  const openVariablesPanel = useUiPanelStore(s => s.open);
 
   const handleFocus = useCallback(() => setFocused(true), []);
   const handleBlur = useCallback(() => setFocused(false), []);
 
-  const handleOverlayClick = useCallback(() => {
+  // [RED TEAM H6] When chip popover is enabled, only non-var spans focus the
+  // input on click — var spans own their own click handler (stopPropagation).
+  const focusInput = useCallback(() => {
     inputRef.current?.focus();
   }, []);
 
+  const renderVarSpan = (s: { text: string }, i: number) => {
+    const name = s.text.slice(2, -2).trim();
+    if (enableChipPopover) {
+      return (
+        <VariableChipPopover key={i} varName={name} onOpenVariablesPanel={openVariablesPanel}>
+          {s.text}
+        </VariableChipPopover>
+      );
+    }
+    return (
+      <span key={i} className="text-[var(--color-accent)]">
+        {s.text}
+      </span>
+    );
+  };
+
   const inputBlock = (
-    <div className={`relative min-w-0 flex-1 rounded bg-[var(--color-bg-secondary)] ${
-      focused ? 'ring-1 ring-[var(--color-accent)]' : ''
-    }`}>
-      {/* Highlighted overlay — only visible when NOT focused */}
+    <div
+      className={`relative min-w-0 flex-1 rounded bg-[var(--color-bg-secondary)] ${
+        focused ? 'ring-1 ring-[var(--color-accent)]' : ''
+      }`}
+    >
+      {/* Highlighted overlay — only visible when NOT focused.
+          z-10 keeps it above the <input> so chip clicks hit Popover.Trigger
+          instead of focusing the input (which would unmount the overlay). */}
       {!focused && hasVars && value && (
         <div
-          aria-hidden
-          onClick={handleOverlayClick}
-          className="absolute inset-0 flex cursor-text items-center overflow-hidden whitespace-pre rounded px-3 font-mono text-sm"
+          aria-hidden={!enableChipPopover}
+          className="absolute inset-0 z-10 flex cursor-text items-center overflow-hidden whitespace-pre rounded px-3 font-mono text-sm"
         >
           {segments.map((s, i) =>
             s.isVar ? (
-              <span key={i} className="text-[var(--color-accent)]">
+              renderVarSpan(s, i)
+            ) : (
+              <span
+                key={i}
+                onClick={focusInput}
+                className="text-[var(--foreground)]"
+              >
                 {s.text}
               </span>
-            ) : (
-              <span key={i} className="text-[var(--foreground)]">{s.text}</span>
             )
           )}
         </div>
@@ -93,9 +127,9 @@ export function VariableHighlightInput({
         onBlur={handleBlur}
         onKeyDown={onKeyDown}
         placeholder={placeholder}
-        className={`relative w-full min-w-0 rounded bg-transparent px-3 py-2 font-mono text-sm outline-none placeholder:text-gray-500 ${className}`}
+        className={`relative w-full min-w-0 rounded bg-transparent px-3 py-2 font-mono text-sm outline-none placeholder:text-[var(--color-text-subtle)] ${className}`}
         style={{
-          color: (!focused && hasVars && value) ? 'transparent' : 'var(--foreground)',
+          color: !focused && hasVars && value ? 'transparent' : 'var(--foreground)',
           caretColor: 'var(--foreground)',
         }}
         spellCheck={false}
@@ -103,7 +137,8 @@ export function VariableHighlightInput({
     </div>
   );
 
-  if (getResolvedValue) {
+  // [RED TEAM] Avoid double UI: if chip popover active, skip tooltip.
+  if (getResolvedValue && !enableChipPopover) {
     return (
       <Tooltip.Provider delayDuration={300}>
         <Tooltip.Root>
@@ -125,4 +160,3 @@ export function VariableHighlightInput({
 
   return inputBlock;
 }
-

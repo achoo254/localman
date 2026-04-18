@@ -53,7 +53,7 @@ export class ErrorBoundary extends Component<Props, State> {
       if (isPanel) {
         return (
           <div
-            className="flex flex-col items-center justify-center gap-2 p-4 h-full rounded border border-red-500/20 bg-red-950/10 text-center"
+            className="flex flex-col items-center justify-center gap-2 p-4 h-full rounded border border-red-500/20 bg-[var(--color-danger-soft)] text-center"
             role="alert"
           >
             <p className="text-xs font-medium text-red-400">Panel error</p>
@@ -73,7 +73,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
       return (
         <div
-          className="flex flex-col items-center justify-center gap-4 p-8 min-h-[200px] rounded-lg border border-red-500/30 bg-red-950/20 text-center"
+          className="flex flex-col items-center justify-center gap-4 p-8 min-h-[200px] rounded-lg border border-red-500/30 bg-[var(--color-danger-soft)] text-center"
           role="alert"
         >
           <p className="text-sm font-medium text-red-400">Something went wrong.</p>
@@ -83,7 +83,7 @@ export class ErrorBoundary extends Component<Props, State> {
           <button
             type="button"
             onClick={() => window.location.reload()}
-            className="rounded-lg bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-white hover:opacity-90"
+            className="rounded-lg bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-[var(--color-text-on-accent)] hover:opacity-90"
           >
             Reload app
           </button>

@@ -102,7 +102,7 @@ export function RequestPanel({ onRequestSaveDialog }: RequestPanelProps) {
         <button
           type="button"
           onClick={handleNewRequest}
-          className="rounded-lg bg-[var(--color-accent)] px-6 py-2.5 text-sm font-semibold text-white transition-all hover:bg-[var(--color-accent-hover)] hover:shadow-md active:scale-95"
+          className="rounded-lg bg-[var(--color-accent)] px-6 py-2.5 text-sm font-semibold text-[var(--color-text-on-accent)] transition-all hover:bg-[var(--color-accent-hover)] hover:shadow-md active:scale-95"
         >
           New request
         </button>

@@ -42,10 +42,10 @@ export function FolderItem({
         onClick={e => { e.stopPropagation(); toggleExpand(node.id); }}
       >
         <ChevronRight
-          className={`h-4 w-4 text-gray-400 transition-transform ${isExpanded ? 'rotate-90' : ''}`}
+          className={`h-4 w-4 text-[var(--color-text-muted)] transition-transform ${isExpanded ? 'rotate-90' : ''}`}
         />
       </button>
-      <FolderOpen className="h-4 w-4 shrink-0 text-gray-500" />
+      <FolderOpen className="h-4 w-4 shrink-0 text-[var(--color-text-subtle)]" />
       <span className="truncate text-sm flex-1 min-w-0" title={node.name}>{node.name}</span>
     </div>
   );

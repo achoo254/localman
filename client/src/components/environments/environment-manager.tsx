@@ -97,13 +97,13 @@ export function EnvironmentManager({ open, onOpenChange }: EnvironmentManagerPro
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 bg-black/50" />
-        <Dialog.Content className="fixed left-1/2 top-1/2 flex h-[70vh] w-full max-w-3xl -translate-x-1/2 -translate-y-1/2 flex-col rounded-lg border border-[var(--color-bg-tertiary)] bg-[var(--color-bg-secondary)] shadow-lg">
+        <Dialog.Overlay className="fixed inset-0 z-[var(--z-modal-backdrop)] bg-[var(--color-bg-overlay)]" />
+        <Dialog.Content className="fixed left-1/2 top-1/2 z-50 flex h-[80vh] w-full max-w-4xl -translate-x-1/2 -translate-y-1/2 flex-col rounded-lg border border-[var(--color-bg-tertiary)] bg-[var(--color-bg-secondary)] shadow-lg">
           <Dialog.Title className="border-b border-[var(--color-bg-tertiary)] px-4 py-3 text-sm font-medium">
             Manage environments
           </Dialog.Title>
           <div className="flex min-h-0 flex-1">
-            <div className="w-52 shrink-0 border-r border-[var(--color-bg-tertiary)] p-2">
+            <div className="w-72 shrink-0 border-r border-[var(--color-bg-tertiary)] p-2">
               <button
                 type="button"
                 onClick={() => setSelection({ type: 'globals' })}
@@ -141,19 +141,19 @@ export function EnvironmentManager({ open, onOpenChange }: EnvironmentManagerPro
                   </button>
                 </div>
               ))}
-              <div className="mt-2 flex gap-1">
+              <div className="mt-2 flex items-stretch gap-1">
                 <input
                   type="text"
                   value={newEnvName}
                   onChange={e => setNewEnvName(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && handleEnvCreate()}
                   placeholder="New environment"
-                  className="min-w-0 flex-1 rounded border border-[var(--color-bg-tertiary)] bg-[var(--color-bg-primary)] px-2 py-1.5 text-[13px] focus:border-[var(--color-accent)] focus:outline-none"
+                  className="min-w-0 flex-1 rounded border border-[var(--color-bg-tertiary)] bg-[var(--color-bg-primary)] px-2 py-1.5 text-[length:var(--text-sm)] focus:border-[var(--color-accent)] focus:outline-none"
                 />
                 <button
                   type="button"
                   onClick={handleEnvCreate}
-                  className="rounded-lg bg-[var(--color-accent)] p-1.5 text-white hover:bg-[var(--color-accent-hover)]"
+                  className="flex shrink-0 items-center justify-center rounded bg-[var(--color-accent)] px-3 text-[var(--color-text-on-accent)] hover:bg-[var(--color-accent-hover)]"
                   aria-label="Create environment"
                 >
                   <Plus className="h-4 w-4" />
@@ -169,6 +169,9 @@ export function EnvironmentManager({ open, onOpenChange }: EnvironmentManagerPro
                 onChange={handleVariablesChange}
                 onAdd={handleAddVariable}
                 onRemove={handleRemoveVariable}
+                sourceLabel={
+                  selection.type === 'globals' ? 'Global' : selectedEnv?.name
+                }
               />
             </div>
           </div>

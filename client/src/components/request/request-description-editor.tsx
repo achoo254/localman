@@ -45,7 +45,7 @@ export function RequestDescriptionEditor({ description, onChange }: RequestDescr
             <button
               type="button"
               onClick={toggleMode}
-              className="flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] text-slate-500 hover:text-slate-300 hover:bg-white/5 transition-colors"
+              className="flex items-center gap-1 rounded px-1.5 py-0.5 text-[length:var(--text-xs)] text-slate-500 hover:text-slate-300 hover:bg-white/5 transition-colors"
               title={mode === 'edit' ? 'Preview' : 'Edit'}
             >
               {mode === 'edit' ? <Eye className="h-3 w-3" /> : <Pencil className="h-3 w-3" />}

@@ -30,7 +30,7 @@ export function BodyBinaryPicker({ filePath, onSelect }: BodyBinaryPickerProps) 
         Select file
       </button>
       {filePath && (
-        <p className="font-mono text-sm text-gray-400 truncate" title={filePath}>
+        <p className="font-mono text-sm text-[var(--color-text-muted)] truncate" title={filePath}>
           {filePath}
         </p>
       )}

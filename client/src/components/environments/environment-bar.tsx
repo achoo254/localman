@@ -26,8 +26,7 @@ export function EnvironmentBar({ onOpenManager }: EnvironmentBarProps) {
 
   return (
     <div
-      className="flex items-center gap-3 border-b border-[var(--color-bg-tertiary)] px-4 py-2"
-      style={{ background: 'var(--color-bg-secondary)' }}
+      className="flex items-center gap-3 border-b border-[var(--color-bg-tertiary)] bg-[var(--color-bg-secondary)] px-4 py-2"
     >
       <span className="text-xs font-medium text-slate-500">Environment</span>
       <EnvironmentSelector

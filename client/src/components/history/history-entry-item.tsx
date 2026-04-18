@@ -38,17 +38,17 @@ export const HistoryEntryItem = memo(function HistoryEntryItem({ entry, isSelect
       {/* Row 1: method + URL */}
       <div className="flex items-center gap-2 min-w-0">
         <span
-          className="shrink-0 text-[10px] font-bold tracking-wide rounded px-1.5 py-0.5 text-center uppercase"
+          className="shrink-0 text-[length:var(--text-meta)] font-bold tracking-wide rounded px-1.5 py-0.5 text-center uppercase"
           style={{ backgroundColor: `${methodColor}15`, color: methodColor }}
         >
           {entry.method}
         </span>
-        <span className="truncate text-[13px] text-slate-300 flex-1 font-mono" title={entry.url}>
+        <span className="truncate text-[length:var(--text-sm)] text-slate-300 flex-1 font-mono" title={entry.url}>
           {entry.url || '—'}
         </span>
       </div>
       {/* Row 2: status + duration + time ago + re-run */}
-      <div className="flex items-center gap-2 text-[11px] text-slate-500">
+      <div className="flex items-center gap-2 text-[length:var(--text-xs)] text-slate-500">
         <span
           className="font-medium rounded px-1 py-px"
           style={{ backgroundColor: `${statusCol}12`, color: statusCol }}

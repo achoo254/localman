@@ -34,7 +34,7 @@ export function DocsRequestCard({ request }: DocsRequestCardProps) {
     <div id={`req-${request.id}`} className="rounded-lg border border-[var(--color-bg-tertiary)] bg-[var(--color-bg-secondary)] p-4 mb-3 overflow-hidden">
       {/* Method + Name */}
       <div className="flex items-center gap-2 mb-1">
-        <span className={`rounded px-2 py-0.5 text-[11px] font-bold ${methodColor}`}>
+        <span className={`rounded px-2 py-0.5 text-[length:var(--text-xs)] font-bold ${methodColor}`}>
           {request.method}
         </span>
         <span className="text-sm font-medium text-slate-200 truncate">
@@ -119,7 +119,7 @@ export function DocsRequestCard({ request }: DocsRequestCardProps) {
           <summary className="text-xs font-medium text-slate-400 cursor-pointer hover:text-slate-200">
             Body ({request.body.type})
           </summary>
-          <pre className="mt-1 rounded bg-[var(--color-bg-primary)] p-2 text-[11px] text-slate-300 overflow-auto max-h-[200px]">
+          <pre className="mt-1 rounded bg-[var(--color-bg-primary)] p-2 text-[length:var(--text-xs)] text-slate-300 overflow-auto max-h-[200px]">
             {resolve(request.body.raw)}
           </pre>
         </details>

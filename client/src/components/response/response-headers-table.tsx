@@ -9,15 +9,15 @@ interface ResponseHeadersTableProps {
 export function ResponseHeadersTable({ headers }: ResponseHeadersTableProps) {
   const entries = Object.entries(headers);
   if (entries.length === 0) {
-    return <p className="p-4 text-sm text-gray-500">No headers.</p>;
+    return <p className="p-4 text-sm text-[var(--color-text-subtle)]">No headers.</p>;
   }
   return (
     <div className="overflow-auto font-mono text-sm">
       <table className="w-full border-collapse">
         <thead>
           <tr className="border-b border-[var(--color-bg-tertiary)]">
-            <th className="px-3 py-2 text-left font-medium text-gray-400">Name</th>
-            <th className="px-3 py-2 text-left font-medium text-gray-400">Value</th>
+            <th className="px-3 py-2 text-left font-medium text-[var(--color-text-muted)]">Name</th>
+            <th className="px-3 py-2 text-left font-medium text-[var(--color-text-muted)]">Value</th>
           </tr>
         </thead>
         <tbody>

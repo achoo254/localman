@@ -33,7 +33,7 @@ export function ResponseTabs({ data, scriptResults }: ResponseTabsProps) {
 
   return (
     <Tabs.Root value={activeTab} onValueChange={setActiveTab} className="flex flex-col min-h-0 flex-1">
-      <Tabs.List className="flex border-b border-[var(--color-bg-tertiary)] px-3 pt-2 gap-1 shrink-0 bg-[#0B1120]">
+      <Tabs.List className="flex border-b border-[var(--color-bg-tertiary)] px-3 pt-2 gap-1 shrink-0 bg-[var(--color-bg-primary)]">
         {hasTests && (
           <Tabs.Trigger value="tests" className={tabClass}>
             Tests

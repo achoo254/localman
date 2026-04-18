@@ -26,7 +26,7 @@ export function ResponseActions({ body, onCopy }: ResponseActionsProps) {
   }, [body]);
 
   return (
-    <div className="flex gap-2 border-b border-[var(--color-bg-tertiary)] px-3 py-2 bg-[#0B1120]">
+    <div className="flex gap-2 border-b border-[var(--color-bg-tertiary)] px-3 py-2 bg-[var(--color-bg-primary)]">
       <button
         type="button"
         onClick={handleCopy}

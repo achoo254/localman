@@ -36,16 +36,16 @@ const JsonNode = memo(function JsonNode({
           onClick={() => setOpen(o => !o)}
           className="flex items-center gap-1 text-left hover:bg-[var(--color-bg-tertiary)]/50 rounded px-1 -mx-1"
         >
-          <span className="text-gray-500 select-none w-4">{open ? '▼' : '▶'}</span>
+          <span className="text-[var(--color-text-subtle)] select-none w-4">{open ? '▼' : '▶'}</span>
           <span className="text-[var(--color-accent)]">{name ? `"${name}"` : ''}</span>
-          <span className="text-gray-400">{'{'}{!open && ' … }'}</span>
+          <span className="text-[var(--color-text-muted)]">{'{'}{!open && ' … }'}</span>
         </button>
         {open && (
           <div>
             {entries.map(([k, v]) => (
               <JsonNode key={k} name={k} value={v} depth={depth + 1} />
             ))}
-            <div style={{ marginLeft: depth * 12 }} className="text-gray-400">{'}'}</div>
+            <div style={{ marginLeft: depth * 12 }} className="text-[var(--color-text-muted)]">{'}'}</div>
           </div>
         )}
       </div>
@@ -60,17 +60,17 @@ const JsonNode = memo(function JsonNode({
           onClick={() => setOpen(o => !o)}
           className="flex items-center gap-1 text-left hover:bg-[var(--color-bg-tertiary)]/50 rounded px-1 -mx-1"
         >
-          <span className="text-gray-500 select-none w-4">{open ? '▼' : '▶'}</span>
+          <span className="text-[var(--color-text-subtle)] select-none w-4">{open ? '▼' : '▶'}</span>
           <span className="text-[var(--color-accent)]">{name ? `"${name}"` : ''}</span>
-          <span className="text-gray-400">[</span>
-          {!open && <span className="text-gray-500"> … {arr.length} items ]</span>}
+          <span className="text-[var(--color-text-muted)]">[</span>
+          {!open && <span className="text-[var(--color-text-subtle)]"> … {arr.length} items ]</span>}
         </button>
         {open && (
           <div>
             {arr.map((v, i) => (
               <JsonNode key={i} name={String(i)} value={v} depth={depth + 1} />
             ))}
-            <div style={{ marginLeft: depth * 12 }} className="text-gray-400">]</div>
+            <div style={{ marginLeft: depth * 12 }} className="text-[var(--color-text-muted)]">]</div>
           </div>
         )}
       </div>
@@ -79,7 +79,7 @@ const JsonNode = memo(function JsonNode({
 
   const valStr = value === null ? 'null' : typeof value === 'string' ? `"${value}"` : String(value);
   const color =
-    value === null ? 'text-gray-500' :
+    value === null ? 'text-[var(--color-text-subtle)]' :
     typeof value === 'number' ? 'text-blue-400' :
     typeof value === 'boolean' ? 'text-purple-400' :
     'text-green-400';

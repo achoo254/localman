@@ -78,14 +78,14 @@ export function ImportDialog({ open, onOpenChange, onSuccess }: ImportDialogProp
   return (
     <Dialog.Root open={open} onOpenChange={handleOpenChange}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 bg-black/50" />
-        <Dialog.Content className="fixed left-1/2 top-1/2 w-full max-w-lg -translate-x-1/2 -translate-y-1/2 rounded-lg border border-[var(--color-bg-tertiary)] bg-[var(--color-bg-secondary)] p-4 shadow-lg">
+        <Dialog.Overlay className="fixed inset-0 z-[var(--z-modal-backdrop)] bg-[var(--color-bg-overlay)]" />
+        <Dialog.Content className="fixed left-1/2 top-1/2 z-50 w-full max-w-lg -translate-x-1/2 -translate-y-1/2 rounded-lg border border-[var(--color-bg-tertiary)] bg-[var(--color-bg-secondary)] p-4 shadow-lg">
           <Dialog.Title className="text-sm font-semibold">Import</Dialog.Title>
           <div className="mt-3 flex gap-1 border-b border-[var(--color-bg-tertiary)]">
             <button
               type="button"
               onClick={() => setActiveTab('file')}
-              className={`flex items-center gap-2 px-3 py-2 text-sm rounded-t ${activeTab === 'file' ? 'bg-[var(--color-bg-tertiary)] text-[var(--color-accent)]' : 'text-gray-400 hover:text-slate-200'}`}
+              className={`flex items-center gap-2 px-3 py-2 text-sm rounded-t ${activeTab === 'file' ? 'bg-[var(--color-bg-tertiary)] text-[var(--color-accent)]' : 'text-[var(--color-text-muted)] hover:text-slate-200'}`}
             >
               <FileUp className="h-4 w-4" />
               File
@@ -93,7 +93,7 @@ export function ImportDialog({ open, onOpenChange, onSuccess }: ImportDialogProp
             <button
               type="button"
               onClick={() => setActiveTab('curl')}
-              className={`flex items-center gap-2 px-3 py-2 text-sm rounded-t ${activeTab === 'curl' ? 'bg-[var(--color-bg-tertiary)] text-[var(--color-accent)]' : 'text-gray-400 hover:text-slate-200'}`}
+              className={`flex items-center gap-2 px-3 py-2 text-sm rounded-t ${activeTab === 'curl' ? 'bg-[var(--color-bg-tertiary)] text-[var(--color-accent)]' : 'text-[var(--color-text-muted)] hover:text-slate-200'}`}
             >
               <Terminal className="h-4 w-4" />
               cURL
@@ -102,12 +102,12 @@ export function ImportDialog({ open, onOpenChange, onSuccess }: ImportDialogProp
           <div className="mt-3 min-h-[120px]">
             {activeTab === 'file' && (
               <div className="flex flex-col gap-3">
-                <p className="text-xs text-gray-400">Postman Collection v2.1 or Localman backup JSON</p>
+                <p className="text-xs text-[var(--color-text-muted)]">Postman Collection v2.1 or Localman backup JSON</p>
                 <button
                   type="button"
                   onClick={handleFileSelect}
                   disabled={loading}
-                  className="rounded-lg border border-dashed border-slate-600 py-8 px-4 text-sm text-gray-400 hover:border-[var(--color-accent)] hover:text-[var(--color-accent)] disabled:opacity-50"
+                  className="rounded-lg border border-dashed border-slate-600 py-8 px-4 text-sm text-[var(--color-text-muted)] hover:border-[var(--color-accent)] hover:text-[var(--color-accent)] disabled:opacity-50"
                 >
                   {loading ? 'Importing…' : 'Choose file…'}
                 </button>
@@ -115,7 +115,7 @@ export function ImportDialog({ open, onOpenChange, onSuccess }: ImportDialogProp
             )}
             {activeTab === 'curl' && (
               <div className="flex flex-col gap-3">
-                <p className="text-xs text-gray-400">Paste a cURL command (e.g. from browser DevTools)</p>
+                <p className="text-xs text-[var(--color-text-muted)]">Paste a cURL command (e.g. from browser DevTools)</p>
                 <textarea
                   value={curlText}
                   onChange={e => setCurlText(e.target.value)}
@@ -127,7 +127,7 @@ export function ImportDialog({ open, onOpenChange, onSuccess }: ImportDialogProp
                   type="button"
                   onClick={handleCurlImport}
                   disabled={loading || !curlText.trim()}
-                  className="rounded bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+                  className="rounded bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-[var(--color-text-on-accent)] disabled:opacity-50"
                 >
                   {loading ? 'Importing…' : 'Import'}
                 </button>
@@ -141,7 +141,7 @@ export function ImportDialog({ open, onOpenChange, onSuccess }: ImportDialogProp
           )}
           <div className="mt-3 flex justify-end">
             <Dialog.Close asChild>
-              <button type="button" className="rounded px-3 py-1.5 text-sm text-gray-400 hover:text-slate-200">
+              <button type="button" className="rounded px-3 py-1.5 text-sm text-[var(--color-text-muted)] hover:text-slate-200">
                 Cancel
               </button>
             </Dialog.Close>

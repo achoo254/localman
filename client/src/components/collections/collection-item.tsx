@@ -41,13 +41,13 @@ export function CollectionItem({
         onClick={e => { e.stopPropagation(); onToggle(); }}
       >
         <ChevronRight
-          className={`h-4 w-4 text-gray-400 transition-transform ${isExpanded ? 'rotate-90' : ''}`}
+          className={`h-4 w-4 text-[var(--color-text-muted)] transition-transform ${isExpanded ? 'rotate-90' : ''}`}
         />
       </button>
       <Folder className="h-4 w-4 shrink-0 text-[var(--color-accent)]" />
       <span className="truncate text-sm flex-1 min-w-0" title={node.name}>{node.name}</span>
       {node.requestCount != null && node.requestCount > 0 && (
-        <span className="text-xs text-gray-500 shrink-0" title={`${node.requestCount} request${node.requestCount !== 1 ? 's' : ''}`}>{node.requestCount}</span>
+        <span className="text-xs text-[var(--color-text-subtle)] shrink-0" title={`${node.requestCount} request${node.requestCount !== 1 ? 's' : ''}`}>{node.requestCount}</span>
       )}
     </div>
   );
