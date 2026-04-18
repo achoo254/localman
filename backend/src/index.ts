@@ -15,7 +15,7 @@ if (process.env.REQUIRE_AUTH === 'true') {
 }
 
 const PORT = parseInt(process.env.PORT ?? '3001', 10);
-const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS ?? 'http://localhost:5173')
+const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS ?? 'http://localhost:8014,http://localhost:5173')
   .split(',')
   .map(o => o.trim())
   .filter(Boolean);
