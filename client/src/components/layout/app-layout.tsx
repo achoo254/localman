@@ -7,7 +7,9 @@ import { EnvironmentManager } from '../environments/environment-manager';
 import { ImportDialog } from '../import-export/import-dialog';
 import { SettingsPage } from '../settings/settings-page';
 import { KeyboardShortcutsModal } from '../common/keyboard-shortcuts-modal';
+import { VariablesPanel } from './variables-panel';
 import { useRequestStore } from '../../stores/request-store';
+import { useUiPanelStore, RIGHT_PANEL_WIDTH } from '../../stores/ui-panel-store';
 import { ErrorBoundary } from '../common/error-boundary';
 import { checkDbHealth } from '../../db/database';
 import { useSettingsStore } from '../../stores/settings-store';
@@ -19,8 +21,15 @@ const SIDEBAR_WIDTH_MAX = 480;
 const SIDEBAR_WIDTH_DEFAULT = 260;
 const STORAGE_KEY = 'localman_sidebar_width';
 
+const NARROW_CLOSE_THRESHOLD = 1200;
+const RESIZE_DEBOUNCE_MS = 200;
+
 function clampSidebarWidth(value: number): number {
   return Math.max(SIDEBAR_WIDTH_MIN, Math.min(SIDEBAR_WIDTH_MAX, value));
+}
+
+function clampRightWidth(value: number): number {
+  return Math.max(RIGHT_PANEL_WIDTH.MIN, Math.min(RIGHT_PANEL_WIDTH.MAX, value));
 }
 
 interface AppLayoutProps {
@@ -40,9 +49,17 @@ export function AppLayout({ children }: AppLayoutProps) {
     return Number.isFinite(parsed) ? clampSidebarWidth(parsed) : SIDEBAR_WIDTH_DEFAULT;
   });
   const [resizing, setResizing] = useState(false);
+  const [rightResizing, setRightResizing] = useState(false);
   const resizeStartRef = useRef<{ x: number; width: number } | null>(null);
+  const rightResizeStartRef = useRef<{ x: number; width: number } | null>(null);
   const lastWidthRef = useRef<number>(SIDEBAR_WIDTH_DEFAULT);
   const activeTabId = useRequestStore(s => s.activeTabId);
+
+  const rightPanelOpen = useUiPanelStore(s => s.variablesPanelOpen);
+  const rightPanelWidth = useUiPanelStore(s => s.width);
+  const toggleRightPanel = useUiPanelStore(s => s.toggle);
+  const closeRightPanel = useUiPanelStore(s => s.close);
+  const setRightPanelWidth = useUiPanelStore(s => s.setWidth);
 
   const onResizeStart = useCallback((startX: number, startWidth: number) => {
     resizeStartRef.current = { x: startX, width: startWidth };
@@ -79,6 +96,53 @@ export function AppLayout({ children }: AppLayoutProps) {
     };
   }, [resizing]);
 
+  // Right-panel resize (drag from left edge).
+  useEffect(() => {
+    if (!rightResizing) return;
+    const onMove = (e: MouseEvent) => {
+      const start = rightResizeStartRef.current;
+      if (!start) return;
+      const delta = start.x - e.clientX; // dragging left → widen
+      const next = clampRightWidth(start.width + delta);
+      setRightPanelWidth(next);
+    };
+    const onUp = () => {
+      rightResizeStartRef.current = null;
+      setRightResizing(false);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+    return () => {
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+  }, [rightResizing, setRightPanelWidth]);
+
+  // [RED TEAM M14] Debounced resize auto-close with threshold.
+  useEffect(() => {
+    let t: ReturnType<typeof setTimeout> | null = null;
+    const onResize = () => {
+      if (t) clearTimeout(t);
+      t = setTimeout(() => {
+        const w = window.innerWidth;
+        if (w < NARROW_CLOSE_THRESHOLD && useUiPanelStore.getState().variablesPanelOpen) {
+          useUiPanelStore.getState().close();
+        }
+      }, RESIZE_DEBOUNCE_MS);
+    };
+    window.addEventListener('resize', onResize);
+    return () => {
+      window.removeEventListener('resize', onResize);
+      if (t) clearTimeout(t);
+    };
+  }, []);
+
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
       if ((e.ctrlKey || e.metaKey) && e.key === '/') {
@@ -87,6 +151,9 @@ export function AppLayout({ children }: AppLayoutProps) {
       } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 't') {
         e.preventDefault();
         useRequestStore.getState().createDraftTab();
+      } else if ((e.ctrlKey || e.metaKey) && e.altKey && e.key.toLowerCase() === 'v') {
+        e.preventDefault();
+        useUiPanelStore.getState().toggle();
       }
     }
     window.addEventListener('keydown', onKeyDown);
@@ -110,13 +177,14 @@ export function AppLayout({ children }: AppLayoutProps) {
 
   return (
     <div
-      className="flex h-screen w-screen flex-col overflow-hidden"
-      style={{ background: 'var(--color-bg-primary)' }}
+      className="flex h-screen w-screen flex-col overflow-hidden bg-[var(--color-bg-primary)]"
     >
       <Titlebar
         onImportClick={() => setImportOpen(true)}
         onSettingsClick={() => setSettingsOpen(true)}
         onOpenSyncSettings={() => setSettingsOpen(true)}
+        onToggleVariablesPanel={toggleRightPanel}
+        variablesPanelOpen={rightPanelOpen}
       />
       {settingsOpen ? (
         <div className="flex-1 min-h-0 flex flex-col">
@@ -148,10 +216,29 @@ export function AppLayout({ children }: AppLayoutProps) {
               />
             )}
             <ErrorBoundary fallbackSize="panel" resetKey={activeTabId}>
-              <main className="min-w-0 flex-1 overflow-auto" style={{ background: 'var(--color-bg-primary)' }}>
+              <main className="min-w-0 flex-1 overflow-auto bg-[var(--color-bg-primary)]">
                 {children}
               </main>
             </ErrorBoundary>
+            {rightPanelOpen && (
+              <>
+                <div
+                  role="separator"
+                  aria-orientation="vertical"
+                  aria-label="Resize variables panel"
+                  className="w-1.5 shrink-0 cursor-col-resize select-none transition-colors hover:bg-[var(--color-accent)]/20"
+                  style={rightResizing ? { backgroundColor: 'var(--color-accent)' } : undefined}
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    rightResizeStartRef.current = { x: e.clientX, width: rightPanelWidth };
+                    setRightResizing(true);
+                  }}
+                />
+                <ErrorBoundary fallbackSize="panel">
+                  <VariablesPanel width={rightPanelWidth} onClose={closeRightPanel} />
+                </ErrorBoundary>
+              </>
+            )}
           </div>
         </>
       )}
