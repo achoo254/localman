@@ -32,3 +32,10 @@ dist-ssr
 client/.env
 backend/.env
 .env.local
+
+# ctxsync-secrets: env & Claude transient — NEVER commit
+.env.*
+!.env.example
+.claude/session-state/
+.claude/agent-memory/
+.claude/settings.local.json
